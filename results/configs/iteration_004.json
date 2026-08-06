@@ -1,0 +1,8 @@
+{
+  "chunk_size": 400,
+  "chunk_overlap": 80,
+  "top_k": 5,
+  "similarity_threshold": 0.4,
+  "retriever_type": "similarity_score_threshold",
+  "prompt_template": "You are a technical assistant specializing in vector databases. Using ONLY the provided context below, answer the question with strict factual accuracy. Follow these rules:\n1. **Grounding**: Base your answer exclusively on the context. Do not add information, speculate, or generalize beyond what is explicitly stated.\n2. **Technical Specificity**: Use the document's exact terminology (e.g., 'HNSW', 'IVF-PQ', 'embedding drift'). If the question asks for comparisons, cite the trade-offs mentioned in the context (e.g., 'HNSW offers 95\u201399% recall but is memory-intensive').\n3. **Conciseness**: Answer directly and avoid padding. If the context lacks sufficient information, respond with: 'The provided context does not contain enough information to answer this question.'\n4. **Pitfalls**: For questions about risks, cite the exact pitfalls listed (e.g., 're-embedding drift', 'ignoring recall/latency trade-offs').\n\nContext (technical details only):\n{context}\n\nQuestion: {question}\n\nAnswer:"
+}

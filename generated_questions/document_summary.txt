@@ -1,0 +1,39 @@
+**Technical Summary: Vector Databases – A Technical Overview**
+
+This document provides a comprehensive technical overview of **vector databases**, specialized systems designed to store, index, and efficiently query high-dimensional numerical vectors (embeddings) generated from unstructured data (text, images, audio) via machine learning models. It contrasts vector databases with traditional relational databases, which are ill-suited for similarity search tasks, and details their architecture, indexing algorithms, trade-offs, and real-world implementations.
+
+The document is structured into nine sections:
+
+1. **Introduction**: Defines vector databases, their purpose (approximate nearest neighbor search), and the limitations of relational databases for similarity tasks. It outlines the document’s scope: explaining functionality, internal mechanisms, indexing algorithms, and implementation trade-offs.
+
+2. **Why Similarity Search Is Different**: Explains that embeddings lack natural ordering, requiring distance/similarity metrics (cosine similarity, Euclidean distance, dot product) for comparison. It introduces **brute-force search** (exact but slow) and **approximate nearest neighbor (ANN)** algorithms (fast but approximate).
+
+3. **Core Architecture**: Describes the four shared components of vector databases:
+   - **Ingestion pipeline**: Validates and processes raw vectors/metadata.
+   - **Index**: The critical data structure enabling fast ANN search (e.g., HNSW, IVF).
+   - **Metadata store**: Stores structured attributes (e.g., timestamps, categories) for filtering.
+   - **Query engine**: Executes queries, applies filters, and returns top-*k* results.
+
+4. **Indexing Algorithms**: Details three key ANN algorithms:
+   - **HNSW (Hierarchical Navigable Small World)**: A multi-layer graph-based index offering high recall (95–99%) and speed (10–100x faster than brute-force), but memory-intensive. Used by Chroma, Qdrant, and Weaviate.
+   - **IVF (Inverted File Index)**: Clusters vectors into cells; trades accuracy for memory efficiency. Often paired with **product quantization (IVF-PQ)** for compression.
+   - **Flat (Brute-Force)**: Compares query vectors against all stored vectors; used for small datasets or as a baseline.
+
+5. **Metadata Filtering**: Discusses strategies for combining similarity search with structured filters:
+   - **Pre-filtering**: Applies metadata filters before similarity search (accurate but slow for selective filters).
+   - **Post-filtering**: Applies filters after retrieving candidates (faster but may return fewer results).
+
+6. **Popular Implementations**: Profiles five systems:
+   - **Chroma**: Open-source, embedded, HNSW-based, ideal for prototyping.
+   - **FAISS**: Facebook’s optimized library for ANN algorithms (Flat, IVF, HNSW), often used as an underlying engine.
+   - **Pinecone**: Fully managed, cloud-hosted vector database with pay-per-use pricing.
+   - **Qdrant**: Open-source, Rust-based, with built-in metadata filtering in HNSW traversal.
+   - **Weaviate**: Open-source with GraphQL support and automatic embedding generation.
+
+7. **Evaluating Retrieval Quality**: Introduces **Recall@k** (fraction of true nearest neighbors retrieved) and **latency (QPS)** as key metrics, emphasizing the trade-off between them.
+
+8. **Common Pitfalls**: Highlights risks like mismatched distance functions, re-embedding drift (using different models for ingestion/query), HNSW memory constraints, and ignoring recall/latency trade-offs.
+
+9. **Summary**: Reinforces that vector databases enable scalable ANN search via algorithms like HNSW and IVF, with performance heavily dependent on index choice, distance metrics, and filtering strategies. It warns against embedding model inconsistencies as a major source of retrieval degradation.
+
+**Key Terminology**: *Embeddings, ANN, HNSW, IVF, cosine similarity, Euclidean distance, Recall@k, QPS, pre/post-filtering, FAISS, Chroma, Pinecone, Qdrant, Weaviate*.

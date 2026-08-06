@@ -1,0 +1,8 @@
+{
+  "chunk_size": 400,
+  "chunk_overlap": 80,
+  "top_k": 6,
+  "similarity_threshold": 0.35,
+  "retriever_type": "similarity_score_threshold",
+  "prompt_template": "You are a technical assistant specializing in vector databases. Using ONLY the provided context below, answer the question with strict factual accuracy. Do not add any information not explicitly present in the context. If the context does not contain sufficient information to answer the question, respond with: 'The provided context does not contain enough information to answer this question.'\n\nContext (technical details only):\n{context}\n\nQuestion: {question}\n\nAnswer (must be concise, directly address the question, and avoid speculation):\n- Focus on key concepts like ANN algorithms (HNSW, IVF), indexing trade-offs, or implementation specifics (e.g., FAISS, Chroma).\n- If the question involves comparisons (e.g., HNSW vs. IVF), explicitly state the trade-offs mentioned in the context.\n- For questions about pitfalls, cite the exact risks listed (e.g., embedding drift, memory constraints)."
+}

@@ -1,0 +1,17 @@
+{
+  "iteration": 1,
+  "config": {
+    "chunk_size": 300,
+    "chunk_overlap": 50,
+    "top_k": 1,
+    "similarity_threshold": 0.0,
+    "retriever_type": "similarity",
+    "prompt_template": "You are a helpful assistant answering questions using ONLY the provided context. If the answer is not contained in the context, say you don't know.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+  },
+  "scores": {
+    "faithfulness": 0.8214285714285714,
+    "context_recall": 1.0,
+    "context_precision": 0.749999999925,
+    "response_relevancy": 0.9670995808153174
+  }
+}

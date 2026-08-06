@@ -45,7 +45,7 @@ class MistralSettings:
     embedding_model: str = "mistral-embed"
     generation_model: str = "mistral-small-latest"
     optimizer_model: str = "mistral-large-latest"
-    judge_model: str = "mistral-small-latest"
+    judge_model: str = "mistral-large-latest"
 
     # Free-tier rate limiting (requests per minute). Adjust to your plan.
     requests_per_minute: int = 45

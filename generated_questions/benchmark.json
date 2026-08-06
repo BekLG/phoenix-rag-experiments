@@ -1,0 +1,26 @@
+[
+  {
+    "question": "What is the primary purpose of a vector database compared to traditional relational databases?",
+    "reference_answer": "To index and query high-dimensional numerical vectors for finding the most similar items rather than exact matches.",
+    "reference_context": "A vector database is a specialized storage system designed to index and query high-dimensional numerical vectors, commonly called embeddings. ... Vector databases exist because traditional relational databases, which are optimized for exact matches and range queries on structured columns, perform poorly when the task is to find the 'most similar' items in a dataset rather than an exact match.",
+    "question_type": "factual"
+  },
+  {
+    "question": "Why does brute-force search become impractical for large collections in vector databases?",
+    "reference_answer": "Because query time scales linearly with the number of stored vectors, becoming too slow once a collection passes roughly one million vectors on typical hardware.",
+    "reference_context": "Finding the exact nearest neighbor for a query vector by comparing it against every stored vector is called brute-force search. Brute-force search gives perfect accuracy but scales linearly with the number of stored vectors, which becomes too slow once a collection passes roughly one million vectors on typical hardware.",
+    "question_type": "why"
+  },
+  {
+    "question": "How does HNSW achieve faster search speeds compared to brute-force while maintaining high recall?",
+    "reference_answer": "By building a multi-layer graph where search starts at the top layer and greedily moves toward the query vector, dropping down layers until no closer neighbor is found, typically achieving 95-99% recall while being 10-100x faster.",
+    "reference_context": "HNSW builds a multi-layer graph where each vector is a node. ... A search starts at an entry point in the top layer and greedily moves toward the query vector, dropping down a layer each time no closer neighbor can be found at the current layer. HNSW typically achieves 95-99% recall (compared to brute-force search) while being 10-100x faster.",
+    "question_type": "reasoning"
+  },
+  {
+    "question": "What are the two main strategies for metadata filtering in vector databases, and how do they differ in terms of performance impact?",
+    "reference_answer": "Pre-filtering applies metadata filters first, which is accurate but can slow down the search if the filter is very selective. Post-filtering runs similarity search first and applies filters afterward, which is faster but may return fewer results if filters remove too many candidates.",
+    "reference_context": "Vector databases support this through two strategies: Pre-filtering: the metadata filter is applied first to narrow the candidate set, and the similarity search only runs over the surviving vectors. ... Post-filtering: the similarity search runs first over the full index to retrieve a larger candidate set, and the metadata filter is applied afterward to the candidates.",
+    "question_type": "comparison"
+  }
+]

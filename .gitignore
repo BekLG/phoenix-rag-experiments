@@ -2,5 +2,4 @@
 __pycache__/
 *.pyc
 .env
-.env.*
 config/default_config.json
