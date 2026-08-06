@@ -31,7 +31,7 @@ class LocalLLMClient:
 
     def __init__(
         self,
-        model: str = "qwen2.5:7b-instruct",
+        model: str = "qwen2.5:3b-instruct",
         host: str = "http://localhost:11434",
         timeout: float = 300.0,
     ):
