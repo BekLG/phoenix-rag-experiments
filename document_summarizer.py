@@ -79,16 +79,27 @@ def get_or_create_summary(
     summary_path: str | Path,
     force_regenerate: bool = False,
 ) -> str:
-    """Load the cached summary unless it doesn't exist or regeneration is forced.
+    """Load the cached summary unless it doesn't exist, is empty, or
+    regeneration is forced.
 
     Same fixed-artifact pattern as get_or_create_benchmark() in
     question_generator.py -- generate once, reuse across the whole run
-    (and across future runs on the same document).
+    (and across future runs on the same document). The size check
+    specifically guards against a prior crashed write leaving behind an
+    empty-but-existing file, which would otherwise be treated as valid
+    cached content forever.
     """
     path = Path(summary_path)
-    if path.exists() and not force_regenerate:
+    if path.exists() and path.stat().st_size > 0 and not force_regenerate:
         logger.info("Loading cached document summary from %s", path)
         return load_summary(path)
+
+    if path.exists() and path.stat().st_size == 0:
+        logger.warning(
+            "Cached document summary at %s exists but is empty (likely a "
+            "prior crashed write); regenerating.",
+            path,
+        )
 
     summary = generate_summary(full_text, mistral_settings)
     save_summary(summary, path)
