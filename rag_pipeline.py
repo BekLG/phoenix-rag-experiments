@@ -6,7 +6,7 @@ The actual RAG pipeline being optimized: retrieve -> build prompt -> generate.
 Kept intentionally simple/stateless so it can be re-run cheaply for every
 question in the benchmark, for every configuration the optimizer tries.
 
-Generation calls go through MistralClient (mistral_client.py) rather than
+Generation calls go through GeminiClient (gemini_client.py) rather than
 a raw SDK client, so rate limiting and retry/backoff actually apply here.
 Without this, a 429 mid-benchmark crashes the whole experiment run instead
 of backing off and retrying -- this is not hypothetical, it's what actually
@@ -22,8 +22,8 @@ from dataclasses import dataclass
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 
-from config import MistralSettings, RetrievalConfig
-from mistral_client import MistralClient
+from config import GeminiSettings, RetrievalConfig
+from gemini_client import GeminiClient
 
 logger = logging.getLogger("phoenix_rag.rag_pipeline")
 
@@ -41,15 +41,15 @@ class RagPipeline:
     def __init__(
         self,
         vector_store: FAISS,
-        mistral_settings: MistralSettings,
+        gemini_settings: GeminiSettings,
         retrieval_config: RetrievalConfig,
     ):
         self.vector_store = vector_store
         self.retrieval_config = retrieval_config
 
         # Rate-limited, retrying client -- see module docstring.
-        self._client = MistralClient(mistral_settings)
-        self._model = mistral_settings.generation_model
+        self._client = GeminiClient(gemini_settings)
+        self._model = gemini_settings.generation_model
 
         # ---------------------------------------------------------
         # Retriever construction, including mmr support.
@@ -90,8 +90,8 @@ class RagPipeline:
         contexts = [d.page_content for d in docs]
         prompt = self.build_prompt(question, contexts)
 
-        # MistralClient.chat() handles rate limiting + exponential-backoff
-        # retry internally (see mistral_client.py), and returns the answer
+        # GeminiClient.chat() handles rate limiting + exponential-backoff
+        # retry internally (see gemini_client.py), and returns the answer
         # text directly rather than a raw SDK response object.
         answer_text = self._client.chat(
             messages=[{"role": "user", "content": prompt}],

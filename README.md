@@ -17,7 +17,7 @@ Recursive Text Splitter
   ▼        ▼
 FAISS   Full Document Chunks
   │        │
-  │   mistral-small: Generate Evaluation Questions
+  │   Gemini: Generate Evaluation Questions
   │        │
   │        ▼
   │   Evaluation Benchmark Dataset (fixed, generated once)
@@ -26,7 +26,7 @@ FAISS   Full Document Chunks
 Retriever ──► RAG Pipeline ──► Generated Answer
                                     │
                                     ▼
-                        Ragas + mistral-small (judge)
+                        Ragas + Gemini (judge)
                                     │
                                     ▼
               Faithfulness / Context Recall / Context Precision /
@@ -49,16 +49,16 @@ against exactly the same questions.
 
 ```
 app.py                  CLI entry point
-config.py                Dataclasses for all configuration (Mistral, retrieval,
+config.py                Dataclasses for all configuration (Gemini, retrieval,
                           question generation, optimizer)
-mistral_client.py        Rate-limited, retrying wrapper around the Mistral SDK
+gemini_client.py         Rate-limited, retrying wrapper around the Gemini SDK
 document_loader.py       PDF / text ingestion
 chunking.py               RecursiveCharacterTextSplitter wrapper
-embeddings.py             LangChain Embeddings adapter for mistral-embed
+embeddings.py             LangChain Embeddings adapter for Gemini embeddings
 vector_store.py           FAISS index build/save/load + retriever factory
 question_generator.py    Generates + caches the fixed benchmark question set
 rag_pipeline.py           Retrieve → prompt → generate
-evaluator.py              Ragas evaluation using Mistral as judge
+evaluator.py              Ragas evaluation using Gemini as judge
 optimizer.py              Rule-based retrieval parameter tuning
 storage.py                Persists configs / results / scores / best config
 experiment_runner.py      Orchestrates the full optimization loop
@@ -77,8 +77,14 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# edit .env and set MISTRAL_API_KEY
+# edit .env and set GEMINI_API_KEY
 ```
+
+Gemini API quotas are model- and project-specific. The default configuration
+caps each model at 45 requests per minute. Set the per-model fields in
+`GeminiSettings` to the quotas shown in Google AI Studio; the limit is shared
+across generation, embedding, optimization, and Ragas evaluation calls within
+the process.
 
 Place your source document (PDF or .txt/.md) somewhere under `data/`, e.g.
 `data/source.pdf`.

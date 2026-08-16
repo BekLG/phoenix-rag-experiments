@@ -61,7 +61,7 @@ from config import (
 )
 from document_loader import load_document, load_full_text
 from document_summarizer import get_or_create_summary
-from embeddings import MistralEmbeddings
+from embeddings import GeminiEmbeddings
 from evaluator import run_evaluation
 from experiment_runner import run_experiment
 from question_generator import get_or_create_benchmark
@@ -120,7 +120,7 @@ def run_frozen_condition(
     logger.info("=== FROZEN condition: reusing old config unchanged ===")
     logger.info("Frozen config: %s", frozen_config.to_dict())
 
-    embeddings = MistralEmbeddings(app_config.mistral)
+    embeddings = GeminiEmbeddings(app_config.gemini)
     raw_docs = load_document(app_config.source_document)
     chunks = split_documents(
         raw_docs,
@@ -129,11 +129,11 @@ def run_frozen_condition(
     )
     vector_store = build_vector_store(chunks, embeddings)
 
-    pipeline = RagPipeline(vector_store, app_config.mistral, frozen_config)
+    pipeline = RagPipeline(vector_store, app_config.gemini, frozen_config)
     question_texts = [q.question for q in benchmark]
     results = pipeline.answer_many(question_texts)
 
-    scores = run_evaluation(results, benchmark, app_config.mistral)
+    scores = run_evaluation(results, benchmark, app_config.gemini)
     weighted = _weighted(scores)
     logger.info("FROZEN condition scores: %s (weighted: %.4f)", scores, weighted)
 
@@ -153,7 +153,7 @@ def run_fresh_condition(app_config: AppConfig) -> dict:
     logger.info("=== FRESH condition: full self-optimization from scratch ===")
 
     fresh_app_config = AppConfig(
-        mistral=app_config.mistral,
+        gemini=app_config.gemini,
         retrieval=RetrievalConfig(),  # explicit fresh defaults, not seeded
         question_generation=app_config.question_generation,
         optimizer=app_config.optimizer,
@@ -258,7 +258,7 @@ def main() -> None:
     full_text = load_full_text(app_config.source_document)
     benchmark = get_or_create_benchmark(
         full_text=full_text,
-        mistral_settings=app_config.mistral,
+        gemini_settings=app_config.gemini,
         qg_config=app_config.question_generation,
         benchmark_path=app_config.benchmark_path,
     )
@@ -270,7 +270,7 @@ def main() -> None:
     # iteration doesn't pay for it mid-run.
     get_or_create_summary(
         full_text=full_text,
-        mistral_settings=app_config.mistral,
+        gemini_settings=app_config.gemini,
         summary_path=app_config.summary_path,
     )
 

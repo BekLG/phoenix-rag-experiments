@@ -37,20 +37,45 @@ for _dir in (DATA_DIR, RESULTS_DIR, GENERATED_QUESTIONS_DIR, LOGS_DIR, CONFIG_DI
 # --------------------------------------------------------------------------
 
 @dataclass
-class MistralSettings:
-    """Mistral AI credentials and model names."""
+class GeminiSettings:
+    """Gemini API credentials and model names.
 
-    api_key: str = field(default_factory=lambda: os.getenv("MISTRAL_API_KEY", ""))
+    Model names verified against Google's model list as of Aug 2026 --
+    Gemini naming/availability moves fast (gemini-2.5-pro is scheduled to
+    shut down Oct 16, 2026), so re-check https://ai.google.dev/gemini-api/docs/models
+    before a long-lived deployment relies on these defaults.
+    """
 
-    embedding_model: str = "mistral-embed"
-    generation_model: str = "mistral-small-latest"
-    optimizer_model: str = "mistral-large-latest"
-    judge_model: str = "mistral-large-latest"
+    api_key: str = field(default_factory=lambda: os.getenv("GEMINI_API_KEY", ""))
 
-    # Free-tier rate limiting (requests per minute). Adjust to your plan.
+    embedding_model: str = "gemini-embedding-001"
+    generation_model: str = "gemini-3.5-flash"
+    optimizer_model: str = "gemini-3.1-pro-preview"
+    judge_model: str = "gemini-3.1-pro-preview"
+
+    # Adjust these to the per-model quotas shown for the API project in
+    # Google AI Studio. Keep a little headroom below the published limit.
     requests_per_minute: int = 45
+    embedding_requests_per_minute: int | None = None
+    generation_requests_per_minute: int | None = None
+    optimizer_requests_per_minute: int | None = None
+    judge_requests_per_minute: int | None = None
     max_retries: int = 5
     base_backoff_seconds: float = 2.0
+
+    def requests_per_minute_for(self, model: str) -> int:
+        """Return the configured RPM cap for a specific Gemini model."""
+        roles = (
+            (self.embedding_model, self.embedding_requests_per_minute),
+            (self.generation_model, self.generation_requests_per_minute),
+            (self.optimizer_model, self.optimizer_requests_per_minute),
+            (self.judge_model, self.judge_requests_per_minute),
+        )
+        configured = [limit for name, limit in roles if name == model and limit]
+        value = min(configured, default=self.requests_per_minute)
+        if value <= 0:
+            raise ValueError(f"Requests per minute must be positive for {model!r}")
+        return value
 
 
 # --------------------------------------------------------------------------
@@ -162,7 +187,7 @@ class OptimizerConfig:
 
 @dataclass
 class AppConfig:
-    mistral: MistralSettings = field(default_factory=MistralSettings)
+    gemini: GeminiSettings = field(default_factory=GeminiSettings)
     retrieval: RetrievalConfig = field(default_factory=RetrievalConfig)
     question_generation: QuestionGenerationConfig = field(
         default_factory=QuestionGenerationConfig
@@ -182,7 +207,7 @@ class AppConfig:
     def load(cls, path: str | Path) -> "AppConfig":
         data = json.loads(Path(path).read_text())
         return cls(
-            mistral=MistralSettings(**data.get("mistral", {})),
+            gemini=GeminiSettings(**data.get("gemini", data.get("mistral", {}))),
             retrieval=RetrievalConfig.from_dict(data.get("retrieval", {})),
             question_generation=QuestionGenerationConfig(
                 **data.get("question_generation", {})

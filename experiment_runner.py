@@ -33,7 +33,7 @@ import logging
 from config import AppConfig
 from document_loader import load_document, load_full_text
 from chunking import split_documents
-from embeddings import MistralEmbeddings
+from embeddings import GeminiEmbeddings
 from vector_store import build_vector_store
 from question_generator import get_or_create_benchmark
 from document_summarizer import get_or_create_summary
@@ -49,13 +49,13 @@ logger = logging.getLogger("phoenix_rag.experiment_runner")
 def run_experiment(app_config: AppConfig) -> dict:
     """Run the full optimization loop. Returns the best result found."""
 
-    embeddings = MistralEmbeddings(app_config.mistral)
+    embeddings = GeminiEmbeddings(app_config.gemini)
 
     # Benchmark is generated ONCE from the full document and never touched again.
     full_text = load_full_text(app_config.source_document)
     benchmark = get_or_create_benchmark(
         full_text=full_text,
-        mistral_settings=app_config.mistral,
+        gemini_settings=app_config.gemini,
         qg_config=app_config.question_generation,
         benchmark_path=app_config.benchmark_path,
     )
@@ -64,7 +64,7 @@ def run_experiment(app_config: AppConfig) -> dict:
 
     document_summary = get_or_create_summary(
         full_text=full_text,
-        mistral_settings=app_config.mistral,
+        gemini_settings=app_config.gemini,
         summary_path=app_config.summary_path,
     )
     logger.info("Document summary ready (%d chars)", len(document_summary))
@@ -96,10 +96,10 @@ def run_experiment(app_config: AppConfig) -> dict:
             vector_store = build_vector_store(chunks, embeddings)
             cached_chunk_params = chunk_params
 
-        pipeline = RagPipeline(vector_store, app_config.mistral, current_config)
+        pipeline = RagPipeline(vector_store, app_config.gemini, current_config)
         results = pipeline.answer_many(question_texts)
 
-        scores = run_evaluation(results, benchmark, app_config.mistral)
+        scores = run_evaluation(results, benchmark, app_config.gemini)
 
         storage.save_iteration_config(iteration, current_config)
         storage.append_experiment_result(iteration, current_config, scores)
@@ -144,7 +144,7 @@ def run_experiment(app_config: AppConfig) -> dict:
             current_config,
             scores,
             app_config.optimizer,
-            app_config.mistral,
+            app_config.gemini,
             history,
             document_summary,
         )

@@ -38,8 +38,8 @@ import json
 import logging
 import re
 
-from config import MistralSettings, OptimizerConfig, RetrievalConfig
-from mistral_client import MistralClient
+from config import GeminiSettings, OptimizerConfig, RetrievalConfig
+from gemini_client import GeminiClient
 from optimizer import _clamp, meets_targets
 
 logger = logging.getLogger("phoenix_rag.llm_optimizer")
@@ -181,7 +181,7 @@ def propose_next_config_llm(
     current_config: RetrievalConfig,
     scores: dict[str, float],
     opt_config: OptimizerConfig,
-    mistral_settings: MistralSettings,
+    gemini_settings: GeminiSettings,
     history: list[dict],
     document_summary: str,
 ) -> tuple[RetrievalConfig, list[str]]:
@@ -212,7 +212,7 @@ def propose_next_config_llm(
         logger.info("All metrics meet target thresholds.")
         return current_config, ["all_targets_met"]
 
-    client = MistralClient(mistral_settings)
+    client = GeminiClient(gemini_settings)
 
     user_message = (
         f"{_format_bounds(opt_config)}\n\n"
@@ -227,7 +227,7 @@ def propose_next_config_llm(
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_message},
         ],
-        model=mistral_settings.optimizer_model,
+        model=gemini_settings.optimizer_model,
         temperature=0.4,
     )
 
