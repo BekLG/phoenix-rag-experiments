@@ -84,7 +84,10 @@ Gemini API quotas are model- and project-specific. The default configuration
 caps each model at 45 requests per minute. Set the per-model fields in
 `GeminiSettings` to the quotas shown in Google AI Studio; the limit is shared
 across generation, embedding, optimization, and Ragas evaluation calls within
-the process.
+the process. Requests are evenly paced instead of sent in a burst. FAISS
+indexes are cached below `faiss_index_path` using the document contents,
+embedding model, chunk size, and overlap, so recurring configurations do not
+consume embedding quota again.
 
 Place your source document (PDF or .txt/.md) somewhere under `data/`, e.g.
 `data/source.pdf`.

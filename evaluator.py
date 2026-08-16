@@ -15,11 +15,9 @@ Ragas evaluates metrics as a batch of internally-concurrent async calls --
 each metric can fire multiple sub-calls per sample (e.g. faithfulness
 decomposes an answer into statements, then verifies each one separately),
 so the real number of judge API calls is well above len(dataset) *
-len(METRICS). The judge client here is built directly, NOT routed through
-gemini_client.GeminiClient, so none of that module's rate limiting applies
-to judge calls -- Ragas's default concurrency can burst well past Gemini's
-actual per-minute limit and trigger a wall of 429s. run_evaluation() below
-caps Ragas's own concurrency via RunConfig to keep it under the limit.
+len(METRICS). The judge client is built directly but receives the same shared,
+model-specific limiter used by GeminiClient. Ragas concurrency is also capped
+below as a second layer of protection.
 """
 
 from __future__ import annotations

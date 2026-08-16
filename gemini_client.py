@@ -19,7 +19,8 @@ import logging
 import random
 import threading
 import time
-from collections import deque
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 from google import genai
@@ -31,30 +32,25 @@ logger = logging.getLogger("phoenix_rag.gemini_client")
 
 
 class RateLimiter:
-    """Simple sliding-window rate limiter (thread-safe)."""
+    """Thread-safe paced limiter that avoids using the quota in a burst."""
 
     def __init__(self, max_calls: int, period_seconds: float = 60.0):
         self.max_calls = max_calls
         self.period_seconds = period_seconds
-        self._calls: deque[float] = deque()
+        self._interval = period_seconds / max_calls
+        self._next_allowed = 0.0
         self._lock = threading.Lock()
 
     def acquire(self) -> None:
         with self._lock:
             now = time.monotonic()
-            while self._calls and now - self._calls[0] > self.period_seconds:
-                self._calls.popleft()
+            scheduled = max(now, self._next_allowed)
+            self._next_allowed = scheduled + self._interval
+            wait_time = scheduled - now
 
-            if len(self._calls) >= self.max_calls:
-                wait_time = self.period_seconds - (now - self._calls[0])
-                if wait_time > 0:
-                    logger.debug("Rate limit hit, sleeping %.2fs", wait_time)
-                    time.sleep(wait_time)
-                now = time.monotonic()
-                while self._calls and now - self._calls[0] > self.period_seconds:
-                    self._calls.popleft()
-
-            self._calls.append(time.monotonic())
+        if wait_time > 0:
+            logger.debug("Pacing Gemini request for %.2fs", wait_time)
+            time.sleep(wait_time)
 
 
 _LIMITERS: dict[tuple[str, str, int], RateLimiter] = {}
@@ -157,6 +153,50 @@ class GeminiClient:
 
     # -- internals --------------------------------------------------------
 
+    @staticmethod
+    def _status_code(exc: Exception) -> int | None:
+        for candidate in (
+            getattr(exc, "status_code", None),
+            getattr(exc, "code", None),
+            getattr(getattr(exc, "response", None), "status_code", None),
+        ):
+            try:
+                return int(candidate)
+            except (TypeError, ValueError):
+                continue
+        return None
+
+    @staticmethod
+    def _retry_after_seconds(exc: Exception) -> float | None:
+        response = getattr(exc, "response", None)
+        headers = getattr(response, "headers", None)
+        if headers:
+            value = headers.get("Retry-After") or headers.get("retry-after")
+            try:
+                return max(0.0, float(value))
+            except (TypeError, ValueError):
+                try:
+                    retry_at = parsedate_to_datetime(value)
+                    if retry_at.tzinfo is None:
+                        retry_at = retry_at.replace(tzinfo=timezone.utc)
+                    return max(
+                        0.0,
+                        (retry_at - datetime.now(timezone.utc)).total_seconds(),
+                    )
+                except (TypeError, ValueError, OverflowError):
+                    pass
+        return None
+
+    @classmethod
+    def _is_transient(cls, exc: Exception) -> bool:
+        status = cls._status_code(exc)
+        if status is not None:
+            return status in {408, 429} or 500 <= status <= 599
+        name = type(exc).__name__.lower()
+        return isinstance(exc, (TimeoutError, ConnectionError, OSError)) or any(
+            marker in name for marker in ("timeout", "connection", "transport")
+        )
+
     def _with_retry(self, call, extract, model: str):
         last_error: Exception | None = None
         limiter = get_shared_rate_limiter(self.settings, model)
@@ -167,8 +207,13 @@ class GeminiClient:
                 return extract(response)
             except Exception as exc:  # noqa: BLE001 - SDK raises various error types
                 last_error = exc
+                if not self._is_transient(exc) or attempt == self.settings.max_retries:
+                    raise
                 backoff = self.settings.base_backoff_seconds * (2 ** (attempt - 1))
                 backoff += random.uniform(0, self.settings.base_backoff_seconds)
+                retry_after = self._retry_after_seconds(exc)
+                if retry_after is not None:
+                    backoff = max(backoff, retry_after)
                 logger.warning(
                     "Gemini call failed (attempt %d/%d): %s. Retrying in %.1fs",
                     attempt,
@@ -177,6 +222,4 @@ class GeminiClient:
                     backoff,
                 )
                 time.sleep(backoff)
-        raise RuntimeError(
-            f"Gemini API call failed after {self.settings.max_retries} attempts"
-        ) from last_error
+        raise RuntimeError("Gemini API retry loop exited unexpectedly") from last_error

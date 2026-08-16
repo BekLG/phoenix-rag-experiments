@@ -34,7 +34,7 @@ from config import AppConfig
 from document_loader import load_document, load_full_text
 from chunking import split_documents
 from embeddings import GeminiEmbeddings
-from vector_store import build_vector_store
+from vector_store import get_or_build_vector_store
 from question_generator import get_or_create_benchmark
 from document_summarizer import get_or_create_summary
 from rag_pipeline import RagPipeline
@@ -93,7 +93,15 @@ def run_experiment(app_config: AppConfig) -> dict:
                 chunk_size=current_config.chunk_size,
                 chunk_overlap=current_config.chunk_overlap,
             )
-            vector_store = build_vector_store(chunks, embeddings)
+            vector_store = get_or_build_vector_store(
+                chunks=chunks,
+                embeddings=embeddings,
+                cache_root=app_config.faiss_index_path,
+                source_document=app_config.source_document,
+                embedding_model=app_config.gemini.embedding_model,
+                chunk_size=current_config.chunk_size,
+                chunk_overlap=current_config.chunk_overlap,
+            )
             cached_chunk_params = chunk_params
 
         pipeline = RagPipeline(vector_store, app_config.gemini, current_config)

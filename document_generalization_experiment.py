@@ -66,7 +66,7 @@ from evaluator import run_evaluation
 from experiment_runner import run_experiment
 from question_generator import get_or_create_benchmark
 from rag_pipeline import RagPipeline
-from vector_store import build_vector_store
+from vector_store import get_or_build_vector_store
 
 logger = logging.getLogger("phoenix_rag.document_generalization_experiment")
 
@@ -127,7 +127,15 @@ def run_frozen_condition(
         chunk_size=frozen_config.chunk_size,
         chunk_overlap=frozen_config.chunk_overlap,
     )
-    vector_store = build_vector_store(chunks, embeddings)
+    vector_store = get_or_build_vector_store(
+        chunks=chunks,
+        embeddings=embeddings,
+        cache_root=app_config.faiss_index_path,
+        source_document=app_config.source_document,
+        embedding_model=app_config.gemini.embedding_model,
+        chunk_size=frozen_config.chunk_size,
+        chunk_overlap=frozen_config.chunk_overlap,
+    )
 
     pipeline = RagPipeline(vector_store, app_config.gemini, frozen_config)
     question_texts = [q.question for q in benchmark]
