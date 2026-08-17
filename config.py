@@ -198,6 +198,7 @@ class AppConfig:
     faiss_index_path: str = str(DATA_DIR / "faiss_index")
     benchmark_path: str = str(GENERATED_QUESTIONS_DIR / "benchmark.json")
     summary_path: str = str(GENERATED_QUESTIONS_DIR / "document_summary.txt")
+    profile_path: str = str(GENERATED_QUESTIONS_DIR / "document_profile.json")
 
     def save(self, path: str | Path) -> None:
         path = Path(path)
@@ -223,6 +224,9 @@ class AppConfig:
             ),
             summary_path=data.get(
                 "summary_path", str(GENERATED_QUESTIONS_DIR / "document_summary.txt")
+            ),
+            profile_path=data.get(
+                "profile_path", str(GENERATED_QUESTIONS_DIR / "document_profile.json")
             ),
         )
 

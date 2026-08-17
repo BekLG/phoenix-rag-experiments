@@ -21,7 +21,7 @@ whether the config was re-optimized for this document or just reused:
 
 GOTCHAS THIS SCRIPT HANDLES FOR YOU (see module docstring section in the
 project chat history for why these matter):
-  1. Benchmark/summary caching is keyed by file path, not by which
+  1. Benchmark/summary/profile caching is keyed by file path, not by which
      document it came from -- get_or_create_benchmark() has no idea
      "this benchmark was for document A." This script points both at
      document-B-specific paths so document A's cached benchmark is never
@@ -57,6 +57,7 @@ from config import (
 )
 from document_loader import load_document, load_full_text
 from document_summarizer import get_or_create_summary
+from document_profile import get_or_create_profile
 from embeddings import GeminiEmbeddings
 from evaluator import run_evaluation
 from experiment_runner import run_experiment
@@ -160,6 +161,7 @@ def run_fresh_condition(app_config: AppConfig, results_dir: Path) -> dict:
         faiss_index_path=app_config.faiss_index_path,
         benchmark_path=app_config.benchmark_path,
         summary_path=app_config.summary_path,
+        profile_path=app_config.profile_path,
     )
 
     _configure_results_dir(results_dir)
@@ -252,6 +254,7 @@ def main() -> None:
     # cached benchmark/summary from being silently reused (gotcha #1).
     app_config.benchmark_path = str(GENERATED_QUESTIONS_DIR / f"benchmark_{args.label}.json")
     app_config.summary_path = str(GENERATED_QUESTIONS_DIR / f"document_summary_{args.label}.txt")
+    app_config.profile_path = str(GENERATED_QUESTIONS_DIR / f"document_profile_{args.label}.json")
     app_config.optimizer.max_iterations = args.max_iterations
 
     full_text = load_full_text(app_config.source_document)
@@ -265,12 +268,19 @@ def main() -> None:
         "Benchmark for new document ready: %d questions (used for BOTH conditions)",
         len(benchmark),
     )
-    # Warm the document summary cache too, so the FRESH condition's first
-    # iteration doesn't pay for it mid-run.
+    # Warm the summary and profile caches too, so the FRESH condition's first
+    # iteration doesn't pay for either artifact mid-run.
     get_or_create_summary(
         full_text=full_text,
         gemini_settings=app_config.gemini,
         summary_path=app_config.summary_path,
+    )
+    get_or_create_profile(
+        full_text=full_text,
+        profile_path=app_config.profile_path,
+        pages=len(load_document(app_config.source_document))
+        if Path(app_config.source_document).suffix.lower() == ".pdf"
+        else None,
     )
 
     experiment_results_dir = RESULTS_DIR / "generalization_experiment" / args.label

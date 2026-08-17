@@ -29,14 +29,16 @@ loop -- propose_next_config_llm is the only proposer used.
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 from config import AppConfig
-from document_loader import load_document, load_full_text
+from document_loader import load_document
 from chunking import split_documents
 from embeddings import GeminiEmbeddings
 from vector_store import get_or_build_vector_store
 from question_generator import get_or_create_benchmark
 from document_summarizer import get_or_create_summary
+from document_profile import get_or_create_profile
 from rag_pipeline import RagPipeline
 from evaluator import run_evaluation
 from optimizer import meets_targets
@@ -52,7 +54,8 @@ def run_experiment(app_config: AppConfig) -> dict:
     embeddings = GeminiEmbeddings(app_config.gemini)
 
     # Benchmark is generated ONCE from the full document and never touched again.
-    full_text = load_full_text(app_config.source_document)
+    source_documents = load_document(app_config.source_document)
+    full_text = "\n\n".join(document.page_content for document in source_documents)
     benchmark = get_or_create_benchmark(
         full_text=full_text,
         gemini_settings=app_config.gemini,
@@ -68,6 +71,18 @@ def run_experiment(app_config: AppConfig) -> dict:
         summary_path=app_config.summary_path,
     )
     logger.info("Document summary ready (%d chars)", len(document_summary))
+
+    pages = (
+        len(source_documents)
+        if Path(app_config.source_document).suffix.lower() == ".pdf"
+        else None
+    )
+    document_profile = get_or_create_profile(
+        full_text=full_text,
+        profile_path=app_config.profile_path,
+        pages=pages,
+    )
+    logger.info("Document profile ready: %s", document_profile)
 
     current_config = app_config.retrieval
     best_score = -1.0
@@ -87,9 +102,8 @@ def run_experiment(app_config: AppConfig) -> dict:
         chunk_params = (current_config.chunk_size, current_config.chunk_overlap)
         if vector_store is None or chunk_params != cached_chunk_params:
             logger.info("Rebuilding FAISS index (chunk params changed)")
-            raw_docs = load_document(app_config.source_document)
             chunks = split_documents(
-                raw_docs,
+                source_documents,
                 chunk_size=current_config.chunk_size,
                 chunk_overlap=current_config.chunk_overlap,
             )
@@ -155,6 +169,7 @@ def run_experiment(app_config: AppConfig) -> dict:
             app_config.gemini,
             history,
             document_summary,
+            document_profile,
         )
 
         history.append({
