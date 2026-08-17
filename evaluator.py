@@ -23,6 +23,10 @@ import logging
 
 from datasets import Dataset
 from langchain_mistralai import ChatMistralAI
+
+from ragas_compat import install_ragas_compat
+
+install_ragas_compat()
 from ragas import evaluate
 
 try:
