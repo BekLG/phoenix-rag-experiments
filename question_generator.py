@@ -184,13 +184,16 @@ def generate_benchmark(
 def save_benchmark(questions: list[BenchmarkQuestion], path: str | Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps([asdict(q) for q in questions], indent=2))
+    path.write_text(
+        json.dumps([asdict(q) for q in questions], indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
     logger.info("Saved %d benchmark questions to %s", len(questions), path)
 
 
 def load_benchmark(path: str | Path) -> list[BenchmarkQuestion]:
     path = Path(path)
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding="utf-8"))
     return [BenchmarkQuestion(**item) for item in data]
 
 

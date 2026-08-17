@@ -1,0 +1,62 @@
+[
+  {
+    "question": "How do HNSW and IVF indexing algorithms compare in terms of memory usage, and what is the reason for this difference?",
+    "reference_answer": "HNSW has high memory usage because its full graph structure must be kept in RAM for fast traversal. In contrast, IVF uses less memory because it does not require an in-memory graph, instead clustering vectors into cells.",
+    "reference_context": "Its main drawback is memory usage, since the full graph structure must be kept in RAM for fast traversal. ... IVF uses less memory than HNSW because it does not require an in-memory graph, but its accuracy depends heavily on the number of cells the search is allowed to probe",
+    "question_type": "comparison"
+  },
+  {
+    "question": "What are the three distance or similarity functions used to measure similarity between embeddings, and in what scenarios is each typically applied?",
+    "reference_answer": "The three functions are: 1) Cosine similarity, which is the most common choice for text embeddings; 2) Euclidean distance (L2), which is common in image retrieval; and 3) Dot product, which is often used when embeddings are already normalized.",
+    "reference_context": "- Cosine similarity, which measures the angle between two vectors and ignores their magnitude. It is the most common choice for text embeddings.\n- Euclidean distance (L2), which measures the straight-line distance between two points in vector space. It is common in image retrieval.\n- Dot product, which is similar to cosine similarity but also accounts for vector magnitude. It is often used when embeddings are already normalized.",
+    "question_type": "factual"
+  },
+  {
+    "question": "Why are flat indexes typically only used for small collections of under roughly 10,000 vectors or as a ground-truth baseline?",
+    "reference_answer": "Flat indexes compare the query vector against every stored vector, which means query time grows linearly with the collection size. This makes them too slow for large datasets, though they are useful as a baseline because they guarantee 100% recall.",
+    "reference_context": "A flat index stores vectors with no additional structure and compares the query vector against every stored vector. It guarantees 100% recall and is simple to implement, but query time grows linearly with collection size. Flat indexes are typically only used for small collections (under roughly 10,000 vectors) or as a ground-truth baseline when measuring the recall of an approximate index.",
+    "question_type": "why"
+  },
+  {
+    "question": "What is a potential drawback of using post-filtering instead of pre-filtering when querying a vector database with metadata?",
+    "reference_answer": "Post-filtering can return fewer than the requested number of results (top-k) if the metadata filter removes too many candidates from the initial set retrieved by the similarity search.",
+    "reference_context": "This is faster in most cases but can return fewer than the requested number of results if the filter removes too many candidates from the initial set.",
+    "question_type": "edge-case"
+  },
+  {
+    "question": "How does the query engine interact with the index and metadata store to resolve a client's query?",
+    "reference_answer": "The query engine accepts a query vector and optional metadata filters (which are held in the metadata store). It walks the index to find candidate matches, re-ranks them by exact distance, and returns the top-k results. Depending on the strategy, metadata filtering can run before or after the similarity search.",
+    "reference_context": "Metadata store: a secondary store, often a lightweight key-value or document store, that holds structured fields attached to each vector (for example, a source URL, a timestamp, or a category tag) so that queries can be filtered before or after the similarity search runs.\n- Query engine: accepts a query vector plus optional metadata filters, walks the index to find candidate matches, re-ranks them by exact distance, and returns the top-k results to the client.",
+    "question_type": "relationship"
+  },
+  {
+    "question": "How do Qdrant and Weaviate differ in their specialized features for filtering and embedding generation?",
+    "reference_answer": "Qdrant features built-in support for payload (metadata) filtering combined directly into the HNSW graph traversal, whereas Weaviate features built-in modules for generating embeddings automatically from raw text at ingestion time rather than requiring the client to compute them in advance.",
+    "reference_context": "Qdrant: an open-source vector database written in Rust, designed to be run either embedded or as a standalone server, with built-in support for payload (metadata) filtering combined directly into the HNSW graph traversal rather than as a separate pre- or post-filtering step. Weaviate: an open-source vector database with a GraphQL query interface and built-in modules for generating embeddings automatically from raw text at ingestion time, rather than requiring the client to compute embeddings in advance.",
+    "question_type": "comparison"
+  },
+  {
+    "question": "What does a recall@10 of 0.95 mean when evaluating a vector database's retrieval quality?",
+    "reference_answer": "It means that, on average, 9.5 out of the 10 true nearest neighbors (as determined by brute-force search) were found in the approximate index's top-k results.",
+    "reference_context": "A recall@10 of 0.95 means that, on average, 9.5 out of the 10 true nearest neighbors were found.",
+    "question_type": "factual"
+  },
+  {
+    "question": "Why does re-embedding drift cause similarity scores to become unreliable?",
+    "reference_answer": "Similarity scores become unreliable because the two different model versions do not share the same vector space.",
+    "reference_context": "Re-embedding drift: if a collection's embeddings are generated by one model version and later queries are embedded with a newer or different model version, similarity scores become unreliable, because the two models do not share the same vector space.",
+    "question_type": "why"
+  },
+  {
+    "question": "What happens to a vector database using HNSW if the collection grows past the available RAM?",
+    "reference_answer": "Depending on the database's implementation, the collection will either fail to load or fall back to a much slower disk-backed operation.",
+    "reference_context": "Under-provisioned memory for HNSW: because HNSW keeps its full graph in memory, a collection that grows past the available RAM will either fail to load or fall back to much slower disk-backed operation, depending on the database's implementation.",
+    "question_type": "edge-case"
+  },
+  {
+    "question": "How do changes in search parameters affect the relationship between recall and latency (QPS) in ANN algorithms?",
+    "reference_answer": "Increasing search parameters (such as the number of IVF cells probed or the HNSW search width) improves recall but reduces QPS (latency).",
+    "reference_context": "Recall and latency trade off against each other for every ANN algorithm: increasing the search parameters (for example, the number of IVF cells probed, or the HNSW search width) improves recall but reduces QPS.",
+    "question_type": "relationship"
+  }
+]

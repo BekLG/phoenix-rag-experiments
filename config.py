@@ -48,10 +48,10 @@ class GeminiSettings:
 
     api_key: str = field(default_factory=lambda: os.getenv("GEMINI_API_KEY", ""))
 
-    embedding_model: str = "gemini-embedding-001"
-    generation_model: str = "gemini-3.5-flash"
-    optimizer_model: str = "gemini-3.1-pro-preview"
-    judge_model: str = "gemini-3.1-pro-preview"
+    embedding_model: str = "gemini-embedding-001"      
+    generation_model: str = "gemini-3.5-flash"          
+    optimizer_model: str = "gemini-3.5-flash"           
+    judge_model: str = "gemini-3.5-flash"              
 
     # Adjust these to the per-model quotas shown for the API project in
     # Google AI Studio. Keep a little headroom below the published limit.
