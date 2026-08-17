@@ -173,16 +173,25 @@ class AppConfig:
     faiss_index_path: str = str(DATA_DIR / "faiss_index")
     benchmark_path: str = str(GENERATED_QUESTIONS_DIR / "benchmark.json")
     summary_path: str = str(GENERATED_QUESTIONS_DIR / "document_summary.txt")
+    profile_path: str = str(GENERATED_QUESTIONS_DIR / "document_profile.json")
 
     def save(self, path: str | Path) -> None:
         path = Path(path)
-        path.write_text(json.dumps(_dataclass_to_json_safe(self), indent=2))
+        path.write_text(
+            json.dumps(_dataclass_to_json_safe(self), indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
 
     @classmethod
     def load(cls, path: str | Path) -> "AppConfig":
-        data = json.loads(Path(path).read_text())
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+        mistral_data = data.get("mistral", {})
+        mistral_data = {
+            key: value for key, value in mistral_data.items()
+            if key in MistralSettings.__dataclass_fields__
+        }
         return cls(
-            mistral=MistralSettings(**data.get("mistral", {})),
+            mistral=MistralSettings(**mistral_data),
             retrieval=RetrievalConfig.from_dict(data.get("retrieval", {})),
             question_generation=QuestionGenerationConfig(
                 **data.get("question_generation", {})
@@ -195,6 +204,9 @@ class AppConfig:
             ),
             summary_path=data.get(
                 "summary_path", str(GENERATED_QUESTIONS_DIR / "document_summary.txt")
+            ),
+            profile_path=data.get(
+                "profile_path", str(GENERATED_QUESTIONS_DIR / "document_profile.json")
             ),
         )
 

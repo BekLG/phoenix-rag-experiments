@@ -21,16 +21,15 @@ whether the config was re-optimized for this document or just reused:
 
 GOTCHAS THIS SCRIPT HANDLES FOR YOU (see module docstring section in the
 project chat history for why these matter):
-  1. Benchmark/summary caching is keyed by file path, not by which
+  1. Benchmark/summary/profile caching is keyed by file path, not by which
      document it came from -- get_or_create_benchmark() has no idea
      "this benchmark was for document A." This script points both at
      document-B-specific paths so document A's cached benchmark is never
      silently reused against document B.
-  2. storage.py writes results to fixed paths (results/best_configuration.json,
-     results/evaluation_scores.csv, etc.) -- running a fresh optimization
-     loop would silently overwrite document A's results. This script
-     backs up the existing results/ directory before running the FRESH
-     condition.
+  2. storage.py normally writes to fixed paths (results/best_configuration.json,
+     results/evaluation_scores.csv, etc.). This script redirects those paths
+     to results/generalization_experiment/<label>/, leaving normal optimization
+     results untouched.
 
 Usage:
     python document_generalization_experiment.py \\
@@ -45,28 +44,27 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import shutil
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 from chunking import split_documents
 from config import (
     GENERATED_QUESTIONS_DIR,
     RESULTS_DIR,
-    ROOT_DIR,
     AppConfig,
     RetrievalConfig,
     load_or_create_default_config,
 )
 from document_loader import load_document, load_full_text
 from document_summarizer import get_or_create_summary
+from document_profile import get_or_create_profile
 from embeddings import MistralEmbeddings
 from evaluator import run_evaluation
 from experiment_runner import run_experiment
 from question_generator import get_or_create_benchmark
 from rag_pipeline import RagPipeline
-from vector_store import build_vector_store
+import storage
+from vector_store import get_or_build_vector_store
 
 logger = logging.getLogger("phoenix_rag.document_generalization_experiment")
 
@@ -90,21 +88,15 @@ def _weighted(scores: dict) -> float:
     )
 
 
-def _backup_results_dir() -> Path:
-    """Move the existing results/ dir aside so the FRESH optimization
-    condition (which runs the real experiment_runner loop, writing to
-    the same fixed paths storage.py always uses) doesn't overwrite
-    document A's original results.
-    """
-    if not RESULTS_DIR.exists() or not any(RESULTS_DIR.iterdir()):
-        return RESULTS_DIR
-
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    backup_path = ROOT_DIR / f"results_backup_{timestamp}"
-    shutil.move(str(RESULTS_DIR), str(backup_path))
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    logger.info("Backed up existing results/ to %s before running FRESH condition", backup_path)
-    return backup_path
+def _configure_results_dir(results_dir: Path) -> None:
+    """Redirect storage.py outputs for this standalone experiment process."""
+    results_dir.mkdir(parents=True, exist_ok=True)
+    storage.CONFIGS_DIR = results_dir / "configs"
+    storage.EXPERIMENT_RESULTS_CSV = results_dir / "experiment_results.csv"
+    storage.EVALUATION_SCORES_CSV = results_dir / "evaluation_scores.csv"
+    storage.BEST_CONFIG_PATH = results_dir / "best_configuration.json"
+    storage.CONFIGS_DIR.mkdir(parents=True, exist_ok=True)
+    logger.info("Generalization optimization results will be written to %s", results_dir)
 
 
 def run_frozen_condition(
@@ -127,7 +119,15 @@ def run_frozen_condition(
         chunk_size=frozen_config.chunk_size,
         chunk_overlap=frozen_config.chunk_overlap,
     )
-    vector_store = build_vector_store(chunks, embeddings)
+    vector_store = get_or_build_vector_store(
+        chunks=chunks,
+        embeddings=embeddings,
+        cache_root=app_config.faiss_index_path,
+        source_document=app_config.source_document,
+        embedding_model=app_config.mistral.embedding_model,
+        chunk_size=frozen_config.chunk_size,
+        chunk_overlap=frozen_config.chunk_overlap,
+    )
 
     pipeline = RagPipeline(vector_store, app_config.mistral, frozen_config)
     question_texts = [q.question for q in benchmark]
@@ -145,7 +145,7 @@ def run_frozen_condition(
     }
 
 
-def run_fresh_condition(app_config: AppConfig) -> dict:
+def run_fresh_condition(app_config: AppConfig, results_dir: Path) -> dict:
     """Condition B: run Phoenix RAG's full self-optimization loop from
     scratch on the new document, starting from the default RetrievalConfig
     (NOT seeded from the old document's best config).
@@ -161,9 +161,10 @@ def run_fresh_condition(app_config: AppConfig) -> dict:
         faiss_index_path=app_config.faiss_index_path,
         benchmark_path=app_config.benchmark_path,
         summary_path=app_config.summary_path,
+        profile_path=app_config.profile_path,
     )
 
-    _backup_results_dir()
+    _configure_results_dir(results_dir)
     best_result = run_experiment(fresh_app_config)
 
     if not best_result:
@@ -253,6 +254,7 @@ def main() -> None:
     # cached benchmark/summary from being silently reused (gotcha #1).
     app_config.benchmark_path = str(GENERATED_QUESTIONS_DIR / f"benchmark_{args.label}.json")
     app_config.summary_path = str(GENERATED_QUESTIONS_DIR / f"document_summary_{args.label}.txt")
+    app_config.profile_path = str(GENERATED_QUESTIONS_DIR / f"document_profile_{args.label}.json")
     app_config.optimizer.max_iterations = args.max_iterations
 
     full_text = load_full_text(app_config.source_document)
@@ -266,18 +268,26 @@ def main() -> None:
         "Benchmark for new document ready: %d questions (used for BOTH conditions)",
         len(benchmark),
     )
-    # Warm the document summary cache too, so the FRESH condition's first
-    # iteration doesn't pay for it mid-run.
+    # Warm the summary and profile caches too, so the FRESH condition's first
+    # iteration doesn't pay for either artifact mid-run.
     get_or_create_summary(
         full_text=full_text,
         mistral_settings=app_config.mistral,
         summary_path=app_config.summary_path,
     )
+    get_or_create_profile(
+        full_text=full_text,
+        profile_path=app_config.profile_path,
+        pages=len(load_document(app_config.source_document))
+        if Path(app_config.source_document).suffix.lower() == ".pdf"
+        else None,
+    )
 
+    experiment_results_dir = RESULTS_DIR / "generalization_experiment" / args.label
     frozen_result = run_frozen_condition(app_config, frozen_config, benchmark)
-    fresh_result = run_fresh_condition(app_config)
+    fresh_result = run_fresh_condition(app_config, experiment_results_dir)
 
-    output_path = RESULTS_DIR / f"generalization_experiment_{args.label}.json"
+    output_path = experiment_results_dir / "comparison.json"
     output_path.write_text(
         json.dumps({"frozen": frozen_result, "fresh": fresh_result}, indent=2),
         encoding="utf-8",

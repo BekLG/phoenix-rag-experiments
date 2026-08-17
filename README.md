@@ -17,7 +17,7 @@ Recursive Text Splitter
   ▼        ▼
 FAISS   Full Document Chunks
   │        │
-  │   mistral-small: Generate Evaluation Questions
+  │   Mistral: Generate Evaluation Questions
   │        │
   │        ▼
   │   Evaluation Benchmark Dataset (fixed, generated once)
@@ -26,7 +26,7 @@ FAISS   Full Document Chunks
 Retriever ──► RAG Pipeline ──► Generated Answer
                                     │
                                     ▼
-                        Ragas + mistral-small (judge)
+                        Ragas + Mistral (judge)
                                     │
                                     ▼
               Faithfulness / Context Recall / Context Precision /
@@ -51,12 +51,13 @@ against exactly the same questions.
 app.py                  CLI entry point
 config.py                Dataclasses for all configuration (Mistral, retrieval,
                           question generation, optimizer)
-mistral_client.py        Rate-limited, retrying wrapper around the Mistral SDK
+mistral_client.py         Rate-limited, retrying wrapper around the Mistral SDK
 document_loader.py       PDF / text ingestion
 chunking.py               RecursiveCharacterTextSplitter wrapper
-embeddings.py             LangChain Embeddings adapter for mistral-embed
+embeddings.py             LangChain Embeddings adapter for Mistral embeddings
 vector_store.py           FAISS index build/save/load + retriever factory
 question_generator.py    Generates + caches the fixed benchmark question set
+document_profile.py       Deterministic document characteristics for tuning
 rag_pipeline.py           Retrieve → prompt → generate
 evaluator.py              Ragas evaluation using Mistral as judge
 optimizer.py              Rule-based retrieval parameter tuning
@@ -79,6 +80,13 @@ pip install -r requirements.txt
 cp .env.example .env
 # edit .env and set MISTRAL_API_KEY
 ```
+
+Set `MistralSettings.requests_per_minute` to match the quota for your Mistral
+account. Generation, embedding, and optimization calls use the shared
+rate-limited client; Ragas applies its own conservative concurrency limit.
+FAISS indexes are cached below `faiss_index_path` using the document contents,
+embedding model, chunk size, and overlap, so recurring configurations do not
+consume embedding quota again.
 
 Place your source document (PDF or .txt/.md) somewhere under `data/`, e.g.
 `data/source.pdf`.
@@ -105,6 +113,8 @@ python app.py --source data/my_document.pdf --verbose
 ## Outputs
 
 - `generated_questions/benchmark.json` — the fixed evaluation question set
+- `generated_questions/document_profile.json` — deterministic document facts
+  supplied to the optimizer alongside the generated summary
 - `results/configs/iteration_NNN.json` — retrieval config used each iteration
 - `results/evaluation_scores.csv` — Ragas scores per iteration + which
   optimization rules fired
@@ -112,6 +122,10 @@ python app.py --source data/my_document.pdf --verbose
   row each, convenient for plotting/analysis
 - `results/best_configuration.json` — the best config found so far, updated
   whenever a new best is found
+
+The generalization experiment writes its optimization artifacts and comparison
+under `results/generalization_experiment/<label>/`, leaving normal run results
+untouched.
 
 ## Troubleshooting
 

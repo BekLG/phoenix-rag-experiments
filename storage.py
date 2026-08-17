@@ -14,6 +14,8 @@ from __future__ import annotations
 import csv
 import json
 import logging
+import os
+import tempfile
 from pathlib import Path
 
 from config import RESULTS_DIR, RetrievalConfig
@@ -35,15 +37,44 @@ _SCORE_FIELDS = [
 ]
 
 
+def _atomic_write_json(path: str | Path, data) -> None:
+    """Write JSON beside its target, then atomically replace the target."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    serialized = json.dumps(data, indent=2, ensure_ascii=False)
+    temp_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as temp_file:
+            temp_path = Path(temp_file.name)
+            temp_file.write(serialized)
+            temp_file.flush()
+            os.fsync(temp_file.fileno())
+        os.replace(temp_path, path)
+    finally:
+        if temp_path is not None and temp_path.exists():
+            temp_path.unlink()
+
+
 def save_iteration_config(iteration: int, config: RetrievalConfig) -> Path:
+    """Persist an iteration; the runner ignores the returned convenience path."""
     path = CONFIGS_DIR / f"iteration_{iteration:03d}.json"
-    path.write_text(json.dumps(config.to_dict(), indent=2))
+    _atomic_write_json(path, config.to_dict())
     return path
 
 
 def _append_csv_row(path: Path, row: dict, fieldnames: list[str]) -> None:
+    # Appending is intentionally non-atomic: replacing the file atomically would
+    # require rewriting the full CSV for every iteration. JSON checkpoints are
+    # atomic; switch this path to an atomic rewrite if partial rows are observed.
     file_exists = path.exists()
-    with path.open("a", newline="") as f:
+    with path.open("a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         if not file_exists:
             writer.writeheader()
@@ -89,14 +120,14 @@ def save_best_configuration(
         "config": config.to_dict(),
         "scores": scores,
     }
-    BEST_CONFIG_PATH.write_text(json.dumps(payload, indent=2))
+    _atomic_write_json(BEST_CONFIG_PATH, payload)
     logger.info("New best configuration saved (iteration %d): %s", iteration, scores)
 
 
 def load_best_configuration() -> dict | None:
     if not BEST_CONFIG_PATH.exists():
         return None
-    return json.loads(BEST_CONFIG_PATH.read_text())
+    return json.loads(BEST_CONFIG_PATH.read_text(encoding="utf-8"))
 
 
 def average_score(scores: dict[str, float]) -> float:

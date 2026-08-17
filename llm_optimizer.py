@@ -18,11 +18,11 @@ version structurally couldn't have:
      time") so it can avoid repeating a fix that already backfired.
 
 Prompt tuning is no longer a boolean toggle between "default" and
-COMBINED_PROMPT. The LLM is given the document summary and asked to WRITE
-the prompt template itself -- the same way it writes chunk_size or top_k --
-so the prompt can be tailored to the actual document and to whichever
-generation-quality metric (faithfulness / response_relevancy) is
-struggling, on every iteration, not just as a last-resort tier.
+COMBINED_PROMPT. The LLM is given the document summary, a static
+DocumentProfile, the current RetrievalConfig, and the full iteration history.
+It is asked to WRITE the prompt template itself -- the same way it writes
+chunk_size or top_k -- so the prompt can be tailored to the actual document
+and to whichever generation-quality metric is struggling.
 
 There is no rule-based fallback anymore. If the LLM's response can't be
 parsed, fails validation, or proposes a prompt template missing/duplicating
@@ -39,6 +39,7 @@ import logging
 import re
 
 from config import MistralSettings, OptimizerConfig, RetrievalConfig
+from document_profile import DocumentProfile
 from mistral_client import MistralClient
 from optimizer import _clamp, meets_targets
 
@@ -85,10 +86,10 @@ narrower scope, an explicit "say you don't know" instruction) or refocuses \
 it on the question. Reuse a past prompt only if nothing about the failure \
 mode has changed since it was tried.
 
-You will be given the tunable parameter bounds, a summary of the source \
-document, the current configuration (including its current prompt \
-template), and the full iteration history (config + resulting scores + \
-what was tried that iteration). Propose the next configuration to try.
+You will be given the tunable parameter bounds, a summary and static profile \
+of the source document, the current configuration and its live estimated \
+chunk count, and the full iteration history. Propose the next configuration \
+to try.
 
 Respond with ONLY a JSON object (no markdown fences, no commentary) with \
 exactly these keys:
@@ -144,6 +145,47 @@ def _format_bounds(opt_config: OptimizerConfig) -> str:
     )
 
 
+def _format_profile(profile: DocumentProfile) -> str:
+    """Render static document facts as compact structured prompt context."""
+    fields = (
+        f"pages={profile.pages}",
+        f"characters={profile.characters}",
+        f"estimated_tokens={profile.estimated_tokens}",
+        f"sections={profile.sections}",
+        f"median_chars_per_page={profile.median_chars_per_page}",
+        f"min_chars_per_page={profile.min_chars_per_page}",
+        f"max_chars_per_page={profile.max_chars_per_page}",
+        f"doc_type={profile.doc_type}",
+        f"table_heavy={profile.table_heavy}",
+        f"list_heavy={profile.list_heavy}",
+    )
+    return "{" + ", ".join(fields) + "}"
+
+
+def _estimate_chunk_count(
+    characters: int, chunk_size: int, chunk_overlap: int
+) -> int:
+    effective_step = max(1, chunk_size - chunk_overlap)
+    if characters <= 0:
+        return 0
+    return (characters + effective_step - 1) // effective_step
+
+
+def _format_dynamic_context(
+    current_config: RetrievalConfig, profile: DocumentProfile
+) -> str:
+    estimated_count = _estimate_chunk_count(
+        profile.characters,
+        current_config.chunk_size,
+        current_config.chunk_overlap,
+    )
+    return (
+        "CURRENT RETRIEVAL SHAPE:\n"
+        f"estimated_chunk_count={estimated_count} "
+        "(computed from document characters and current chunk settings)"
+    )
+
+
 def _validate_prompt_template(template: str) -> bool:
     """A proposed prompt template is only usable if it kept both required
     placeholders, each exactly once. Silently accepting a broken template
@@ -184,6 +226,7 @@ def propose_next_config_llm(
     mistral_settings: MistralSettings,
     history: list[dict],
     document_summary: str,
+    document_profile: DocumentProfile,
 ) -> tuple[RetrievalConfig, list[str]]:
     """LLM-driven proposer for the next configuration -- the sole optimizer
     used by experiment_runner.py.
@@ -198,6 +241,10 @@ def propose_next_config_llm(
     used to, except now it's just one more field the LLM proposes on every
     iteration instead of a separate escape-hatch call gated behind two
     other tiers being exhausted.
+
+    `document_profile` provides static, deterministic retrieval-shape facts;
+    the current configuration's estimated chunk count is computed live from
+    that profile and is never stored in it.
 
     There is no rule-based fallback. If the LLM's response can't be parsed,
     fails validation (missing keys, invalid retriever_type, non-numeric
@@ -217,6 +264,8 @@ def propose_next_config_llm(
     user_message = (
         f"{_format_bounds(opt_config)}\n\n"
         f"DOCUMENT SUMMARY:\n{document_summary}\n\n"
+        f"DOCUMENT PROFILE:\n{_format_profile(document_profile)}\n\n"
+        f"{_format_dynamic_context(current_config, document_profile)}\n\n"
         f"Current configuration: {current_config.to_dict()}\n\n"
         f"Iteration history:\n{_format_history(history)}\n\n"
         "Propose the next configuration."

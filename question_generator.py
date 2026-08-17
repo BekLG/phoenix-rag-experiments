@@ -14,7 +14,7 @@ CRITICAL DESIGN RULE (do not violate):
 Workflow:
     1. Split the full document text into batches (character-based, not
        the same as the retrieval chunker).
-    2. For each batch, prompt mistral-small for a mix of question types.
+    2. For each batch, prompt Mistral for a mix of question types.
     3. Merge all batches, deduplicate near-identical questions.
     4. Persist to disk. Later runs load this file instead of regenerating
        it (unless `regenerate_each_iteration` / `force` is set).
@@ -35,6 +35,7 @@ from pathlib import Path
 
 from config import MistralSettings, QuestionGenerationConfig
 from mistral_client import MistralClient
+from storage import _atomic_write_json
 
 logger = logging.getLogger("phoenix_rag.question_generator")
 
@@ -184,13 +185,13 @@ def generate_benchmark(
 def save_benchmark(questions: list[BenchmarkQuestion], path: str | Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps([asdict(q) for q in questions], indent=2))
+    _atomic_write_json(path, [asdict(q) for q in questions])
     logger.info("Saved %d benchmark questions to %s", len(questions), path)
 
 
 def load_benchmark(path: str | Path) -> list[BenchmarkQuestion]:
     path = Path(path)
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding="utf-8"))
     return [BenchmarkQuestion(**item) for item in data]
 
 
