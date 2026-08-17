@@ -26,11 +26,10 @@ project chat history for why these matter):
      "this benchmark was for document A." This script points both at
      document-B-specific paths so document A's cached benchmark is never
      silently reused against document B.
-  2. storage.py writes results to fixed paths (results/best_configuration.json,
-     results/evaluation_scores.csv, etc.) -- running a fresh optimization
-     loop would silently overwrite document A's results. This script
-     backs up the existing results/ directory before running the FRESH
-     condition.
+  2. storage.py normally writes to fixed paths (results/best_configuration.json,
+     results/evaluation_scores.csv, etc.). This script redirects those paths
+     to results/generalization_experiment/<label>/, leaving normal optimization
+     results untouched.
 
 Usage:
     python document_generalization_experiment.py \\
@@ -45,16 +44,13 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import shutil
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 from chunking import split_documents
 from config import (
     GENERATED_QUESTIONS_DIR,
     RESULTS_DIR,
-    ROOT_DIR,
     AppConfig,
     RetrievalConfig,
     load_or_create_default_config,
@@ -66,6 +62,7 @@ from evaluator import run_evaluation
 from experiment_runner import run_experiment
 from question_generator import get_or_create_benchmark
 from rag_pipeline import RagPipeline
+import storage
 from vector_store import get_or_build_vector_store
 
 logger = logging.getLogger("phoenix_rag.document_generalization_experiment")
@@ -90,21 +87,15 @@ def _weighted(scores: dict) -> float:
     )
 
 
-def _backup_results_dir() -> Path:
-    """Move the existing results/ dir aside so the FRESH optimization
-    condition (which runs the real experiment_runner loop, writing to
-    the same fixed paths storage.py always uses) doesn't overwrite
-    document A's original results.
-    """
-    if not RESULTS_DIR.exists() or not any(RESULTS_DIR.iterdir()):
-        return RESULTS_DIR
-
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    backup_path = ROOT_DIR / f"results_backup_{timestamp}"
-    shutil.move(str(RESULTS_DIR), str(backup_path))
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    logger.info("Backed up existing results/ to %s before running FRESH condition", backup_path)
-    return backup_path
+def _configure_results_dir(results_dir: Path) -> None:
+    """Redirect storage.py outputs for this standalone experiment process."""
+    results_dir.mkdir(parents=True, exist_ok=True)
+    storage.CONFIGS_DIR = results_dir / "configs"
+    storage.EXPERIMENT_RESULTS_CSV = results_dir / "experiment_results.csv"
+    storage.EVALUATION_SCORES_CSV = results_dir / "evaluation_scores.csv"
+    storage.BEST_CONFIG_PATH = results_dir / "best_configuration.json"
+    storage.CONFIGS_DIR.mkdir(parents=True, exist_ok=True)
+    logger.info("Generalization optimization results will be written to %s", results_dir)
 
 
 def run_frozen_condition(
@@ -153,7 +144,7 @@ def run_frozen_condition(
     }
 
 
-def run_fresh_condition(app_config: AppConfig) -> dict:
+def run_fresh_condition(app_config: AppConfig, results_dir: Path) -> dict:
     """Condition B: run Phoenix RAG's full self-optimization loop from
     scratch on the new document, starting from the default RetrievalConfig
     (NOT seeded from the old document's best config).
@@ -171,7 +162,7 @@ def run_fresh_condition(app_config: AppConfig) -> dict:
         summary_path=app_config.summary_path,
     )
 
-    _backup_results_dir()
+    _configure_results_dir(results_dir)
     best_result = run_experiment(fresh_app_config)
 
     if not best_result:
@@ -282,10 +273,11 @@ def main() -> None:
         summary_path=app_config.summary_path,
     )
 
+    experiment_results_dir = RESULTS_DIR / "generalization_experiment" / args.label
     frozen_result = run_frozen_condition(app_config, frozen_config, benchmark)
-    fresh_result = run_fresh_condition(app_config)
+    fresh_result = run_fresh_condition(app_config, experiment_results_dir)
 
-    output_path = RESULTS_DIR / f"generalization_experiment_{args.label}.json"
+    output_path = experiment_results_dir / "comparison.json"
     output_path.write_text(
         json.dumps({"frozen": frozen_result, "fresh": fresh_result}, indent=2),
         encoding="utf-8",

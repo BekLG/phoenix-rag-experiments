@@ -201,11 +201,14 @@ class AppConfig:
 
     def save(self, path: str | Path) -> None:
         path = Path(path)
-        path.write_text(json.dumps(_dataclass_to_json_safe(self), indent=2))
+        path.write_text(
+            json.dumps(_dataclass_to_json_safe(self), indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
 
     @classmethod
     def load(cls, path: str | Path) -> "AppConfig":
-        data = json.loads(Path(path).read_text())
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
         return cls(
             gemini=GeminiSettings(**data.get("gemini", data.get("mistral", {}))),
             retrieval=RetrievalConfig.from_dict(data.get("retrieval", {})),

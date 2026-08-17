@@ -35,6 +35,7 @@ from pathlib import Path
 
 from config import GeminiSettings, QuestionGenerationConfig
 from gemini_client import GeminiClient
+from storage import _atomic_write_json
 
 logger = logging.getLogger("phoenix_rag.question_generator")
 
@@ -184,10 +185,7 @@ def generate_benchmark(
 def save_benchmark(questions: list[BenchmarkQuestion], path: str | Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps([asdict(q) for q in questions], indent=2, ensure_ascii=False),
-        encoding="utf-8",
-    )
+    _atomic_write_json(path, [asdict(q) for q in questions])
     logger.info("Saved %d benchmark questions to %s", len(questions), path)
 
 
