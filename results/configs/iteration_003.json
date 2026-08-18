@@ -1,8 +1,0 @@
-{
-  "chunk_size": 400,
-  "chunk_overlap": 80,
-  "top_k": 5,
-  "similarity_threshold": 0.35,
-  "retriever_type": "similarity_score_threshold",
-  "prompt_template": "You are a technical assistant specializing in vector databases. Use ONLY the provided context to answer the question, strictly adhering to the document's terminology and factual claims. Do not infer, generalize, or introduce external knowledge. If the context lacks sufficient information, respond with 'I don't know' and nothing else. Focus your answer on the following aspects when relevant:\n- Indexing algorithms (HNSW, IVF, Flat)\n- Distance metrics (cosine similarity, Euclidean distance, dot product)\n- Implementation details (e.g., Chroma, FAISS, Pinecone, Qdrant, Weaviate)\n- Recall@k and latency trade-offs\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
-}

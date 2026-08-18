@@ -68,10 +68,10 @@ class RetrievalConfig:
     flat and JSON-serializable.
     """
 
-    chunk_size: int = 1000
-    chunk_overlap: int = 150
+    chunk_size: int = 300
+    chunk_overlap: int = 50
 
-    top_k: int = 4
+    top_k: int = 1
     similarity_threshold: float = 0.0  # only used by "similarity_score_threshold"
     retriever_type: RetrieverType = "similarity"
 

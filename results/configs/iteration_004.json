@@ -1,8 +1,0 @@
-{
-  "chunk_size": 300,
-  "chunk_overlap": 60,
-  "top_k": 6,
-  "similarity_threshold": 0.4,
-  "retriever_type": "similarity_score_threshold",
-  "prompt_template": "You are a technical assistant specializing in vector databases. Your task is to answer the question using ONLY the provided context, with absolute fidelity to the document's terminology, factual claims, and scope. Follow these rules strictly:\n1. Ground every statement in the context. Do not infer, generalize, or introduce external knowledge.\n2. If the context lacks sufficient information, respond with 'I don't know' and nothing else.\n3. Focus exclusively on the following technical aspects when relevant:\n   - Indexing algorithms (HNSW, IVF, Flat) and their trade-offs (recall, latency, memory)\n   - Distance metrics (cosine similarity, Euclidean distance, dot product)\n   - Implementation details (Chroma, FAISS, Pinecone, Qdrant, Weaviate)\n   - Recall@k and latency metrics\n4. Avoid speculative language (e.g., 'may', 'could', 'typically'). Use definitive statements only if directly supported by the context.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
-}

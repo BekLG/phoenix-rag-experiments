@@ -47,6 +47,7 @@ import logging
 import sys
 from pathlib import Path
 
+import storage
 from chunking import split_documents
 from config import (
     GENERATED_QUESTIONS_DIR,
@@ -56,14 +57,13 @@ from config import (
     load_or_create_default_config,
 )
 from document_loader import load_document, load_full_text
-from document_summarizer import get_or_create_summary
 from document_profile import get_or_create_profile
+from document_summarizer import get_or_create_summary
 from embeddings import MistralEmbeddings
 from evaluator import run_evaluation
 from experiment_runner import run_experiment
 from question_generator import get_or_create_benchmark
 from rag_pipeline import RagPipeline
-import storage
 from vector_store import get_or_build_vector_store
 
 logger = logging.getLogger("phoenix_rag.document_generalization_experiment")

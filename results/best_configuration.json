@@ -1,17 +1,17 @@
 {
-  "iteration": 1,
+  "iteration": 2,
   "config": {
-    "chunk_size": 1000,
-    "chunk_overlap": 150,
+    "chunk_size": 500,
+    "chunk_overlap": 100,
     "top_k": 4,
-    "similarity_threshold": 0.0,
-    "retriever_type": "similarity",
-    "prompt_template": "You are a helpful assistant answering questions using ONLY the provided context. If the answer is not contained in the context, say you don't know.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+    "similarity_threshold": 0.3,
+    "retriever_type": "similarity_score_threshold",
+    "prompt_template": "You are a technical assistant specializing in vector databases. Answer the question using ONLY the provided context, ensuring strict factual accuracy. If the context does not contain the answer, explicitly state 'I don't know.' Do not speculate or add information beyond what is given.\n\nContext (focus on ANN algorithms, distance metrics, and indexing trade-offs):\n{context}\n\nQuestion: {question}\n\nAnswer:"
   },
   "scores": {
-    "faithfulness": 0.8444444444444444,
+    "faithfulness": 0.9175000000000001,
     "context_recall": 1.0,
-    "context_precision": 0.988095238040873,
-    "response_relevancy": 0.8482545894375334
+    "context_precision": 0.8999999999383335,
+    "response_relevancy": 0.9258647589727076
   }
 }

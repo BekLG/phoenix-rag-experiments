@@ -1,0 +1,39 @@
+{
+  "frozen": {
+    "condition": "frozen",
+    "config": {
+      "chunk_size": 500,
+      "chunk_overlap": 100,
+      "top_k": 4,
+      "similarity_threshold": 0.3,
+      "retriever_type": "similarity_score_threshold",
+      "prompt_template": "You are a technical assistant specializing in vector databases. Answer the question using ONLY the provided context, ensuring strict factual accuracy. If the context does not contain the answer, explicitly state 'I don't know.' Do not speculate or add information beyond what is given.\n\nContext (focus on ANN algorithms, distance metrics, and indexing trade-offs):\n{context}\n\nQuestion: {question}\n\nAnswer:"
+    },
+    "scores": {
+      "faithfulness": 0.5867784176607705,
+      "context_recall": 0.7314814814814814,
+      "context_precision": 0.7833333332916667,
+      "response_relevancy": 0.630690222939359
+    },
+    "weighted_score": 0.6638123746068098
+  },
+  "fresh": {
+    "condition": "fresh",
+    "config": {
+      "chunk_size": 1000,
+      "chunk_overlap": 150,
+      "top_k": 4,
+      "similarity_threshold": 0.0,
+      "retriever_type": "similarity",
+      "prompt_template": "You are a helpful assistant answering questions using ONLY the provided context. If the answer is not contained in the context, say you don't know.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+    },
+    "scores": {
+      "faithfulness": 0.9029178338001868,
+      "context_recall": 0.9117647058823529,
+      "context_precision": 0.8555555555162035,
+      "response_relevancy": 0.9693103137749463
+    },
+    "weighted_score": 0.9084932485547754,
+    "iteration_found": 1
+  }
+}

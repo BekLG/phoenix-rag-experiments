@@ -1,0 +1,2 @@
+iteration,faithfulness,context_recall,context_precision,response_relevancy,applied_rules
+1,0.9029178338001868,0.9117647058823529,0.8555555555162035,0.9693103137749463,all_targets_met

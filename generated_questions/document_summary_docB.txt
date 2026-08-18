@@ -1,0 +1,33 @@
+**Summary of *The Abilene Paradox: The Management of Agreement* by Jerry B. Harvey (1988)**
+
+This seminal article by organizational psychologist Jerry B. Harvey introduces the **Abilene Paradox**, a phenomenon where organizations (or groups) collectively act in ways that contradict their true desires, leading to counterproductive outcomes. Harvey illustrates this through a personal anecdote about a family trip to Abilene, Texas, which none of them wanted but all agreed to due to miscommunication and fear of conflict. The paradox is framed as a failure to manage **agreement** rather than conflict, a critical distinction in organizational behavior.
+
+### **Key Sections and Topics**
+1. **Definition and Symptoms of the Paradox**
+   - The paradox occurs when members privately agree on a problem and solution but fail to communicate their true preferences, leading to collective decisions that sabotage organizational goals.
+   - Six subsymptoms are outlined, including private agreement, miscommunication, counterproductive actions, and post-decision blame.
+
+2. **Case Studies**
+   - **Ozyx Corporation**: A research team privately knew a project was doomed but continued funding it due to fear of confrontation, leading to financial ruin.
+   - **Watergate**: White House staff privately opposed illegal surveillance but participated due to group pressure, escalating the scandal.
+
+3. **Psychological Underpinnings**
+   - **Action Anxiety**: Fear of consequences prevents individuals from acting on their true beliefs.
+   - **Negative Fantasies**: Imagined worst-case scenarios (e.g., job loss, ostracization) deter confrontation.
+   - **Fear of Separation**: The dread of alienation drives conformity, even when it harms the organization.
+   - **Psychological Reversal of Risk**: Avoiding small risks (e.g., confrontation) ironically ensures larger failures (e.g., organizational collapse).
+
+4. **Solutions and Redefinitions**
+   - Harvey redefines terms like *victim/victimizer*, *collusion*, and *responsibility* to emphasize shared accountability.
+   - **Confrontation** is reframed as a tool to uncover hidden agreement, not just conflict.
+   - **Diagnostic Survey**: A tool to distinguish between real conflict and mismanaged agreement.
+
+### **Factual Claims and Terminology**
+- The paradox is **not** about conflict management but **agreement mismanagement**.
+- Organizations often prioritize **harmony over truth**, leading to self-defeating decisions.
+- Key terms: *Action Anxiety*, *Negative Fantasies*, *Separation Anxiety*, *Group Tyranny*, *Phony Conflict*.
+
+### **Structure and Purpose**
+The article blends **narrative** (the Abilene trip), **case studies** (Ozyx, Watergate), and **theoretical analysis** to explain the paradox’s dynamics. Harvey’s goal is to provide a **map** for organizations to avoid "Abilene trips" by fostering open communication and confronting collective illusions. The piece concludes with a call to redefine organizational behavior models, emphasizing **existential risk** and **shared responsibility**.
+
+This work remains foundational in organizational psychology, highlighting how **unmanaged agreement** can be as destructive as unmanaged conflict.

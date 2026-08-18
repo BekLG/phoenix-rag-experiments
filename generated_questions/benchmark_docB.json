@@ -1,0 +1,110 @@
+[
+  {
+    "question": "What is the Abilene Paradox as described in the article?",
+    "reference_answer": "Organizations frequently take actions in contradiction to what they really want to do and therefore defeat the very purposes they are trying to achieve.",
+    "reference_context": "This article is concerned with that paradox—the Abilene Paradox. Stated simply, it is as follows: Organizations frequently take actions in contradiction to what they really want to do and therefore defeat the very purposes they are trying to achieve.",
+    "question_type": "definition"
+  },
+  {
+    "question": "What major corollary of the Abilene Paradox is mentioned in the text?",
+    "reference_answer": "The inability to manage agreement is a major source of organization dysfunction.",
+    "reference_context": "It also deals with a major corollary of the paradox, which is that the inability to manage agreement is a major source of organization dysfunction.",
+    "question_type": "factual"
+  },
+  {
+    "question": "What is the primary symptom that defines organizations caught in the Abilene Paradox?",
+    "reference_answer": "The inability to manage agreement.",
+    "reference_context": "The inability to manage agreement, not the inability to manage conflict, is the essential symptom that defines organizations caught in the web of the Abilene Paradox.",
+    "question_type": "factual"
+  },
+  {
+    "question": "Why did the president of Ozyx Corporation not reveal his reservations about the failing research project?",
+    "reference_answer": "Because abandoning the project would make the company look bad in the press and could cause his vice-president's health issues.",
+    "reference_context": "The president says he can’t reveal his “true” feelings because abandoning the project, which has been widely publicized, would make the company look bad in the press and, in addition, would probably cause his vice-president’s ulcer to kick up or perhaps even cause him to quit.",
+    "question_type": "reasoning"
+  },
+  {
+    "question": "What were the consequences for the organization that boarded the bus to Abilene?",
+    "reference_answer": "The organization failed to meet payroll, underwent two years of personnel cutbacks, morale suffered, competent personnel resigned, and the organization's prestige declined.",
+    "reference_context": "The organization failed to meet a payroll and underwent a two-year period of personnel cutbacks, retrenchments, and austerity. Morale suffered, the most competent technical personnel resigned, and the organization’s prestige in the industry declined.",
+    "question_type": "factual"
+  },
+  {
+    "question": "How did Herbert Porter describe his involvement in the 'dirty tricks operation' during the Watergate Affair?",
+    "reference_answer": "He indicated he had qualms but did not speak up in meetings and drifted along due to fear of group pressure and loyalty to the President.",
+    "reference_context": "Porter indicated that he had had qualms about what he was doing, but that he “ . . . was not one to stand up in a meeting and say that this should be stopped. . . . I kind of drifted along.” And when asked why he had “drifted along,” Porter replied, “In all honesty, because of the fear of the group pressure that would ensue, of not being a team player,” and “ . . . I felt a deep sense of loyalty to him [the President] or was appealed to on that basis.”",
+    "question_type": "factual"
+  },
+  {
+    "question": "What is the concept of 'action anxiety' as described in the text?",
+    "reference_answer": "Action anxiety is the intense anxiety that causes organization members to take actions contrary to their understanding of the organization’s problems, leading them to endure negative consequences rather than act in a manner congruent with their beliefs.",
+    "reference_context": "The concept of action anxiety says that the reasons organization members take actions in contradiction to their understanding of the organization’s problems lies in the intense anxiety that is created as they think about acting in accordance with what they believe needs to be done.",
+    "question_type": "definition"
+  },
+  {
+    "question": "According to the text, what are 'negative fantasies' and how do they function in organizations?",
+    "reference_answer": "Negative fantasies are imagined negative outcomes of acting in accordance with one's beliefs, which serve as an excuse to avoid responsibility for solving organizational problems.",
+    "reference_context": "Part of the answer to that question may be found in the negative fantasies organization members have about acting in congruence with what they believe should be done. ... they provide the individual with an excuse that releases him psychologically, both in his own eyes and frequently in the eyes of others, from the responsibility of having to act to solve organization problems.",
+    "question_type": "definition"
+  },
+  {
+    "question": "According to the text, what are the three specific emotions or experiences that people fear and that contribute to the Abilene Paradox?",
+    "reference_answer": "Separation, alienation, and loneliness",
+    "reference_context": "Separation, alienation, and loneliness are things we do know about—and fear.",
+    "question_type": "factual"
+  },
+  {
+    "question": "How does the text explain the relationship between fear of separation and the Abilene Paradox in organizational decision-making?",
+    "reference_answer": "Fear of separation leads to self-defeating decisions because people avoid risks that could result in separation, but this avoidance itself ensures separation.",
+    "reference_context": "That fear of taking risks that may result in our separation from others is at the core of the paradox. ... our very unwillingness to take such risks virtually ensures the separation and aloneness we so fear.",
+    "question_type": "relationship"
+  },
+  {
+    "question": "What is the Abilene paradox and how does it relate to organizational responsibility?",
+    "reference_answer": "The Abilene paradox describes a situation where members of an organization collectively decide on a course of action that no one actually wants, leading to unrecognized agreement rather than conflict. Responsibility for solving the problem does not lie with the boss or authority figure; instead, any member who confronts the reality can break the paradox.",
+    "reference_context": "To adopt a cliche of modern organization, “It takes a real team effort to go to Abilene.” In that sense each person, in his own collusive manner, shares responsibility for the trip, so searching for a locus of blame outside oneself serves no useful purpose for either the organization or the individual. The answer to that question is no. The key to understanding the functionality of the no answer is the knowledge that, when the dynamics of the paradox are in operation, the authority figure—and others—are in unknowing agreement with one another concerning the organization’s problems and the steps necessary to solve them. Consequently, the power to destroy the paradox’s pernicious influence comes from confronting and speaking to the underlying reality of the situation, and not from one’s hierarchical position within the organization.",
+    "question_type": "definition"
+  },
+  {
+    "question": "What is the difference between real conflict and phony conflict in organizations?",
+    "reference_answer": "Real conflict arises from genuine differences of opinion, while phony conflict stems from agreement on actions that no one actually supports, leading to misplaced blame and frustration.",
+    "reference_context": "Real conflict occurs when people have real differences (“My reading of the research printouts says that we can make the project profitable.” “I come to the opposite conclusion.”) (“I suggest we ‘bug’ the Watergate.” “I’m not in favor of it.”) Phony conflict, on the other hand, occurs when people agree on the actions they want to take, and then do the opposite. The resulting anger, frustration, and blaming behavior generally termed “conflict” are not based on real differences.",
+    "question_type": "comparison"
+  },
+  {
+    "question": "What is the primary psychological benefit for individuals when they attribute their behavior to conformity pressures in a group setting?",
+    "reference_answer": "It releases them from the responsibility of taking action and serves as a defense against action.",
+    "reference_context": "Conceptualizing, experiencing, and responding to such experiences as reflecting the tyrannical pressures of a group again serves as an important psychological use for the individual: As was previously said, it releases him from the responsibility of taking action and thus becomes a defense against action.",
+    "question_type": "factual"
+  },
+  {
+    "question": "According to the text, why does the sheriff's gun in the Western movie example serve as a 'face-saving measure' for the mob?",
+    "reference_answer": "Because most individuals in the mob did not actually want to participate in the hanging but feared ostracization or punishment if they did not go along.",
+    "reference_context": "The situation is one involving agreement management, for a careful investigator canvassing the crowd under conditions in which the anonymity of the interviewees’ responses could be guaranteed would probably find: (1) that few of the individuals in the crowd really wanted to take part in the hanging; (2) that each person’s participation came about because he perceived, falsely, that others wanted to do so; and (3) that each person was afraid that others in the crowd would ostracize or in some other way punish him if he did not go along.",
+    "question_type": "reasoning"
+  },
+  {
+    "question": "What is the first step in the group confrontation process described in the text?",
+    "reference_answer": "The first step is for the individual who calls the meeting to own up to his position first and be open to feedback.",
+    "reference_context": "The first step in the meeting is for the individual who “calls” it (that is, the confronter) to own up to his position first and be open to the feedback he gets.",
+    "question_type": "factual"
+  },
+  {
+    "question": "According to the text, what are the two possible outcomes of heated debate resulting from confrontation?",
+    "reference_answer": "Heated debate can either be the basis for creativity in organizational problem solving or lead to personal consequences like getting fired or ostracized.",
+    "reference_context": "There is evidence that such debates, properly managed, can be the basis for creativity in organizational problem solving. There is also the possibility, however, that such debates cannot be managed, and substantiating the concept of existential risk, the person who initiates the risk may get fired or ostracized.",
+    "question_type": "reasoning"
+  },
+  {
+    "question": "What is the Abilene Paradox according to the text?",
+    "reference_answer": "The Abilene Paradox is the absurd paradox of agreement where organizations fail to confront reality and instead accept the evils of the present.",
+    "reference_context": "In essence, this paper proposes that there is an underlying organizational reality that includes both agreement and disagreement, cooperation and conflict. However, the decision to confront the possibility of organizational agreement is all too difficult and rare, and its opposite, the decision to accept the evils of the present, is all too common. Yet those two decisions may reflect the essence of both our human potential and our human imperfectability.",
+    "question_type": "definition"
+  },
+  {
+    "question": "How does the text compare the act of confronting the Abilene Paradox to the myth of Sisyphus?",
+    "reference_answer": "Confronting the Abilene Paradox provides intrinsic psychological satisfaction and brief moments of transcendence, similar to Sisyphus's passive but conscious acceptance of his absurd fate.",
+    "reference_context": "Camus also points out, though, that on occasion as Sisyphus released his rock and watched it return to its resting place at the bottom of the hill, he was able to recognize the absurdity of his lot and, for brief periods of time, transcend it. So it may be with confronting the Abilene Paradox. Confronting the absurd paradox of agreement may provide, through activity, what Sisyphus gained from his passive but conscious acceptance of his fate.",
+    "question_type": "relationship"
+  }
+]

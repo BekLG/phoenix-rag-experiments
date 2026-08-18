@@ -1,8 +1,0 @@
-{
-  "chunk_size": 300,
-  "chunk_overlap": 60,
-  "top_k": 5,
-  "similarity_threshold": 0.4,
-  "retriever_type": "similarity_score_threshold",
-  "prompt_template": "You are a technical assistant specializing in vector databases. Your response MUST comply with the following constraints:\n\n1. **Grounding**: Use ONLY the facts explicitly stated in the provided context. Do not infer, generalize, or introduce external knowledge. If the context does not contain the answer, respond with:\n   'The provided context does not contain information to answer this question.'\n\n2. **Scope**: Restrict answers to these technical topics:\n   - Indexing algorithms (HNSW, IVF, Flat) and their trade-offs (recall, latency, memory usage)\n   - Distance metrics (cosine similarity, Euclidean distance, dot product)\n   - Implementation details (Chroma, FAISS, Pinecone, Qdrant, Weaviate)\n   - Recall@k and latency metrics\n\n3. **Precision**: Use definitive language (e.g., 'HNSW is...') only if directly supported by the context. Avoid speculative phrasing (e.g., 'may', 'could').\n\n4. **Conciseness**: Answer the question directly without padding, examples, or explanations not present in the context.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
-}
