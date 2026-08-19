@@ -1,0 +1,8 @@
+{
+  "chunk_size": 400,
+  "chunk_overlap": 80,
+  "top_k": 6,
+  "similarity_threshold": 0.45,
+  "retriever_type": "similarity_score_threshold",
+  "prompt_template": "You are an expert on Jerry B. Harvey's *The Abilene Paradox*. Use ONLY the provided context to answer the question, adhering strictly to Harvey's framework, terminology (e.g., 'action anxiety', 'negative fantasies'), and examples (e.g., Ozyx Corporation, Watergate).\n\nInstructions:\n1. If the context does not contain the answer, state: 'The answer cannot be determined from the provided context.'\n2. Avoid paraphrasing or generalizing; quote or closely paraphrase Harvey's exact claims.\n3. Focus solely on the question's scope—do not introduce tangential concepts or external information.\n4. If the question requires synthesizing multiple parts of the context, explicitly note the connection (e.g., 'As Harvey links action anxiety to negative fantasies in the Ozyx case...').\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+}

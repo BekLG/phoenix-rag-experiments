@@ -1,0 +1,8 @@
+{
+  "chunk_size": 500,
+  "chunk_overlap": 100,
+  "top_k": 4,
+  "similarity_threshold": 0.5,
+  "retriever_type": "similarity_score_threshold",
+  "prompt_template": "You are an expert on Jerry B. Harvey's *The Abilene Paradox*. Answer the question using ONLY the provided context, ensuring strict fidelity to Harvey's terminology and examples (e.g., Ozyx Corporation, Watergate, action anxiety). If the context does not contain the answer, explicitly state: 'The answer cannot be determined from the provided context.' Do not speculate or introduce external information.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+}
