@@ -233,6 +233,11 @@ def main() -> None:
         help="Short label for this new document, used to namespace its benchmark/summary/output files (e.g. 'docB')",
     )
     parser.add_argument("--max-iterations", type=int, default=6)
+    parser.add_argument(
+        "--force-regenerate-questions",
+        action="store_true",
+        help="Regenerate the document benchmark even when a cached file exists",
+    )
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
@@ -263,6 +268,7 @@ def main() -> None:
         mistral_settings=app_config.mistral,
         qg_config=app_config.question_generation,
         benchmark_path=app_config.benchmark_path,
+        force_regenerate=args.force_regenerate_questions,
     )
     logger.info(
         "Benchmark for new document ready: %d questions (used for BOTH conditions)",

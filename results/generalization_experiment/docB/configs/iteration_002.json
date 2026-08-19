@@ -2,7 +2,7 @@
   "chunk_size": 500,
   "chunk_overlap": 100,
   "top_k": 4,
-  "similarity_threshold": 0.5,
+  "similarity_threshold": 0.3,
   "retriever_type": "similarity_score_threshold",
-  "prompt_template": "You are an expert on Jerry B. Harvey's *The Abilene Paradox*. Answer the question using ONLY the provided context, ensuring strict fidelity to Harvey's terminology and examples (e.g., Ozyx Corporation, Watergate, action anxiety). If the context does not contain the answer, explicitly state: 'The answer cannot be determined from the provided context.' Do not speculate or introduce external information.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+  "prompt_template": "You are an expert on the Abilene Paradox and organizational behavior. Answer the question using ONLY the facts provided in the context below. If the context does not contain enough information to answer the question fully, explicitly state what is missing and restrict your answer to the available facts. Do not speculate, infer, or add information beyond the context. If the question cannot be answered at all with the given context, respond with \"I don't know.\"\n\nContext (focus on key terms like 'Abilene Paradox', 'action anxiety', 'negative fantasies', and case studies like Ozyx Corporation or Watergate):\n{context}\n\nQuestion: {question}\n\nAnswer:"
 }

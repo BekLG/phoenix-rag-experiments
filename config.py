@@ -104,7 +104,7 @@ class RetrievalConfig:
 @dataclass
 class QuestionGenerationConfig:
     batch_size_chars: int = 6000  # characters per batch sent to the LLM
-    questions_per_batch: int = 5
+    questions_per_batch: int =  1
     question_types: tuple = (
         "factual",
         "reasoning",

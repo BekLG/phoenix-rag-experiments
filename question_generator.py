@@ -120,6 +120,17 @@ def _generate_for_batch(
     )
     items = _parse_llm_json(raw)
 
+    # Treat the requested count as a hard limit. Models occasionally return
+    # extra items despite the instruction, which otherwise makes the final
+    # benchmark larger than `questions_per_batch * number_of_batches`.
+    if len(items) > qg_config.questions_per_batch:
+        logger.warning(
+            "Model returned %d questions; keeping only the requested %d",
+            len(items),
+            qg_config.questions_per_batch,
+        )
+        items = items[: qg_config.questions_per_batch]
+
     questions = []
     for item in items:
         try:
