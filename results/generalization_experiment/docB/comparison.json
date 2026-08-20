@@ -10,30 +10,30 @@
       "prompt_template": "You are a technical assistant specializing in vector databases. Answer the question using ONLY the provided context, ensuring strict factual accuracy. If the context does not contain the answer, explicitly state 'I don't know.' Do not speculate or add information beyond what is given.\n\nContext (focus on ANN algorithms, distance metrics, and indexing trade-offs):\n{context}\n\nQuestion: {question}\n\nAnswer:"
     },
     "scores": {
-      "faithfulness": 0.16666666666666666,
-      "context_recall": 0.6666666666666666,
-      "context_precision": 0.6388888888527777,
-      "response_relevancy": 0.2786366931531382
+      "faithfulness": 1.0,
+      "context_recall": 1.0,
+      "context_precision": 0.8749999999625,
+      "response_relevancy": 0.8282929059126448
     },
-    "weighted_score": 0.38350511640118323
+    "weighted_score": 0.9406585811750291
   },
   "fresh": {
     "condition": "fresh",
     "config": {
-      "chunk_size": 350,
-      "chunk_overlap": 70,
-      "top_k": 5,
-      "similarity_threshold": 0.45,
-      "retriever_type": "similarity_score_threshold",
-      "prompt_template": "You are an expert on the Abilene Paradox and organizational behavior. Answer the question using **only** the facts explicitly stated in the provided context. Follow these rules precisely:\n\n1. **Grounding**: \n   - Use **only** the exact details from the context. Do not infer, speculate, or add external information.\n   - If the context lacks sufficient information, state: \"The context does not provide enough information about [specific missing detail].\"\n   - If the question cannot be answered at all, respond: \"I don't know.\"\n\n2. **Key Terms & Case Studies**: \n   - Explicitly label all references to:\n     - Core concepts: *Abilene Paradox*, *action anxiety*, *negative fantasies*, *group tyranny*, *phony conflict*.\n     - Case studies: *Ozyx Corporation*, *Watergate*, or the *Abilene anecdote*.\n     - Psychological underpinnings: *action anxiety*, *negative fantasies*, *fear of separation*.\n   - Format each fact as: \"*Term/Case Study*: [detail].\"\n\n3. **Structure**: \n   - **Direct Answer**: Start with a one-sentence response to the question.\n   - **Supporting Details**: Use bullet points for each fact, prefixed with the exact term/case study (e.g., \"*Ozyx Corporation*: [detail]\").\n   - **Missing Information**: If a critical detail is absent, state: \"Missing: [detail], required to fully answer [specific aspect].\"\n\n4. **Avoid**: \n   - Introductory phrases (e.g., \"According to the context\").\n   - Generalizations or unsupported summaries.\n   - Off-topic or tangential details.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+      "chunk_size": 500,
+      "chunk_overlap": 100,
+      "top_k": 4,
+      "similarity_threshold": 0.1,
+      "retriever_type": "similarity",
+      "prompt_template": "You are an expert on the Abilene Paradox, analyzing Jerry B. Harvey's work. Answer the question using ONLY the facts explicitly stated in the provided context. Do NOT infer, speculate, or introduce external information. If the context does not contain the answer, respond with: \"The provided context does not contain sufficient information to answer this question.\"\n\nStrictly adhere to these guidelines:\n1. Ground every claim in the context. Cite specific phrases or examples from the context to support your answer.\n2. If the question asks for definitions, symptoms, or solutions, list them verbatim from the context.\n3. Do not generalize beyond the context or add interpretive commentary.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
     },
     "scores": {
-      "faithfulness": 0.8738095238095239,
-      "context_recall": 0.6666666666666666,
-      "context_precision": 0.6666666666388888,
-      "response_relevancy": 0.9513312523302744
+      "faithfulness": 0.9352678571428571,
+      "context_recall": 1.0,
+      "context_precision": 0.9333333332863889,
+      "response_relevancy": 0.9700179694469713
     },
-    "weighted_score": 0.8064567266509755,
-    "iteration_found": 9
+    "weighted_score": 0.954777403403815,
+    "iteration_found": 2
   }
 }

@@ -1,7 +1,7 @@
 [
   {
     "question": "What is the Abilene Paradox, as defined in the article?",
-    "reference_answer": "Organizations frequently take actions in contradiction to what they really want to do and therefore defeat the very purposes they are trying to achieve.",
+    "reference_answer": "The Abilene Paradox is when organizations frequently take actions in contradiction to what they really want to do and therefore defeat the very purposes they are trying to achieve.",
     "reference_context": "This article is concerned with that paradox—the Abilene Paradox. Stated simply, it is as follows: Organizations frequently take actions in contradiction to what they really want to do and therefore defeat the very purposes they are trying to achieve.",
     "question_type": "definition"
   },
@@ -13,44 +13,49 @@
   },
   {
     "question": "What is the Abilene Paradox, and how does it relate to the Watergate scandal?",
-    "reference_answer": "The Abilene Paradox occurs when organizations take actions contradictory to their shared agreement, leading to worsened problems. In Watergate, White House staff agreed the plan was inappropriate but implemented it anyway, compounding their issues.",
-    "reference_context": "Organizations frequently take actions in contradiction to the data they have for dealing with problems and, as a result, compound their problems rather than solve them. ... the data seem to reflect the essential elements of the Abilene Paradox. First, they indicate agreement. Evidently, Mitchell, Porter, Dean, and Magruder agreed that the plan was inappropriate.",
+    "reference_answer": "The Abilene Paradox occurs when organizations take actions contrary to their shared agreement, leading to worsened problems. In the Watergate scandal, White House staff agreed the plan was inappropriate but proceeded anyway, compounding their issues.",
+    "reference_context": "The Abilene Paradox can be stated succinctly as follows: Organizations frequently take actions in contradiction to the data they have for dealing with problems and, as a result, compound their problems rather than solve them. ... First, they indicate agreement. Evidently, Mitchell, Porter, Dean, and Magruder agreed that the plan was inappropriate. (“I think I can honestly say that no one was particularly overwhelmed with the project.”) Second, the data indicate that the principal figures then proceeded to implement the plan in contradiction to their shared agreement.",
     "question_type": "relationship"
   },
   {
     "question": "What is the concept of 'action anxiety' as described in the text?",
-    "reference_answer": "Action anxiety refers to the intense anxiety that organization members experience when considering acting in accordance with what they believe needs to be done, leading them to avoid such actions despite knowing the correct course.",
+    "reference_answer": "Action anxiety is the intense anxiety that causes organization members to take actions contrary to their understanding of the organization's problems, leading them to endure negative consequences rather than act in a manner congruent with their beliefs.",
     "reference_context": "The concept of action anxiety says that the reasons organization members take actions in contradiction to their understanding of the organization’s problems lies in the intense anxiety that is created as they think about acting in accordance with what they believe needs to be done.",
     "question_type": "definition"
   },
   {
-    "question": "What is the core fear driving the Abilene Paradox according to the text?",
-    "reference_answer": "The fear of separation, alienation, and loneliness.",
+    "question": "What is the core fear driving the paradox described in the text?",
+    "reference_answer": "The core fear is separation, alienation, and loneliness.",
     "reference_context": "Separation, alienation, and loneliness are things we do know about—and fear. Both research and experience indicate that ostracism is one of the most powerful punishments that can be devised.",
     "question_type": "factual"
   },
   {
-    "question": "What is the key to addressing the Abilene paradox according to the text?",
-    "reference_answer": "Confronting and speaking to the underlying reality of the situation, not hierarchical position.",
-    "reference_context": "The power to destroy the paradox’s pernicious influence comes from confronting and speaking to the underlying reality of the situation, and not from one’s hierarchical position within the organization.",
-    "question_type": "factual"
-  },
-  {
-    "question": "What is the primary psychological function of conceptualizing group behavior as conformity pressure rather than collective anxiety?",
-    "reference_answer": "It releases the individual from the responsibility of taking action and serves as a defense against action.",
-    "reference_context": "Conceptualizing, experiencing, and responding to such experiences as reflecting the tyrannical pressures of a group again serves as an important psychological use for the individual: As was previously said, it releases him from the responsibility of taking action and thus becomes a defense against action.",
+    "question": "What is the primary source of the Abilene Paradox's influence on an organization?",
+    "reference_answer": "The primary source is the unknowing agreement among organization members about the problems and necessary solutions, rather than conflict.",
+    "reference_context": "The key to understanding the functionality of the no answer is the knowledge that, when the dynamics of the paradox are in operation, the authority figure—and others—are in unknowing agreement with one another concerning the organization’s problems and the steps necessary to solve them.",
     "question_type": "why"
   },
   {
-    "question": "What is the first step the confronter should take in a group setting to address the Abilene Paradox?",
-    "reference_answer": "The confronter should own up to their position first and be open to feedback.",
+    "question": "What is the primary purpose of the sheriff's gun in the Western movie example?",
+    "reference_answer": "It serves as a face-saving measure for people who don’t wish to participate in the hanging.",
+    "reference_context": "Thus, the gun in fact serves as a face-saving measure for people who don’t wish to participate in a hanging anyway.",
+    "question_type": "factual"
+  },
+  {
+    "question": "What is the first step in the group confrontation process described in the text?",
+    "reference_answer": "The first step is for the individual who \"calls\" the meeting (the confronter) to own up to his position first and be open to feedback.",
     "reference_context": "The first step in the meeting is for the individual who “calls” it (that is, the confronter) to own up to his position first and be open to the feedback he gets.",
     "question_type": "factual"
   },
   {
-    "question": "What does the author suggest is the psychological benefit of confronting organizational absurdities like the Abilene Paradox?",
-    "reference_answer": "The act of confrontation provides intrinsic psychological satisfaction, offering brief moments of transcendence similar to Sisyphus's acceptance of his fate.",
-    "reference_context": "Most important, the act of confrontation apparently provides intrinsic psychological satisfaction, regardless of the technological outcomes for those who attempt it. ... So it may be with confronting the Abilene Paradox. Confronting the absurd paradox of agreement may provide, through activity, what Sisyphus gained from his passive but conscious acceptance of his fate.",
-    "question_type": "reasoning"
+    "question": "What is the Abilene Paradox, and how does it relate to the myth of Sisyphus?",
+    "reference_answer": "The Abilene Paradox is a situation where organizations agree to a course of action that no one actually wants, reflecting both agreement and disagreement. It relates to the myth of Sisyphus as both involve absurd, meaningless tasks that can be transcended through active confrontation or conscious acceptance.",
+    "reference_context": [
+      "In essence, this paper proposes that there is an underlying organizational reality that includes both agreement and disagreement, cooperation and conflict.",
+      "The decision to confront the possibility of organizational agreement is all too difficult and rare, and its opposite, the decision to accept the evils of the present, is all too common.",
+      "As Camus suggested in his revision of the myth, Sisyphus’s task was absurd and totally devoid of meaning.",
+      "So it may be with confronting the Abilene Paradox. Confronting the absurd paradox of agreement may provide, through activity, what Sisyphus gained from his passive but conscious acceptance of his fate."
+    ],
+    "question_type": "relationship"
   }
 ]

@@ -109,6 +109,34 @@ it needs to change this iteration.
 values given the history
 """
 
+BALANCED_SEARCH_POLICY = """BALANCED SEARCH POLICY (mandatory):
+This is an experiment, not a one-dimensional hill climb. Every proposed
+configuration must deliberately consider ALL tunable retrieval dimensions:
+chunk_size, chunk_overlap, top_k, retriever_type, and similarity_threshold,
+as well as the answer prompt. Do not repeatedly change only top_k and the
+threshold. Use the iteration history to maintain an exploration ledger:
+
+1. In the first six non-terminal iterations, make at least one meaningful
+   structural change among chunk_size, chunk_overlap, and retriever_type;
+   test each of these dimensions at least once when the history has not yet
+   tested it. A prompt-only change does not count as structural exploration.
+2. Treat context_recall and context_precision as equally important. If either
+   is below target, the next trial must explicitly state which one is being
+   prioritized and why the other will not be harmed. When precision is below
+   target, include a precision-focused trial (lower top_k, MMR, or a stricter
+   threshold); when recall is below target, include a recall-focused trial
+   (smaller chunks, suitable overlap, or higher top_k).
+3. Explore chunk_size and chunk_overlap as a pair: overlap must remain below
+   chunk_size and should normally be 10-25% of chunk_size. Do not leave both
+   unchanged for more than two consecutive proposals while recall or precision
+   misses target.
+4. Do not claim a parameter changed unless the JSON value actually changes.
+   The JSON configuration is authoritative, not the prose reasoning.
+5. Prefer a controlled experiment: change two or three related dimensions at
+   most, record the expected metric tradeoff, and avoid repeating a previously
+   tested configuration.
+"""
+
 
 def _format_history(history: list[dict]) -> str:
     if not history:
@@ -262,6 +290,7 @@ def propose_next_config_llm(
     client = MistralClient(mistral_settings)
 
     user_message = (
+        f"{BALANCED_SEARCH_POLICY}\n\n"
         f"{_format_bounds(opt_config)}\n\n"
         f"DOCUMENT SUMMARY:\n{document_summary}\n\n"
         f"DOCUMENT PROFILE:\n{_format_profile(document_profile)}\n\n"

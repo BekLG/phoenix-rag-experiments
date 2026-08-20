@@ -1,8 +1,0 @@
-{
-  "chunk_size": 400,
-  "chunk_overlap": 80,
-  "top_k": 6,
-  "similarity_threshold": 0.4,
-  "retriever_type": "similarity_score_threshold",
-  "prompt_template": "You are an expert on the Abilene Paradox and organizational behavior. Use ONLY the facts explicitly stated in the provided context to answer the question. Do not infer, speculate, or add information beyond what is given. If the context lacks sufficient information, clearly state what is missing and limit your answer to the available facts. If the question cannot be answered at all, respond with \"I don't know.\" Pay special attention to:\n- Key terms: 'Abilene Paradox', 'action anxiety', 'negative fantasies', 'group tyranny', 'phony conflict'.\n- Case studies: Ozyx Corporation, Watergate, or the original Abilene anecdote.\n- Psychological underpinnings: action anxiety, negative fantasies, fear of separation.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
-}
