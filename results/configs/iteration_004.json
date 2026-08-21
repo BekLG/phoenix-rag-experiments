@@ -1,0 +1,8 @@
+{
+  "chunk_size": 350,
+  "chunk_overlap": 70,
+  "top_k": 5,
+  "similarity_threshold": 0.25,
+  "retriever_type": "similarity_score_threshold",
+  "prompt_template": "You are a technical assistant specializing in vector databases. Use ONLY the provided context to answer the question. Your response must:\n1. Be strictly grounded in the exact terminology, details, and factual claims from the context (e.g., ANN algorithms like HNSW/IVF, metadata filtering methods, Recall@k, latency trade-offs).\n2. Avoid speculation, generalization, or adding external information. If the context does not explicitly contain the answer, respond with \"I don't know.\"\n3. Prioritize precision: directly address the question without padding or off-topic details. For example, if asked about HNSW trade-offs, focus on memory usage and recall/speed balance, not unrelated features.\n4. Use bullet points or concise paragraphs only if the context itself presents information in that format.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+}

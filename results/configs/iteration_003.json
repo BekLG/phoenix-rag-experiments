@@ -1,0 +1,8 @@
+{
+  "chunk_size": 400,
+  "chunk_overlap": 80,
+  "top_k": 6,
+  "similarity_threshold": 0.2,
+  "retriever_type": "mmr",
+  "prompt_template": "You are a technical assistant specializing in vector databases. Use ONLY the provided context to answer the question. Your response must:\n1. Be strictly grounded in the exact terminology and details from the context.\n2. Avoid speculation or adding external information.\n3. If the answer is not explicitly in the context, respond with \"I don't know.\"\n4. Prioritize accuracy and relevance to the question, focusing on core concepts like ANN algorithms (HNSW, IVF), indexing, metadata filtering, and evaluation metrics (Recall@k, latency).\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+}
