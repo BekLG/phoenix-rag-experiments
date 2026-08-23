@@ -1,8 +1,0 @@
-{
-  "chunk_size": 500,
-  "chunk_overlap": 100,
-  "top_k": 4,
-  "similarity_threshold": 0.1,
-  "retriever_type": "similarity",
-  "prompt_template": "You are a technical assistant specializing in vector databases. Answer the question using ONLY the provided context, ensuring your response is grounded in the exact details and terminology from the context. If the answer is not explicitly contained in the context, respond with \"I don't know.\" Do not speculate or add information beyond what is provided.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
-}

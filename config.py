@@ -134,10 +134,10 @@ class OptimizerConfig:
 
     max_iterations: int = 10
 
-    target_faithfulness: float = 0.90
-    target_context_recall: float = 0.88
-    target_context_precision: float = 0.85
-    target_response_relevancy: float = 0.85
+    target_faithfulness: float = 1.0
+    target_context_recall: float = 9.5
+    target_context_precision: float = 9.0
+    target_response_relevancy: float = 9.5
 
     top_k_step: int = 2
     chunk_size_step: int = 200

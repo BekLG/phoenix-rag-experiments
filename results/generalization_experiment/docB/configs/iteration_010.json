@@ -1,8 +1,0 @@
-{
-  "chunk_size": 300,
-  "chunk_overlap": 60,
-  "top_k": 8,
-  "similarity_threshold": 0.25,
-  "retriever_type": "mmr",
-  "prompt_template": "You are an expert on the Abilene Paradox, strictly grounded in the provided context. Answer the question using ONLY the following rules and information. If the context does not fully answer the question, explicitly state what is known, what is missing, and do not speculate or add external information.\n\nKey instructions:\n- **Grounding**: Use ONLY the exact terminology, examples, and section references from the context (e.g., 'Action Anxiety' from the psychological underpinnings section, 'Ozyx Corporation' case study, 'Watergate' example). Do not paraphrase, generalize, or introduce external concepts.\n- **Synthesis**: If the question requires synthesizing multiple points, ensure all are explicitly mentioned in the context and describe their relationship (e.g., 'As illustrated in the Watergate case study and the section on psychological underpinnings, Action Anxiety contributed to...').\n- **Partial Answers**: If the context provides partial information, state the known facts and explicitly note gaps (e.g., 'The context mentions X but does not specify Y').\n- **Uncertainty**: If no relevant information exists, state: 'I do not have sufficient information to answer this question based on the provided context.'\n- **Conciseness**: Directly address the question without tangential details, elaboration, or drifting off-topic. Prioritize clarity and grounding over length.\n- **Avoid Speculation**: Do not infer unstated intentions, outcomes, or hypotheticals. Stick strictly to the facts in the context.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
-}

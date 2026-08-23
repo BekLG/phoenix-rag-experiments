@@ -1,8 +1,0 @@
-{
-  "chunk_size": 600,
-  "chunk_overlap": 120,
-  "top_k": 3,
-  "similarity_threshold": 0.35,
-  "retriever_type": "similarity_score_threshold",
-  "prompt_template": "You are a technical assistant specializing in vector databases. Use ONLY the provided context to answer the question. Your response must adhere to these rules:\n\n1. **Grounding**: Restrict your answer to the exact terminology, factual claims, and technical details (e.g., ANN algorithms like HNSW/IVF, metadata filtering methods, Recall@k, latency trade-offs) explicitly stated in the context. Do not infer, generalize, or introduce external information.\n2. **Scope**: If the question asks about a concept not covered in the context, respond with \"I don't know.\" For example, if asked about non-vector indexing methods or unrelated database systems, decline to answer.\n3. **Precision**: Directly address the question without padding or off-topic details. Use a single, focused paragraph unless the context itself uses bullet points or lists.\n4. **Technical Focus**: Prioritize core concepts like indexing algorithms (HNSW, IVF), metadata filtering (pre-filtering vs. post-filtering), and evaluation metrics (Recall@k, latency). Avoid vague or high-level explanations.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
-}

@@ -55,20 +55,50 @@ metrics, each with a target:
   - faithfulness: does the generated answer stay grounded in the retrieved \
 context, without inventing facts? Raised by a stricter/more constrained \
 prompt template, or by retrieving less noisy/irrelevant context (lower \
-top_k).
+top_k). ALSO raised by chunks large enough to hold a complete unit of \
+reasoning: a chunk that truncates an argument, definition, or worked \
+example mid-thought forces the model to bridge the gap from its own \
+knowledge, which scores as unfaithful. If faithfulness is weak while \
+context_recall is adequate, suspect chunks that are too SMALL before \
+tightening the prompt further.
   - context_recall: did retrieval find the information actually needed to \
-answer the question? Raised by retrieving more chunks (top_k), or by using \
-smaller chunks (chunk_size) so more distinct pieces of information can be \
-retrieved within the same top_k budget.
+answer the question? This is genuinely BIDIRECTIONAL in chunk_size, and \
+you must reason about which direction applies:
+      * SMALLER chunks pack more distinct facts into the same top_k budget, \
+which helps when each answer is a short self-contained span (lookup-style \
+questions over fact-dense text).
+      * LARGER chunks help when the answer spans several consecutive \
+sentences -- comparisons ("what are the two types of X and how do they \
+differ"), causal chains, multi-step explanations. Splitting such an answer \
+across chunk boundaries loses it even at high top_k, because each fragment \
+looks only partly relevant to the retriever.
+    Raising top_k also helps recall, but it is the blunter instrument: it \
+costs precision, whereas correctly-sized chunks cost nothing.
   - context_precision: how much of what was retrieved was actually useful, \
 vs noise? Raised by retrieving fewer chunks (top_k), or by switching to a \
-similarity_score_threshold retriever that filters out low-relevance chunks.
+similarity_score_threshold retriever that filters out low-relevance chunks. \
+Be aware this metric has a built-in bias toward small chunks -- a large \
+chunk carries more material beyond the answer span and can be judged partly \
+irrelevant even when it is the RIGHT chunk to retrieve. Do not shrink \
+chunk_size purely to chase this metric if faithfulness is falling as a \
+result; report the trade-off in your reasoning instead.
   - response_relevancy: does the generated answer directly address the \
 question, without padding or drifting off-topic? Raised by a stricter, \
-more focused prompt template, or by reducing top_k to cut noisy context.
+more focused prompt template, or by reducing top_k to cut noisy context. \
+Fragmented chunks also hurt here: given half an explanation, the model \
+tends to pad around the gap.
 
 IMPORTANT -- you are given the FULL history of past iterations below. Use it:
   - Increasing top_k tends to help recall but can hurt precision.
+  - chunk_size is NOT a one-way lever. Do not assume "smaller is better for \
+recall" -- that only holds for fact-dense lookup text. Check the history: if \
+recall stalled or fell after a chunk_size REDUCTION, the answers are being \
+fragmented and the correct move is to go LARGER, not smaller still.
+  - Before concluding chunk_size should shrink, check whether it has ever \
+been tried larger. If every past iteration sits in a narrow band well inside \
+the permitted bounds, you have not actually tested the parameter -- you have \
+been nudging around your starting value. An untested direction is not \
+evidence against that direction.
   - Switching to similarity_score_threshold retrieval tends to help \
 precision but can hurt recall if the threshold excludes relevant chunks.
   - If a past change made a metric worse, do not blindly repeat that same \
@@ -106,7 +136,8 @@ programmatically at answer time, do not remove, rename, or duplicate them. \
 You may reuse the current prompt template unchanged if you don't believe \
 it needs to change this iteration.
   "reasoning": a short (1-2 sentence) explanation of why you chose these \
-values given the history
+values given the history, which MUST cite the document profile numbers behind \
+your chunk_size/chunk_overlap choice and the regime you concluded
 """
 
 BALANCED_SEARCH_POLICY = """BALANCED SEARCH POLICY (mandatory):
@@ -135,6 +166,52 @@ threshold. Use the iteration history to maintain an exploration ledger:
 5. Prefer a controlled experiment: change two or three related dimensions at
    most, record the expected metric tradeoff, and avoid repeating a previously
    tested configuration.
+"""
+
+DOCUMENT_CONDITIONED_SIZING_POLICY = """DOCUMENT-CONDITIONED SIZING (mandatory):
+chunk_size and chunk_overlap must be derived from the DOCUMENT PROFILE above,
+not carried over from generic RAG defaults. The profile is not background
+colour -- it is data you are required to act on. Two documents of different
+size and type must not receive the same chunk settings.
+
+1. Estimate the document's natural unit of meaning:
+      chars_per_section = characters / sections
+   A chunk should hold a COMPLETE unit of reasoning. Target roughly one
+   quarter to one half of chars_per_section for discursive text, or a single
+   self-contained entry for reference text. Never size a chunk so small that
+   a typical answer must straddle two of them.
+
+2. Pick the regime from doc_type and median_chars_per_page. doc_type is one of
+   paper, manual, policy, narrative, unknown:
+      * PROSE-HEAVY / ARGUMENTATIVE -- doc_type is paper, narrative, or
+        policy, OR median_chars_per_page > 3000. Answers typically span
+        several consecutive sentences, so favour LARGER chunks, typically
+        800-1200. Do not go below ~600 unless the history shows a specific
+        measured gain from doing so.
+      * FACT-DENSE / LOOKUP -- doc_type is manual, or doc_type is unknown with
+        median_chars_per_page < 2500, OR table_heavy=true, OR list_heavy=true.
+        Discrete facts sit in short spans, so favour SMALLER chunks, typically
+        300-600.
+   If the two signals disagree, say so in your reasoning and pick the regime
+   that matches the document summary's actual content.
+
+3. Size chunk_overlap to preserve continuity across a boundary -- enough to
+   carry roughly one sentence of lead-in into the next chunk. In practice this
+   is 10-20% of chunk_size; larger chunks need proportionally less.
+
+4. Sanity-check against estimated_chunk_count in CURRENT RETRIEVAL SHAPE:
+      * Very low (< ~15): top_k is pulling a large fraction of the entire
+        document, and precision will suffer.
+      * Very high (> ~200) with a small top_k: relevant material is scattered
+        across chunks you will never retrieve, and recall will suffer.
+
+5. Your "reasoning" field MUST cite the specific profile numbers you used and
+   name the regime you concluded (e.g. "doc_type=paper,
+   median_chars_per_page=4353, chars_per_section~3731 -> prose-heavy, so
+   chunk_size=1000"). A proposal whose reasoning does not reference the
+   profile is not acceptable. If your proposed chunk_size/chunk_overlap would
+   be unchanged for a 4-page fact sheet and a 40-page argumentative paper,
+   you are ignoring the profile and must revise.
 """
 
 
@@ -207,10 +284,18 @@ def _format_dynamic_context(
         current_config.chunk_size,
         current_config.chunk_overlap,
     )
+    # Precomputed so the sizing policy's rule 1 does not depend on the LLM
+    # doing arithmetic on the profile numbers itself.
+    chars_per_section = (
+        profile.characters // profile.sections if profile.sections else profile.characters
+    )
     return (
         "CURRENT RETRIEVAL SHAPE:\n"
         f"estimated_chunk_count={estimated_count} "
-        "(computed from document characters and current chunk settings)"
+        "(computed from document characters and current chunk settings)\n"
+        f"chars_per_section={chars_per_section} "
+        "(characters / sections -- the document's natural unit of meaning; "
+        "see DOCUMENT-CONDITIONED SIZING rule 1)"
     )
 
 
@@ -295,6 +380,9 @@ def propose_next_config_llm(
         f"DOCUMENT SUMMARY:\n{document_summary}\n\n"
         f"DOCUMENT PROFILE:\n{_format_profile(document_profile)}\n\n"
         f"{_format_dynamic_context(current_config, document_profile)}\n\n"
+        # Sizing policy sits immediately after the profile and chunk-count it
+        # refers to: the guidance is only actionable next to its own data.
+        f"{DOCUMENT_CONDITIONED_SIZING_POLICY}\n\n"
         f"Current configuration: {current_config.to_dict()}\n\n"
         f"Iteration history:\n{_format_history(history)}\n\n"
         "Propose the next configuration."

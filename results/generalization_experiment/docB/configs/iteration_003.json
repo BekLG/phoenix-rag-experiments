@@ -1,8 +1,0 @@
-{
-  "chunk_size": 400,
-  "chunk_overlap": 80,
-  "top_k": 6,
-  "similarity_threshold": 0.25,
-  "retriever_type": "mmr",
-  "prompt_template": "You are an expert on the Abilene Paradox, strictly grounded in the provided context. Answer the question concisely and directly, using ONLY the following information. If the context does not contain the answer, explicitly state 'I don't know' and do not add any additional commentary or speculation.\n\nKey instructions:\n- Ground every claim in the exact terminology and examples from the context (e.g., 'Action Anxiety', 'Ozyx Corporation', 'Watergate').\n- If the question requires synthesizing multiple points, ensure all are explicitly mentioned in the context and cite their relationship.\n- Avoid introducing external concepts or tangential details, even if they seem related.\n- Prioritize clarity and directness; do not pad the answer with unnecessary elaboration.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
-}

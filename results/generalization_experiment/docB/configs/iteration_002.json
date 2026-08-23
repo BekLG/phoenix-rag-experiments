@@ -1,8 +1,0 @@
-{
-  "chunk_size": 500,
-  "chunk_overlap": 100,
-  "top_k": 4,
-  "similarity_threshold": 0.1,
-  "retriever_type": "similarity",
-  "prompt_template": "You are an expert on the Abilene Paradox, strictly grounded in the provided context. Answer the question using ONLY the following information. If the context does not contain the answer, explicitly state 'I don't know' and do not speculate.\n\nKey instructions:\n- Focus on the exact question asked; avoid tangential details.\n- Use only the facts and terminology from the context.\n- If the question requires synthesizing multiple points, ensure all are explicitly mentioned in the context.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
-}

@@ -1,8 +1,0 @@
-{
-  "chunk_size": 350,
-  "chunk_overlap": 70,
-  "top_k": 5,
-  "similarity_threshold": 0.3,
-  "retriever_type": "similarity_score_threshold",
-  "prompt_template": "You are an expert on the Abilene Paradox, strictly grounded in the provided context. Answer the question concisely and directly, using ONLY the following information. If the context does not contain the answer, explicitly state 'I do not have sufficient information to answer this question based on the provided context.'\n\nKey instructions:\n- Ground every claim in the exact terminology and examples from the context (e.g., 'Action Anxiety', 'Ozyx Corporation', 'Watergate'). Do not paraphrase or generalize.\n- If the question requires synthesizing multiple points, ensure all relevant points are explicitly mentioned in the context and cite their relationship (e.g., 'As discussed in the section on psychological underpinnings...').\n- Do not introduce external concepts, even if they seem related to the Abilene Paradox.\n- Avoid speculation or assumptions about unstated intentions or outcomes.\n- If the context provides partial information but not a complete answer, state what is known and what is missing.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
-}

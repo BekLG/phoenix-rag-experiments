@@ -5,19 +5,39 @@ Validates Phoenix RAG's core value proposition: that self-optimization
 removes the need for manual re-tuning when the source document changes.
 
 Two conditions are run against the SAME new document, graded on the SAME
-fixed benchmark, so the comparison isolates exactly one variable --
-whether the config was re-optimized for this document or just reused:
+fixed benchmark, with prompt_template HELD CONSTANT across both arms, so
+the comparison isolates the retrieval parameters and nothing else:
 
-  A. FROZEN:  the best RetrievalConfig previously found for the OLD
-              document, applied unchanged (chunking, top_k, retriever
-              type, similarity_threshold, prompt_template all frozen) --
-              only the FAISS index is rebuilt, since that's mechanically
-              required for a new document's content to be searchable at
-              all.
   B. FRESH:   Phoenix RAG's full self-optimization loop run from scratch
               on the new document -- fresh benchmark generation, fresh
               document summary, fresh LLM-driven parameter tuning,
-              starting from the default RetrievalConfig.
+              starting from the default RetrievalConfig. Runs FIRST,
+              because its winning prompt_template is what condition A
+              borrows (see below).
+  A. FROZEN:  the retrieval parameters previously found best for the OLD
+              document (chunk_size, chunk_overlap, top_k,
+              similarity_threshold, retriever_type), applied unchanged to
+              the new document -- but paired with the FRESH arm's
+              prompt_template rather than the old document's. The FAISS
+              index is rebuilt, since that's mechanically required for a
+              new document's content to be searchable at all.
+
+WHY prompt_template IS NOT COMPARED
+-----------------------------------
+prompt_template lives in RetrievalConfig next to chunk_size and top_k,
+but it is not the same kind of thing. chunk_size=500 is document-agnostic
+and transfers to any corpus; a prompt that says "You are a technical
+assistant specializing in vector databases ... decline to answer
+questions outside this scope" is document-scoped CONTENT, and applying it
+to an unrelated document instructs the generator to refuse every
+question.
+
+Leaving it in the frozen arm therefore measures prompt non-portability,
+not config generalization -- the two get bundled into a single number and
+the retrieval question becomes unanswerable. Both arms' prompts were
+tuned against their own document, so neither is a fair "frozen" value.
+Holding the prompt fixed at the FRESH arm's value removes that confound:
+whatever delta remains is attributable to the five retrieval parameters.
 
 GOTCHAS THIS SCRIPT HANDLES FOR YOU (see module docstring section in the
 project chat history for why these matter):
@@ -70,6 +90,17 @@ logger = logging.getLogger("phoenix_rag.document_generalization_experiment")
 
 METRICS = ["faithfulness", "context_recall", "context_precision", "response_relevancy"]
 
+# The RetrievalConfig fields the two arms are actually allowed to differ on.
+# prompt_template is deliberately absent -- see "WHY prompt_template IS NOT
+# COMPARED" in the module docstring.
+COMPARED_DIMENSIONS = [
+    "chunk_size",
+    "chunk_overlap",
+    "top_k",
+    "similarity_threshold",
+    "retriever_type",
+]
+
 
 def _setup_logging(verbose: bool) -> None:
     level = logging.DEBUG if verbose else logging.INFO
@@ -99,17 +130,60 @@ def _configure_results_dir(results_dir: Path) -> None:
     logger.info("Generalization optimization results will be written to %s", results_dir)
 
 
+def _share_prompt(
+    frozen_config: RetrievalConfig, shared_prompt: str
+) -> tuple[RetrievalConfig, str]:
+    """Return the frozen config with prompt_template swapped for the shared one.
+
+    Returns (config_to_run, discarded_prompt). The discarded old-document
+    prompt is handed back so it can be recorded in comparison.json for
+    provenance -- it is never executed.
+    """
+    discarded = frozen_config.prompt_template
+    controlled = frozen_config.copy_with(prompt_template=shared_prompt)
+
+    if discarded == shared_prompt:
+        logger.info(
+            "Frozen and fresh arms already share an identical prompt_template; "
+            "no substitution needed."
+        )
+    else:
+        logger.info(
+            "Prompt control applied: frozen arm's own prompt_template (%d chars, "
+            "tuned on the OLD document) discarded in favour of the FRESH arm's "
+            "(%d chars). prompt_template is now identical across both arms and "
+            "is NOT a compared dimension.",
+            len(discarded), len(shared_prompt),
+        )
+    return controlled, discarded
+
+
+def _differing_dimensions(frozen: RetrievalConfig, fresh: RetrievalConfig) -> dict:
+    """Report which of COMPARED_DIMENSIONS actually differ between the arms."""
+    frozen_d, fresh_d = frozen.to_dict(), fresh.to_dict()
+    return {
+        dim: {"frozen": frozen_d.get(dim), "fresh": fresh_d.get(dim)}
+        for dim in COMPARED_DIMENSIONS
+        if frozen_d.get(dim) != fresh_d.get(dim)
+    }
+
+
 def run_frozen_condition(
     app_config: AppConfig,
     frozen_config: RetrievalConfig,
     benchmark,
 ) -> dict:
-    """Condition A: apply the OLD document's best config, unchanged, to
-    the NEW document. Only the FAISS index is rebuilt (mechanically
-    required -- the old index was built from a different document's text
-    and can't search the new one).
+    """Condition A: apply the OLD document's best RETRIEVAL PARAMETERS to
+    the NEW document, unchanged.
+
+    `frozen_config` is expected to have already had its prompt_template
+    replaced with the FRESH arm's via _share_prompt(), so that
+    prompt_template is held constant across both arms and the only things
+    varying are COMPARED_DIMENSIONS. Only the FAISS index is rebuilt
+    (mechanically required -- the old index was built from a different
+    document's text and can't search the new one).
     """
-    logger.info("=== FROZEN condition: reusing old config unchanged ===")
+    logger.info("=== FROZEN condition: reusing old retrieval params unchanged ===")
     logger.info("Frozen config: %s", frozen_config.to_dict())
 
     embeddings = MistralEmbeddings(app_config.mistral)
@@ -186,9 +260,21 @@ def run_fresh_condition(app_config: AppConfig, results_dir: Path) -> dict:
     }
 
 
-def print_comparison(frozen: dict, fresh: dict) -> None:
+def print_comparison(frozen: dict, fresh: dict, differing: dict) -> None:
     print()
-    print(f"{'Metric':<22} {'Frozen (old config)':<22} {'Fresh (re-optimized)':<22} {'Delta':<10}")
+    print("prompt_template: HELD CONSTANT across both arms (fresh arm's value).")
+    if differing:
+        print("Retrieval parameters under comparison (only those that differ):")
+        for dim, vals in differing.items():
+            print(f"  {dim:<22} frozen={vals['frozen']!s:<18} fresh={vals['fresh']!s}")
+    else:
+        print(
+            "Retrieval parameters under comparison: NONE DIFFER -- both arms are "
+            "byte-identical configs. Any delta below is pure run-to-run noise, "
+            "and is a useful measurement of that noise floor."
+        )
+    print()
+    print(f"{'Metric':<22} {'Frozen (old params)':<22} {'Fresh (re-optimized)':<22} {'Delta':<10}")
     print("-" * 78)
     for m in METRICS:
         f = frozen["scores"].get(m, 0.0)
@@ -200,19 +286,28 @@ def print_comparison(frozen: dict, fresh: dict) -> None:
         f"{fresh['weighted_score']:<22.4f} {fresh['weighted_score'] - frozen['weighted_score']:+.4f}"
     )
     print()
+    if not differing:
+        print(
+            "Both arms ran identical configs, so this delta is a noise estimate, "
+            "not an effect. Treat any future delta smaller than this as unresolvable."
+        )
+        print()
+        return
     if fresh["weighted_score"] > frozen["weighted_score"]:
         delta_pct = (
             (fresh["weighted_score"] - frozen["weighted_score"]) / max(frozen["weighted_score"], 1e-9)
         ) * 100
         print(
-            f"Re-optimizing for the new document improved weighted score by "
-            f"{delta_pct:.1f}% over reusing the old config unchanged."
+            f"With the prompt held constant, re-optimizing the retrieval parameters "
+            f"for the new document improved weighted score by {delta_pct:.1f}% over "
+            f"reusing the old document's parameters."
         )
     else:
         print(
-            "The frozen (old-document) config matched or outperformed re-optimization "
-            "on this new document -- worth investigating why before claiming a "
-            "generalization benefit."
+            "With the prompt held constant, the old document's retrieval parameters "
+            "matched or outperformed re-optimization on this new document -- i.e. no "
+            "measurable parameter-level generalization benefit here. Worth reporting "
+            "as-is rather than investigating until it flips."
         )
 
 
@@ -290,17 +385,60 @@ def main() -> None:
     )
 
     experiment_results_dir = RESULTS_DIR / "generalization_experiment" / args.label
-    frozen_result = run_frozen_condition(app_config, frozen_config, benchmark)
+
+    # ORDER MATTERS: fresh runs FIRST because the frozen arm borrows its
+    # winning prompt_template. Holding the prompt constant is what turns
+    # this into a clean test of the retrieval parameters -- see the module
+    # docstring.
     fresh_result = run_fresh_condition(app_config, experiment_results_dir)
+
+    fresh_config = RetrievalConfig.from_dict(fresh_result["config"])
+    controlled_frozen_config, discarded_prompt = _share_prompt(
+        frozen_config, fresh_config.prompt_template
+    )
+    differing = _differing_dimensions(controlled_frozen_config, fresh_config)
+    if not differing:
+        logger.warning(
+            "Frozen and fresh arms are IDENTICAL on every compared dimension (%s). "
+            "The run will still proceed -- the resulting delta is a run-to-run "
+            "noise estimate, which is worth having, but it is not an effect.",
+            ", ".join(COMPARED_DIMENSIONS),
+        )
+    else:
+        logger.info("Compared dimensions that differ: %s", differing)
+
+    frozen_result = run_frozen_condition(app_config, controlled_frozen_config, benchmark)
 
     output_path = experiment_results_dir / "comparison.json"
     output_path.write_text(
-        json.dumps({"frozen": frozen_result, "fresh": fresh_result}, indent=2),
+        json.dumps(
+            {
+                "control": {
+                    "prompt_template_held_constant": True,
+                    "shared_prompt_source": "fresh (re-optimized on this document)",
+                    "shared_prompt_template": fresh_config.prompt_template,
+                    "frozen_discarded_prompt_template": discarded_prompt,
+                    "compared_dimensions": COMPARED_DIMENSIONS,
+                    "differing_dimensions": differing,
+                    "note": (
+                        "prompt_template is document-scoped content, not a portable "
+                        "hyperparameter -- each arm's prompt was tuned against its own "
+                        "document, so neither is a fair frozen value. It is held "
+                        "constant at the fresh arm's value and excluded from the "
+                        "comparison. Deltas below are attributable to "
+                        "compared_dimensions only."
+                    ),
+                },
+                "frozen": frozen_result,
+                "fresh": fresh_result,
+            },
+            indent=2,
+        ),
         encoding="utf-8",
     )
     logger.info("Full experiment results saved to %s", output_path)
 
-    print_comparison(frozen_result, fresh_result)
+    print_comparison(frozen_result, fresh_result, differing)
 
 
 if __name__ == "__main__":
