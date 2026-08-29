@@ -28,48 +28,85 @@ Orchestrates the full self-optimization loop:
 The rule-based optimizer (optimizer.propose_next_config) and the standalone
 prompt refiner (prompt_refiner.refine_prompt) are no longer part of this
 loop -- propose_next_config_llm is the only proposer used.
+
+SINGLE DOCUMENT vs CORPUS
+-------------------------
+Steps 1, 2, 2b and 2c differ depending on whether app_config.corpus_path is set,
+and nothing else in the loop does. They are therefore gathered up front by
+prepare_inputs() into an ExperimentInputs, which hands the loop a benchmark, a
+summary, a profile, and a callable that produces an index for a given
+chunk_size/overlap. The scoring, safety gate, history and proposal logic below
+are identical in both modes and have no idea which one is running.
+
+  * corpus_path unset (the default) -- exactly the original behaviour: one
+    document, its own cached benchmark/summary/profile, and the content-addressed
+    index from vector_store.get_or_build_vector_store.
+  * corpus_path set -- the benchmark, summary and profile describe every document
+    in the corpus (see corpus.py), and the index spans all of them. A document
+    added since the last run is embedded into the existing index rather than
+    triggering a rebuild.
 """
 
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 
+import corpus
+import storage
+from chunking import split_documents
 from config import AppConfig
 from document_loader import load_document
-from chunking import split_documents
-from embeddings import MistralEmbeddings
-from vector_store import get_or_build_vector_store
-from question_generator import get_or_create_benchmark
+from document_profile import DocumentProfile, get_or_create_profile
 from document_summarizer import get_or_create_summary
-from document_profile import get_or_create_profile
-from rag_pipeline import RagPipeline
+from embeddings import MistralEmbeddings
 from evaluator import run_evaluation
-from optimizer import meets_targets
 from llm_optimizer import propose_next_config_llm
+from optimizer import meets_targets
+from question_generator import BenchmarkQuestion, get_or_create_benchmark
+from rag_pipeline import RagPipeline
 from seed_config import propose_seed_config
-import storage
+from vector_store import get_or_build_vector_store
 
 logger = logging.getLogger("phoenix_rag.experiment_runner")
 
 
-def run_experiment(app_config: AppConfig) -> dict:
-    """Run the full optimization loop. Returns the best result found."""
+@dataclass
+class ExperimentInputs:
+    """Everything the optimization loop needs that depends on WHAT is indexed.
 
-    embeddings = MistralEmbeddings(app_config.mistral)
+    `build_store` takes (chunk_size, chunk_overlap) and returns a vector store
+    for those parameters. The loop calls it only when the chunk parameters
+    change, so both implementations are free to be expensive.
 
-    # Benchmark is generated ONCE from the full document and never touched again.
+    `on_success` is invoked once, after the loop finishes, only if a best
+    configuration was actually found and saved. The corpus uses it to record
+    which documents that configuration was measured against.
+    """
+
+    benchmark: list[BenchmarkQuestion]
+    document_summary: str
+    document_profile: DocumentProfile
+    build_store: Callable[[int, int], object]
+    description: str
+    on_success: Callable[[], None] | None = None
+
+
+def _single_document_inputs(
+    app_config: AppConfig, embeddings: MistralEmbeddings
+) -> ExperimentInputs:
+    """The original single-document path, moved here verbatim in behaviour."""
     source_documents = load_document(app_config.source_document)
     full_text = "\n\n".join(document.page_content for document in source_documents)
+
     benchmark = get_or_create_benchmark(
         full_text=full_text,
         mistral_settings=app_config.mistral,
         qg_config=app_config.question_generation,
         benchmark_path=app_config.benchmark_path,
     )
-    question_texts = [q.question for q in benchmark]
-    logger.info("Benchmark ready: %d fixed evaluation questions", len(benchmark))
-
     document_summary = get_or_create_summary(
         full_text=full_text,
         mistral_settings=app_config.mistral,
@@ -88,6 +125,118 @@ def run_experiment(app_config: AppConfig) -> dict:
         pages=pages,
     )
     logger.info("Document profile ready: %s", document_profile)
+
+    def build_store(chunk_size: int, chunk_overlap: int):
+        chunks = split_documents(
+            source_documents, chunk_size=chunk_size, chunk_overlap=chunk_overlap
+        )
+        return get_or_build_vector_store(
+            chunks=chunks,
+            embeddings=embeddings,
+            cache_root=app_config.faiss_index_path,
+            source_document=app_config.source_document,
+            embedding_model=app_config.mistral.embedding_model,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+        )
+
+    return ExperimentInputs(
+        benchmark=benchmark,
+        document_summary=document_summary,
+        document_profile=document_profile,
+        build_store=build_store,
+        description=f"single document: {Path(app_config.source_document).name}",
+    )
+
+
+def _corpus_inputs(
+    app_config: AppConfig, embeddings: MistralEmbeddings
+) -> ExperimentInputs:
+    """The multi-document path: every artifact describes the whole corpus."""
+    corpus_state = corpus.load(app_config.corpus_path)
+
+    if corpus_state.is_empty:
+        # An operator who turned corpus mode on without adding anything yet still
+        # has a configured source_document; seeding from it (reusing its cached
+        # artifacts) is much friendlier than refusing to run.
+        corpus.bootstrap_from_single_document(corpus_state, app_config)
+    if corpus_state.is_empty:
+        raise RuntimeError(
+            f"Corpus at {app_config.corpus_path} is empty and could not be "
+            "bootstrapped. Add a document before optimizing."
+        )
+
+    for problem in corpus.verify_documents(corpus_state):
+        logger.warning("Corpus integrity: %s", problem)
+
+    benchmark = corpus.corpus_benchmark(corpus_state, app_config)
+    document_summary = corpus.summary_text(corpus_state)
+    document_profile = corpus.profile(corpus_state)
+
+    logger.info(
+        "Corpus summary ready (%d chars, %d document(s))",
+        len(document_summary), len(corpus_state.documents),
+    )
+    logger.info("Aggregated corpus profile: %s", document_profile)
+    logger.info(
+        "Benchmark composition: %s",
+        ", ".join(
+            f"{d.label}={d.question_count}" for d in corpus_state.documents
+        ) or "(unattributed)",
+    )
+    if corpus.optimization_status(corpus_state) == "stale":
+        logger.info(
+            "Corpus membership changed since the last optimization -- the previously "
+            "saved best configuration does not describe this corpus, and scores "
+            "below are not comparable to it (the benchmark grew too)."
+        )
+
+    def build_store(chunk_size: int, chunk_overlap: int):
+        store, _report = corpus.sync_index(
+            corpus_state,
+            embeddings=embeddings,
+            embedding_model=app_config.mistral.embedding_model,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+        )
+        return store
+
+    labels = ", ".join(document.label for document in corpus_state.documents)
+    return ExperimentInputs(
+        benchmark=benchmark,
+        document_summary=document_summary,
+        document_profile=document_profile,
+        build_store=build_store,
+        description=f"corpus of {len(corpus_state.documents)}: {labels}",
+        on_success=lambda: corpus.mark_optimized(corpus_state),
+    )
+
+
+def prepare_inputs(
+    app_config: AppConfig, embeddings: MistralEmbeddings
+) -> ExperimentInputs:
+    """Gather the loop's document-dependent inputs for whichever mode is active."""
+    if app_config.corpus_path:
+        return _corpus_inputs(app_config, embeddings)
+    return _single_document_inputs(app_config, embeddings)
+
+
+def run_experiment(app_config: AppConfig) -> dict:
+    """Run the full optimization loop. Returns the best result found."""
+
+    embeddings = MistralEmbeddings(app_config.mistral)
+
+    # Benchmark is generated ONCE and never touched again during the run, so
+    # every configuration is scored against exactly the same questions.
+    inputs = prepare_inputs(app_config, embeddings)
+    question_texts = [question.question for question in inputs.benchmark]
+    logger.info(
+        "Benchmark ready: %d fixed evaluation questions (%s)",
+        len(inputs.benchmark), inputs.description,
+    )
+
+    document_summary = inputs.document_summary
+    document_profile = inputs.document_profile
 
     # Iteration 1 starts from parameters DERIVED FROM THIS DOCUMENT, not from the
     # config's retrieval block. Without this the LLM optimizer anchors on a
@@ -125,27 +274,17 @@ def run_experiment(app_config: AppConfig) -> dict:
 
         chunk_params = (current_config.chunk_size, current_config.chunk_overlap)
         if vector_store is None or chunk_params != cached_chunk_params:
-            logger.info("Rebuilding FAISS index (chunk params changed)")
-            chunks = split_documents(
-                source_documents,
-                chunk_size=current_config.chunk_size,
-                chunk_overlap=current_config.chunk_overlap,
+            logger.info(
+                "Vector store needed for chunk_size=%d, chunk_overlap=%d",
+                *chunk_params,
             )
-            vector_store = get_or_build_vector_store(
-                chunks=chunks,
-                embeddings=embeddings,
-                cache_root=app_config.faiss_index_path,
-                source_document=app_config.source_document,
-                embedding_model=app_config.mistral.embedding_model,
-                chunk_size=current_config.chunk_size,
-                chunk_overlap=current_config.chunk_overlap,
-            )
+            vector_store = inputs.build_store(*chunk_params)
             cached_chunk_params = chunk_params
 
         pipeline = RagPipeline(vector_store, app_config.mistral, current_config)
         results = pipeline.answer_many(question_texts)
 
-        scores = run_evaluation(results, benchmark, app_config.mistral)
+        scores = run_evaluation(results, inputs.benchmark, app_config.mistral)
 
         storage.save_iteration_config(iteration, current_config)
         storage.append_experiment_result(iteration, current_config, scores)
@@ -220,4 +359,11 @@ def run_experiment(app_config: AppConfig) -> dict:
             break
 
     logger.info("Experiment complete. Best weighted score: %.4f", best_score)
+
+    # Only after a best configuration was actually found and saved -- a run where
+    # every iteration failed the faithfulness gate has not established anything
+    # about this corpus, so it must not be recorded as having optimized it.
+    if best_result and inputs.on_success is not None:
+        inputs.on_success()
+
     return best_result or {}

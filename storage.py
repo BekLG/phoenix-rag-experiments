@@ -37,6 +37,33 @@ _SCORE_FIELDS = [
 ]
 
 
+def configure_results_dir(results_dir: str | Path) -> Path:
+    """Point this module's output paths at `results_dir` for the current process.
+
+    Every writer below reads its destination from a module-level global, so
+    rebinding those globals redirects the whole persistence layer. Callers that
+    run a nested experiment -- the generalization comparison, or a per-corpus
+    optimization -- use this to keep their output out of the top-level results/
+    directory instead of overwriting a previous run's best_configuration.json.
+
+    Process-wide by design: it is a redirect, not a scope. A caller that needs
+    the original paths back must call it again with RESULTS_DIR.
+    """
+    global CONFIGS_DIR, EXPERIMENT_RESULTS_CSV, EVALUATION_SCORES_CSV, BEST_CONFIG_PATH
+
+    results_dir = Path(results_dir)
+    results_dir.mkdir(parents=True, exist_ok=True)
+
+    CONFIGS_DIR = results_dir / "configs"
+    EXPERIMENT_RESULTS_CSV = results_dir / "experiment_results.csv"
+    EVALUATION_SCORES_CSV = results_dir / "evaluation_scores.csv"
+    BEST_CONFIG_PATH = results_dir / "best_configuration.json"
+    CONFIGS_DIR.mkdir(parents=True, exist_ok=True)
+
+    logger.info("Results for this run will be written to %s", results_dir)
+    return results_dir
+
+
 def _atomic_write_json(path: str | Path, data) -> None:
     """Write JSON beside its target, then atomically replace the target."""
     path = Path(path)

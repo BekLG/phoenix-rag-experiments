@@ -111,6 +111,81 @@ def estimate_chunk_count(characters: int, chunk_size: int, chunk_overlap: int) -
     return (characters + effective_step - 1) // effective_step
 
 
+def aggregate_profiles(profiles: list[DocumentProfile]) -> DocumentProfile:
+    """Collapse per-document profiles into one profile describing the corpus.
+
+    Used when retrieval spans several documents (corpus.py): the optimizer and
+    seed_config both take a single DocumentProfile, and the thing they need to
+    size chunks for is the whole searchable corpus, not any one member of it.
+
+    Deterministic, no LLM call -- same contract as compute_profile.
+
+    Two choices worth stating outright:
+
+    * `doc_type` is the character-weighted dominant type, and is NEVER a new
+      label like "mixed". seed_config._select_regime and llm_optimizer's sizing
+      policy both branch on the exact vocabulary compute_profile produces, so
+      inventing a value here would silently drop the corpus into their fallback
+      paths. The actual composition is reported in the corpus summary text
+      instead, where the LLM can read it.
+    * `median_chars_per_page` is the page-weighted median of the per-document
+      medians. That is exact under the same uniform-page-length assumption
+      _page_lengths already makes whenever a loader hands us joined text with no
+      form-feeds, which is the common case.
+    """
+    if not profiles:
+        return compute_profile("")
+    if len(profiles) == 1:
+        return profiles[0]
+
+    def _sum_or_none(values: list[int | None]) -> int | None:
+        present = [v for v in values if v is not None]
+        return sum(present) if present else None
+
+    characters = sum(p.characters for p in profiles)
+
+    # Page-weighted median: repeat each document's median once per page it has,
+    # falling back to one vote per document when page counts are unknown.
+    weighted_medians: list[float] = []
+    for profile in profiles:
+        if profile.median_chars_per_page is None:
+            continue
+        weight = profile.pages if profile.pages and profile.pages > 0 else 1
+        weighted_medians.extend([profile.median_chars_per_page] * weight)
+
+    per_page_mins = [p.min_chars_per_page for p in profiles if p.min_chars_per_page is not None]
+    per_page_maxes = [p.max_chars_per_page for p in profiles if p.max_chars_per_page is not None]
+
+    # Character-weighted vote, so a 50-page paper is not outvoted by a one-page
+    # note. Ties break on the first-registered document, which keeps the result
+    # stable across runs for a fixed manifest order.
+    type_weights: dict[str, int] = {}
+    for profile in profiles:
+        type_weights[profile.doc_type] = type_weights.get(profile.doc_type, 0) + profile.characters
+    dominant_type = max(type_weights, key=type_weights.get) if type_weights else "unknown"
+
+    def _weighted_flag(attribute: str) -> bool:
+        if characters <= 0:
+            return False
+        heavy = sum(p.characters for p in profiles if getattr(p, attribute))
+        return heavy / characters >= 0.5
+
+    return DocumentProfile(
+        pages=_sum_or_none([p.pages for p in profiles]),
+        characters=characters,
+        estimated_tokens=sum(p.estimated_tokens for p in profiles),
+        sections=_sum_or_none([p.sections for p in profiles]),
+        median_chars_per_page=(
+            float(statistics.median(weighted_medians)) if weighted_medians else None
+        ),
+        min_chars_per_page=min(per_page_mins) if per_page_mins else None,
+        max_chars_per_page=max(per_page_maxes) if per_page_maxes else None,
+        doc_type=dominant_type,
+        table_heavy=_weighted_flag("table_heavy"),
+        list_heavy=_weighted_flag("list_heavy"),
+    )
+
+
 def save_profile(profile: DocumentProfile, path: str | Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

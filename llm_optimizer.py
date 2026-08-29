@@ -289,16 +289,25 @@ def _format_dynamic_context(
     )
 
 
-def _validate_prompt_template(template: str) -> bool:
+def validate_prompt_template(template: str) -> bool:
     """A proposed prompt template is only usable if it kept both required
     placeholders, each exactly once. Silently accepting a broken template
     (missing or duplicated placeholders) would crash str.format() downstream
     in rag_pipeline.py's build_prompt(), so this is checked before the
     template is ever installed into a RetrievalConfig.
+
+    Public because the config editor (menu.py / streamlit_app.py) validates a
+    hand-edited template with exactly this rule -- a prompt typed by an operator
+    can break build_prompt() the same way an LLM-proposed one can.
     """
     return isinstance(template, str) and all(
         template.count(ph) == 1 for ph in REQUIRED_PLACEHOLDERS
     )
+
+
+# Retained under the original private name: this module's own call site and the
+# tests both reach for it, and there is no reason to churn them.
+_validate_prompt_template = validate_prompt_template
 
 
 def _parse_llm_config(raw: str) -> dict | None:

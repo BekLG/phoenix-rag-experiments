@@ -8,6 +8,20 @@ Usage:
     python app.py --source data/source.pdf --force-regenerate-questions
     python app.py --source data/source.pdf --max-iterations 15
     python app.py --source data/source.pdf --no-profile-seed
+
+    python app.py --menu                    # interactive terminal front-end
+    python app.py --corpus                  # optimize the whole multi-doc corpus
+    python app.py --no-corpus --source X    # ignore the corpus for this run
+
+For the GUI: streamlit run streamlit_app.py
+
+CORPUS MODE
+-----------
+--corpus opts this run into the multi-document corpus (data/corpus/), where the
+benchmark, summary, profile and FAISS index describe every document that has been
+added rather than one file. Documents are added through the menu or the GUI. When
+the saved config already has corpus_path set, that is honoured without the flag;
+--no-corpus overrides it for one run without editing the config.
 """
 
 from __future__ import annotations
@@ -17,7 +31,7 @@ import logging
 import sys
 from pathlib import Path
 
-from config import LOGS_DIR, load_or_create_default_config
+from config import CORPUS_DIR, LOGS_DIR, load_or_create_default_config
 from experiment_runner import run_experiment
 from dotenv import load_dotenv
 
@@ -60,14 +74,46 @@ def parse_args() -> argparse.Namespace:
             "deriving chunk_size/chunk_overlap/top_k from the document profile"
         ),
     )
+    parser.add_argument(
+        "--menu",
+        action="store_true",
+        help="Launch the interactive terminal front-end instead of running an experiment",
+    )
+    parser.add_argument(
+        "--corpus",
+        action="store_true",
+        help=(
+            "Optimize against the multi-document corpus in data/corpus/ instead of a "
+            "single document. Add documents with --menu (option 2) or the GUI."
+        ),
+    )
+    parser.add_argument(
+        "--no-corpus",
+        action="store_true",
+        help=(
+            "Ignore the corpus for this run even if the saved config enables it, and "
+            "optimize against --source alone"
+        ),
+    )
     parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+
+    if args.menu:
+        # Deferred so the menu's own logging setup is the only one installed.
+        import menu
+
+        sys.exit(menu.main())
+
     _setup_logging(args.verbose)
     logger = logging.getLogger("phoenix_rag.app")
+
+    if args.corpus and args.no_corpus:
+        logger.error("--corpus and --no-corpus contradict each other; pick one")
+        sys.exit(2)
 
     app_config = (
         load_or_create_default_config() if not args.config else _load_config(args.config)
@@ -81,8 +127,16 @@ def main() -> None:
         app_config.question_generation.regenerate_each_iteration = True
     if args.no_profile_seed:
         app_config.optimizer.seed_from_profile = False
+    if args.corpus:
+        app_config.corpus_path = str(CORPUS_DIR)
+    if args.no_corpus:
+        app_config.corpus_path = None
 
-    if not Path(app_config.source_document).exists():
+    # The source document is only required when it is what gets indexed. In corpus
+    # mode it is just the seed for an empty corpus, and an already-populated corpus
+    # does not need it at all -- refusing to run because a path that will never be
+    # read is missing would be wrong.
+    if not app_config.corpus_path and not Path(app_config.source_document).exists():
         logger.error(
             "Source document not found: %s\n"
             "Pass --source /path/to/document.pdf or place a file at that path.",
@@ -91,7 +145,10 @@ def main() -> None:
         sys.exit(1)
 
     logger.info("Starting Phoenix RAG optimization run")
-    logger.info("Source document: %s", app_config.source_document)
+    if app_config.corpus_path:
+        logger.info("Corpus: %s", app_config.corpus_path)
+    else:
+        logger.info("Source document: %s", app_config.source_document)
 
     best = run_experiment(app_config)
 

@@ -28,6 +28,12 @@ GENERATED_QUESTIONS_DIR = ROOT_DIR / "generated_questions"
 LOGS_DIR = ROOT_DIR / "logs"
 CONFIG_DIR = ROOT_DIR / "config"
 
+# Multi-document corpus root: the manifest, plus one FAISS index directory per
+# (embedding_model, chunk_size, chunk_overlap) variant. Deliberately not created
+# eagerly below -- corpus.py makes it on first use, so single-document runs
+# leave no empty corpus directory behind.
+CORPUS_DIR = DATA_DIR / "corpus"
+
 for _dir in (DATA_DIR, RESULTS_DIR, GENERATED_QUESTIONS_DIR, LOGS_DIR, CONFIG_DIR):
     _dir.mkdir(parents=True, exist_ok=True)
 
@@ -181,6 +187,12 @@ class AppConfig:
     summary_path: str = str(GENERATED_QUESTIONS_DIR / "document_summary.txt")
     profile_path: str = str(GENERATED_QUESTIONS_DIR / "document_profile.json")
 
+    # Opt-in multi-document mode. None (the default) keeps every path above
+    # describing a single document, exactly as before. When set, the experiment
+    # runner sources its benchmark, summary, profile and FAISS index from the
+    # corpus manifest under this root instead -- see corpus.py.
+    corpus_path: str | None = None
+
     def save(self, path: str | Path) -> None:
         path = Path(path)
         path.write_text(
@@ -214,6 +226,7 @@ class AppConfig:
             profile_path=data.get(
                 "profile_path", str(GENERATED_QUESTIONS_DIR / "document_profile.json")
             ),
+            corpus_path=data.get("corpus_path"),
         )
 
 

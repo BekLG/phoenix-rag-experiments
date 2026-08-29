@@ -35,6 +35,24 @@ def save_vector_store(store: FAISS, path: str | Path) -> None:
     logger.info("Saved FAISS index to %s", path)
 
 
+def add_chunks_to_store(store: FAISS, chunks: list[Document]) -> FAISS:
+    """Embed `chunks` and append them to an existing index in place.
+
+    This is what makes growing a corpus cheap: only the new chunks are sent to
+    the embedding endpoint, and every vector already in `store` is reused as-is.
+    Contrast get_or_build_vector_store below, which is content-addressed on a
+    single document and therefore re-embeds everything whenever its key changes.
+
+    Returns the same store it was handed, for call-site convenience.
+    """
+    if not chunks:
+        logger.debug("add_chunks_to_store called with no chunks; nothing to do")
+        return store
+    logger.info("Adding %d new chunks to existing FAISS index", len(chunks))
+    store.add_documents(chunks)
+    return store
+
+
 def load_vector_store(path: str | Path, embeddings: Embeddings) -> FAISS:
     path = Path(path)
     logger.info("Loading FAISS index from %s", path)

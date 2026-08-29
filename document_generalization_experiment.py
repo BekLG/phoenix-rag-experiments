@@ -124,13 +124,7 @@ def _weighted(scores: dict) -> float:
 
 def _configure_results_dir(results_dir: Path) -> None:
     """Redirect storage.py outputs for this standalone experiment process."""
-    results_dir.mkdir(parents=True, exist_ok=True)
-    storage.CONFIGS_DIR = results_dir / "configs"
-    storage.EXPERIMENT_RESULTS_CSV = results_dir / "experiment_results.csv"
-    storage.EVALUATION_SCORES_CSV = results_dir / "evaluation_scores.csv"
-    storage.BEST_CONFIG_PATH = results_dir / "best_configuration.json"
-    storage.CONFIGS_DIR.mkdir(parents=True, exist_ok=True)
-    logger.info("Generalization optimization results will be written to %s", results_dir)
+    storage.configure_results_dir(results_dir)
 
 
 def _share_prompt(
@@ -320,6 +314,144 @@ def print_comparison(frozen: dict, fresh: dict, differing: dict) -> None:
         )
 
 
+def run_generalization_experiment(
+    old_best_config: str | Path,
+    new_source: str | Path,
+    label: str,
+    max_iterations: int = 6,
+    force_regenerate_questions: bool = False,
+    no_profile_seed: bool = False,
+) -> dict:
+    """Run both arms and return the full comparison payload.
+
+    Separated from main() so the menu and the GUI can run this experiment as a
+    function call rather than shelling out to this script -- they need the payload
+    back to render it, and a subprocess would only hand them exit codes and logs.
+
+    Returns the dict written to comparison.json, plus an "output_path" key naming
+    where it was written.
+    """
+    old_best_config = Path(old_best_config)
+    new_source = Path(new_source)
+    if not old_best_config.exists():
+        raise FileNotFoundError(f"Old best-config file not found: {old_best_config}")
+    if not new_source.exists():
+        raise FileNotFoundError(f"New source document not found: {new_source}")
+
+    old_data = json.loads(old_best_config.read_text(encoding="utf-8"))
+    frozen_config = RetrievalConfig.from_dict(old_data["config"])
+
+    app_config = load_or_create_default_config()
+    app_config.source_document = str(new_source)
+    # This experiment is inherently single-document: both arms are graded on ONE
+    # new document's benchmark, and the question is whether the old document's
+    # parameters transfer to it. A corpus_path left set in the saved default
+    # config would silently point both arms at a multi-document index and make
+    # the comparison meaningless, so it is cleared explicitly.
+    app_config.corpus_path = None
+    # Document-B-specific paths -- this is what prevents document A's
+    # cached benchmark/summary from being silently reused (gotcha #1).
+    app_config.benchmark_path = str(GENERATED_QUESTIONS_DIR / f"benchmark_{label}.json")
+    app_config.summary_path = str(GENERATED_QUESTIONS_DIR / f"document_summary_{label}.txt")
+    app_config.profile_path = str(GENERATED_QUESTIONS_DIR / f"document_profile_{label}.json")
+    app_config.optimizer.max_iterations = max_iterations
+    if no_profile_seed:
+        app_config.optimizer.seed_from_profile = False
+
+    full_text = load_full_text(app_config.source_document)
+    benchmark = get_or_create_benchmark(
+        full_text=full_text,
+        mistral_settings=app_config.mistral,
+        qg_config=app_config.question_generation,
+        benchmark_path=app_config.benchmark_path,
+        force_regenerate=force_regenerate_questions,
+    )
+    logger.info(
+        "Benchmark for new document ready: %d questions (used for BOTH conditions)",
+        len(benchmark),
+    )
+    # Warm the summary and profile caches too, so the FRESH condition's first
+    # iteration doesn't pay for either artifact mid-run.
+    get_or_create_summary(
+        full_text=full_text,
+        mistral_settings=app_config.mistral,
+        summary_path=app_config.summary_path,
+    )
+    get_or_create_profile(
+        full_text=full_text,
+        profile_path=app_config.profile_path,
+        pages=len(load_document(app_config.source_document))
+        if Path(app_config.source_document).suffix.lower() == ".pdf"
+        else None,
+    )
+
+    experiment_results_dir = RESULTS_DIR / "generalization_experiment" / label
+
+    # run_fresh_condition redirects storage's module-level result paths into
+    # experiment_results_dir so this nested run doesn't clobber the top-level
+    # results. Anything running afterwards IN THE SAME PROCESS -- the menu's
+    # "ask the RAG", a later top-level optimize -- would otherwise read and write
+    # this experiment's files instead of the real ones, so the redirect is undone
+    # on the way out whether or not the arms succeeded.
+    try:
+        # ORDER MATTERS: fresh runs FIRST because the frozen arm borrows its
+        # winning prompt_template. Holding the prompt constant is what turns
+        # this into a clean test of the retrieval parameters -- see the module
+        # docstring.
+        fresh_result = run_fresh_condition(app_config, experiment_results_dir)
+
+        fresh_config = RetrievalConfig.from_dict(fresh_result["config"])
+        controlled_frozen_config, discarded_prompt = _share_prompt(
+            frozen_config, fresh_config.prompt_template
+        )
+        differing = _differing_dimensions(controlled_frozen_config, fresh_config)
+        if not differing:
+            logger.warning(
+                "Frozen and fresh arms are IDENTICAL on every compared dimension (%s). "
+                "The run will still proceed -- the resulting delta is a run-to-run "
+                "noise estimate, which is worth having, but it is not an effect.",
+                ", ".join(COMPARED_DIMENSIONS),
+            )
+        else:
+            logger.info("Compared dimensions that differ: %s", differing)
+
+        frozen_result = run_frozen_condition(
+            app_config, controlled_frozen_config, benchmark
+        )
+    finally:
+        storage.configure_results_dir(RESULTS_DIR)
+
+    payload = {
+        "control": {
+            "prompt_template_held_constant": True,
+            "shared_prompt_source": "fresh (re-optimized on this document)",
+            "shared_prompt_template": fresh_config.prompt_template,
+            "frozen_discarded_prompt_template": discarded_prompt,
+            "compared_dimensions": COMPARED_DIMENSIONS,
+            "differing_dimensions": differing,
+            "fresh_seeded_from_profile": app_config.optimizer.seed_from_profile,
+            "note": (
+                "prompt_template is document-scoped content, not a portable "
+                "hyperparameter -- each arm's prompt was tuned against its own "
+                "document, so neither is a fair frozen value. It is held "
+                "constant at the fresh arm's value and excluded from the "
+                "comparison. Deltas below are attributable to "
+                "compared_dimensions only. fresh_seeded_from_profile records "
+                "whether the FRESH arm's iteration 1 was derived from this "
+                "document's profile; the FROZEN arm never is."
+            ),
+        },
+        "frozen": frozen_result,
+        "fresh": fresh_result,
+    }
+
+    output_path = experiment_results_dir / "comparison.json"
+    output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    logger.info("Full experiment results saved to %s", output_path)
+
+    return {**payload, "output_path": str(output_path)}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Compare a statically-reused config vs. fresh re-optimization on a new document"
@@ -356,112 +488,22 @@ def main() -> None:
 
     _setup_logging(args.verbose)
 
-    if not Path(args.old_best_config).exists():
-        logger.error("Old best-config file not found: %s", args.old_best_config)
-        sys.exit(1)
-    if not Path(args.new_source).exists():
-        logger.error("New source document not found: %s", args.new_source)
-        sys.exit(1)
-
-    old_data = json.loads(Path(args.old_best_config).read_text(encoding="utf-8"))
-    frozen_config = RetrievalConfig.from_dict(old_data["config"])
-
-    app_config = load_or_create_default_config()
-    app_config.source_document = args.new_source
-    # Document-B-specific paths -- this is what prevents document A's
-    # cached benchmark/summary from being silently reused (gotcha #1).
-    app_config.benchmark_path = str(GENERATED_QUESTIONS_DIR / f"benchmark_{args.label}.json")
-    app_config.summary_path = str(GENERATED_QUESTIONS_DIR / f"document_summary_{args.label}.txt")
-    app_config.profile_path = str(GENERATED_QUESTIONS_DIR / f"document_profile_{args.label}.json")
-    app_config.optimizer.max_iterations = args.max_iterations
-    if args.no_profile_seed:
-        app_config.optimizer.seed_from_profile = False
-
-    full_text = load_full_text(app_config.source_document)
-    benchmark = get_or_create_benchmark(
-        full_text=full_text,
-        mistral_settings=app_config.mistral,
-        qg_config=app_config.question_generation,
-        benchmark_path=app_config.benchmark_path,
-        force_regenerate=args.force_regenerate_questions,
-    )
-    logger.info(
-        "Benchmark for new document ready: %d questions (used for BOTH conditions)",
-        len(benchmark),
-    )
-    # Warm the summary and profile caches too, so the FRESH condition's first
-    # iteration doesn't pay for either artifact mid-run.
-    get_or_create_summary(
-        full_text=full_text,
-        mistral_settings=app_config.mistral,
-        summary_path=app_config.summary_path,
-    )
-    get_or_create_profile(
-        full_text=full_text,
-        profile_path=app_config.profile_path,
-        pages=len(load_document(app_config.source_document))
-        if Path(app_config.source_document).suffix.lower() == ".pdf"
-        else None,
-    )
-
-    experiment_results_dir = RESULTS_DIR / "generalization_experiment" / args.label
-
-    # ORDER MATTERS: fresh runs FIRST because the frozen arm borrows its
-    # winning prompt_template. Holding the prompt constant is what turns
-    # this into a clean test of the retrieval parameters -- see the module
-    # docstring.
-    fresh_result = run_fresh_condition(app_config, experiment_results_dir)
-
-    fresh_config = RetrievalConfig.from_dict(fresh_result["config"])
-    controlled_frozen_config, discarded_prompt = _share_prompt(
-        frozen_config, fresh_config.prompt_template
-    )
-    differing = _differing_dimensions(controlled_frozen_config, fresh_config)
-    if not differing:
-        logger.warning(
-            "Frozen and fresh arms are IDENTICAL on every compared dimension (%s). "
-            "The run will still proceed -- the resulting delta is a run-to-run "
-            "noise estimate, which is worth having, but it is not an effect.",
-            ", ".join(COMPARED_DIMENSIONS),
+    try:
+        result = run_generalization_experiment(
+            old_best_config=args.old_best_config,
+            new_source=args.new_source,
+            label=args.label,
+            max_iterations=args.max_iterations,
+            force_regenerate_questions=args.force_regenerate_questions,
+            no_profile_seed=args.no_profile_seed,
         )
-    else:
-        logger.info("Compared dimensions that differ: %s", differing)
+    except FileNotFoundError as exc:
+        logger.error("%s", exc)
+        sys.exit(1)
 
-    frozen_result = run_frozen_condition(app_config, controlled_frozen_config, benchmark)
-
-    output_path = experiment_results_dir / "comparison.json"
-    output_path.write_text(
-        json.dumps(
-            {
-                "control": {
-                    "prompt_template_held_constant": True,
-                    "shared_prompt_source": "fresh (re-optimized on this document)",
-                    "shared_prompt_template": fresh_config.prompt_template,
-                    "frozen_discarded_prompt_template": discarded_prompt,
-                    "compared_dimensions": COMPARED_DIMENSIONS,
-                    "differing_dimensions": differing,
-                    "fresh_seeded_from_profile": app_config.optimizer.seed_from_profile,
-                    "note": (
-                        "prompt_template is document-scoped content, not a portable "
-                        "hyperparameter -- each arm's prompt was tuned against its own "
-                        "document, so neither is a fair frozen value. It is held "
-                        "constant at the fresh arm's value and excluded from the "
-                        "comparison. Deltas below are attributable to "
-                        "compared_dimensions only. fresh_seeded_from_profile records "
-                        "whether the FRESH arm's iteration 1 was derived from this "
-                        "document's profile; the FROZEN arm never is."
-                    ),
-                },
-                "frozen": frozen_result,
-                "fresh": fresh_result,
-            },
-            indent=2,
-        ),
-        encoding="utf-8",
+    print_comparison(
+        result["frozen"], result["fresh"], result["control"]["differing_dimensions"]
     )
-    logger.info("Full experiment results saved to %s", output_path)
-
-    print_comparison(frozen_result, fresh_result, differing)
 
 
 if __name__ == "__main__":

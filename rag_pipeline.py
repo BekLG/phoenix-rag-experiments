@@ -17,7 +17,7 @@ unhandled, process died).
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
@@ -33,6 +33,12 @@ class RagResult:
     question: str
     answer: str
     contexts: list[str]
+    # Chunk metadata for each retrieved context, in the same order as `contexts`.
+    # Only `contexts` is used for evaluation -- this exists so an operator asking
+    # the RAG interactively can see WHICH document each context came from, which
+    # is the difference between a checkable answer and an unverifiable one once a
+    # single index spans several documents (corpus.py stamps doc_id/doc_label).
+    sources: list[dict] = field(default_factory=list)
 
 
 class RagPipeline:
@@ -98,7 +104,12 @@ class RagPipeline:
             model=self._model,
             temperature=0.2,
         )
-        return RagResult(question=question, answer=answer_text, contexts=contexts)
+        return RagResult(
+            question=question,
+            answer=answer_text,
+            contexts=contexts,
+            sources=[dict(d.metadata) for d in docs],
+        )
 
     def answer_many(self, questions: list[str]) -> list[RagResult]:
         results = []
