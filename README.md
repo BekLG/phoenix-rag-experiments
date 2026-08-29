@@ -58,6 +58,7 @@ embeddings.py             LangChain Embeddings adapter for Mistral embeddings
 vector_store.py           FAISS index build/save/load + retriever factory
 question_generator.py    Generates + caches the fixed benchmark question set
 document_profile.py       Deterministic document characteristics for tuning
+seed_config.py            Derives iteration 1's chunk/top_k from that profile
 rag_pipeline.py           Retrieve → prompt → generate
 evaluator.py              Ragas evaluation using Mistral as judge
 optimizer.py              Rule-based retrieval parameter tuning
@@ -106,9 +107,29 @@ python app.py --source data/my_document.pdf --max-iterations 5
 # Force the benchmark question set to regenerate even if a cached one exists
 python app.py --source data/my_document.pdf --force-regenerate-questions
 
+# Start iteration 1 from config/default_config.json instead of the document profile
+python app.py --source data/my_document.pdf --no-profile-seed
+
 # Verbose logging
 python app.py --source data/my_document.pdf --verbose
 ```
+
+### Where iteration 1 starts
+
+Iteration 1's `chunk_size`, `chunk_overlap`, and `top_k` are derived from the
+document profile by `seed_config.py`, not read from `config/default_config.json`.
+A document-agnostic starting point (previously 300/50/1 for every document) acts
+as an anchor the LLM optimizer nudges around: on a 12-page paper needing 800–1200
+character chunks, ten consecutive iterations never left the 300–500 band. Seeding
+puts iteration 1 in the regime the document's own `doc_type`,
+`median_chars_per_page`, and section length imply, so the budget goes on refining
+rather than travelling.
+
+`retriever_type`, `similarity_threshold`, and `prompt_template` still come from
+the config — choosing those needs measured scores, which do not exist yet at
+iteration 1. Pass `--no-profile-seed` (or set `optimizer.seed_from_profile` to
+`false`) to restore the old unseeded behaviour; the seed rationale is recorded in
+iteration 1's `applied_rules` either way.
 
 ## Outputs
 

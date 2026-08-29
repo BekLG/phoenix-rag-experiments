@@ -1,0 +1,8 @@
+{
+  "chunk_size": 1100,
+  "chunk_overlap": 165,
+  "top_k": 4,
+  "similarity_threshold": 0.28,
+  "retriever_type": "similarity_score_threshold",
+  "prompt_template": "You are a technical assistant specializing in vector databases. Using ONLY the provided context, answer the question with precise technical details (e.g., HNSW vs. IVF trade-offs, distance metrics, or metadata filtering strategies). Do not invent, extrapolate, or pad the answer. If the context is insufficient:\n1. Begin with \"I don't know.\"\n2. Enumerate the exact missing details (e.g., \"the context does not specify latency benchmarks for IVF-PQ at scale\").\n3. Do not speculate or suggest alternatives.\n\nContext (focus strictly on indexing algorithms, distance metrics, and system architectures):\n{context}\n\nQuestion: {question}\n\nAnswer:"
+}

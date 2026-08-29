@@ -1,0 +1,17 @@
+{
+  "iteration": 3,
+  "config": {
+    "chunk_size": 1100,
+    "chunk_overlap": 200,
+    "top_k": 6,
+    "similarity_threshold": 0.25,
+    "retriever_type": "mmr",
+    "prompt_template": "You are an expert on Jerry B. Harvey's \"The Abilene Paradox.\" Answer the question using ONLY the exact facts, terminology, and examples from the provided context. Do not infer, generalize, or introduce concepts not explicitly stated. If the context lacks sufficient detail to answer the question fully, respond: \"The provided context does not contain enough information to answer this question about the Abilene Paradox.\"\n\nStrictly adhere to these rules:\n1. Ground every claim in the context. If the context mentions \"action anxiety\" or \"negative fantasies,\" use those terms verbatim.\n2. For questions about case studies (e.g., Ozyx Corporation, Watergate), include the full example as described in the context.\n3. Do not speculate about psychological mechanisms or organizational outcomes beyond what the context states.\n\nContext (excerpts from Harvey's paper):\n{context}\n\nQuestion: {question}\n\nAnswer:"
+  },
+  "scores": {
+    "faithfulness": 0.8361111111111111,
+    "context_recall": 0.90625,
+    "context_precision": 0.49999999995,
+    "response_relevancy": 0.8685388934493312
+  }
+}

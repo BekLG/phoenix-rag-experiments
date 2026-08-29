@@ -7,6 +7,7 @@ Usage:
     python app.py --source data/source.pdf
     python app.py --source data/source.pdf --force-regenerate-questions
     python app.py --source data/source.pdf --max-iterations 15
+    python app.py --source data/source.pdf --no-profile-seed
 """
 
 from __future__ import annotations
@@ -51,6 +52,14 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Regenerate the benchmark question set even if a cached one exists",
     )
+    parser.add_argument(
+        "--no-profile-seed",
+        action="store_true",
+        help=(
+            "Start iteration 1 from the config's retrieval block instead of "
+            "deriving chunk_size/chunk_overlap/top_k from the document profile"
+        ),
+    )
     parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
     return parser.parse_args()
 
@@ -70,6 +79,8 @@ def main() -> None:
         app_config.optimizer.max_iterations = args.max_iterations
     if args.force_regenerate_questions:
         app_config.question_generation.regenerate_each_iteration = True
+    if args.no_profile_seed:
+        app_config.optimizer.seed_from_profile = False
 
     if not Path(app_config.source_document).exists():
         logger.error(

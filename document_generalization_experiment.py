@@ -10,17 +10,20 @@ the comparison isolates the retrieval parameters and nothing else:
 
   B. FRESH:   Phoenix RAG's full self-optimization loop run from scratch
               on the new document -- fresh benchmark generation, fresh
-              document summary, fresh LLM-driven parameter tuning,
-              starting from the default RetrievalConfig. Runs FIRST,
-              because its winning prompt_template is what condition A
-              borrows (see below).
+              document summary, fresh LLM-driven parameter tuning, with
+              iteration 1 seeded from the NEW document's own profile
+              (seed_config.py) rather than from the old document's best
+              config. Runs FIRST, because its winning prompt_template is
+              what condition A borrows (see below).
   A. FROZEN:  the retrieval parameters previously found best for the OLD
               document (chunk_size, chunk_overlap, top_k,
               similarity_threshold, retriever_type), applied unchanged to
               the new document -- but paired with the FRESH arm's
-              prompt_template rather than the old document's. The FAISS
-              index is rebuilt, since that's mechanically required for a
-              new document's content to be searchable at all.
+              prompt_template rather than the old document's. Never
+              profile-seeded: reusing the old parameters verbatim is the
+              whole point of this arm. The FAISS index is rebuilt, since
+              that's mechanically required for a new document's content to
+              be searchable at all.
 
 WHY prompt_template IS NOT COMPARED
 -----------------------------------
@@ -221,14 +224,20 @@ def run_frozen_condition(
 
 def run_fresh_condition(app_config: AppConfig, results_dir: Path) -> dict:
     """Condition B: run Phoenix RAG's full self-optimization loop from
-    scratch on the new document, starting from the default RetrievalConfig
-    (NOT seeded from the old document's best config).
+    scratch on the new document.
+
+    The retrieval block passed in is deliberately RetrievalConfig() rather
+    than the old document's best config -- nothing here is seeded from
+    document A. run_experiment() then derives iteration 1's
+    chunk_size/chunk_overlap/top_k from the NEW document's own profile
+    (unless optimizer.seed_from_profile was turned off), so those defaults
+    only supply retriever_type/similarity_threshold/prompt_template.
     """
     logger.info("=== FRESH condition: full self-optimization from scratch ===")
 
     fresh_app_config = AppConfig(
         mistral=app_config.mistral,
-        retrieval=RetrievalConfig(),  # explicit fresh defaults, not seeded
+        retrieval=RetrievalConfig(),  # not seeded from document A's best config
         question_generation=app_config.question_generation,
         optimizer=app_config.optimizer,
         source_document=app_config.source_document,
@@ -333,6 +342,15 @@ def main() -> None:
         action="store_true",
         help="Regenerate the document benchmark even when a cached file exists",
     )
+    parser.add_argument(
+        "--no-profile-seed",
+        action="store_true",
+        help=(
+            "Start the FRESH arm's iteration 1 from the default retrieval block "
+            "instead of deriving chunk_size/chunk_overlap/top_k from the new "
+            "document's profile (the FROZEN arm is never profile-seeded)"
+        ),
+    )
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
@@ -356,6 +374,8 @@ def main() -> None:
     app_config.summary_path = str(GENERATED_QUESTIONS_DIR / f"document_summary_{args.label}.txt")
     app_config.profile_path = str(GENERATED_QUESTIONS_DIR / f"document_profile_{args.label}.json")
     app_config.optimizer.max_iterations = args.max_iterations
+    if args.no_profile_seed:
+        app_config.optimizer.seed_from_profile = False
 
     full_text = load_full_text(app_config.source_document)
     benchmark = get_or_create_benchmark(
@@ -420,13 +440,16 @@ def main() -> None:
                     "frozen_discarded_prompt_template": discarded_prompt,
                     "compared_dimensions": COMPARED_DIMENSIONS,
                     "differing_dimensions": differing,
+                    "fresh_seeded_from_profile": app_config.optimizer.seed_from_profile,
                     "note": (
                         "prompt_template is document-scoped content, not a portable "
                         "hyperparameter -- each arm's prompt was tuned against its own "
                         "document, so neither is a fair frozen value. It is held "
                         "constant at the fresh arm's value and excluded from the "
                         "comparison. Deltas below are attributable to "
-                        "compared_dimensions only."
+                        "compared_dimensions only. fresh_seeded_from_profile records "
+                        "whether the FRESH arm's iteration 1 was derived from this "
+                        "document's profile; the FROZEN arm never is."
                     ),
                 },
                 "frozen": frozen_result,

@@ -39,7 +39,7 @@ import logging
 import re
 
 from config import MistralSettings, OptimizerConfig, RetrievalConfig
-from document_profile import DocumentProfile
+from document_profile import DocumentProfile, chars_per_section, estimate_chunk_count
 from mistral_client import MistralClient
 from optimizer import _clamp, meets_targets
 
@@ -267,33 +267,23 @@ def _format_profile(profile: DocumentProfile) -> str:
     return "{" + ", ".join(fields) + "}"
 
 
-def _estimate_chunk_count(
-    characters: int, chunk_size: int, chunk_overlap: int
-) -> int:
-    effective_step = max(1, chunk_size - chunk_overlap)
-    if characters <= 0:
-        return 0
-    return (characters + effective_step - 1) // effective_step
-
-
 def _format_dynamic_context(
     current_config: RetrievalConfig, profile: DocumentProfile
 ) -> str:
-    estimated_count = _estimate_chunk_count(
+    estimated_count = estimate_chunk_count(
         profile.characters,
         current_config.chunk_size,
         current_config.chunk_overlap,
     )
     # Precomputed so the sizing policy's rule 1 does not depend on the LLM
-    # doing arithmetic on the profile numbers itself.
-    chars_per_section = (
-        profile.characters // profile.sections if profile.sections else profile.characters
-    )
+    # doing arithmetic on the profile numbers itself. Same helpers seed_config.py
+    # sizes the starting configuration with, so the shape the LLM is shown and
+    # the shape the seed was derived from cannot drift apart.
     return (
         "CURRENT RETRIEVAL SHAPE:\n"
         f"estimated_chunk_count={estimated_count} "
         "(computed from document characters and current chunk settings)\n"
-        f"chars_per_section={chars_per_section} "
+        f"chars_per_section={chars_per_section(profile)} "
         "(characters / sections -- the document's natural unit of meaning; "
         "see DOCUMENT-CONDITIONED SIZING rule 1)"
     )

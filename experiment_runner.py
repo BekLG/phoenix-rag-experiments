@@ -10,6 +10,10 @@ Orchestrates the full self-optimization loop:
     2b. Generate (or load cached) a document summary. Fed to the LLM
         optimizer on every iteration so it can tailor the prompt template
         it writes to what the source document actually is.
+    2c. Compute (or load cached) the document profile, then derive iteration
+        1's chunk_size/chunk_overlap/top_k from it (seed_config.py). The
+        config's retrieval block supplies the non-derivable fields and is
+        the fallback when optimizer.seed_from_profile is False.
     3. For each iteration:
         a. Build a RAG pipeline with the current retrieval config.
         b. Answer every benchmark question.
@@ -43,6 +47,7 @@ from rag_pipeline import RagPipeline
 from evaluator import run_evaluation
 from optimizer import meets_targets
 from llm_optimizer import propose_next_config_llm
+from seed_config import propose_seed_config
 import storage
 
 logger = logging.getLogger("phoenix_rag.experiment_runner")
@@ -84,7 +89,26 @@ def run_experiment(app_config: AppConfig) -> dict:
     )
     logger.info("Document profile ready: %s", document_profile)
 
+    # Iteration 1 starts from parameters DERIVED FROM THIS DOCUMENT, not from the
+    # config's retrieval block. Without this the LLM optimizer anchors on a
+    # document-agnostic starting value and spends the whole budget nudging around
+    # it -- see the trajectory in seed_config.py's module docstring.
     current_config = app_config.retrieval
+    seed_rules: list[str] = []
+    if app_config.optimizer.seed_from_profile:
+        seed = propose_seed_config(
+            base_config=current_config,
+            profile=document_profile,
+            opt_config=app_config.optimizer,
+        )
+        current_config = seed.config
+        seed_rules = [seed.rationale]
+    else:
+        logger.info(
+            "Profile seeding disabled; starting from the configured retrieval block: %s",
+            current_config.to_dict(),
+        )
+
     best_score = -1.0
     best_result: dict | None = None
 
@@ -153,16 +177,18 @@ def run_experiment(app_config: AppConfig) -> dict:
 
         if meets_targets(scores, app_config.optimizer):
             logger.info("Targets met at iteration %d, stopping early", iteration)
+            applied_rules = [*seed_rules, "all_targets_met"]
+            seed_rules = []
             history.append({
                 "iteration": iteration,
                 "config": current_config.to_dict(),
                 "scores": scores,
-                "applied_rules": "all_targets_met",
+                "applied_rules": "; ".join(applied_rules),
             })
-            storage.append_evaluation_scores(iteration, scores, applied_rules=["all_targets_met"])
+            storage.append_evaluation_scores(iteration, scores, applied_rules=applied_rules)
             break
 
-        next_config, applied_rules = propose_next_config_llm(
+        next_config, proposal_rules = propose_next_config_llm(
             current_config,
             scores,
             app_config.optimizer,
@@ -171,6 +197,13 @@ def run_experiment(app_config: AppConfig) -> dict:
             document_summary,
             document_profile,
         )
+
+        # Iteration 1's row carries the seed rationale ahead of that iteration's
+        # proposal, so both evaluation_scores.csv and the history the LLM reads on
+        # later iterations record what the starting point was derived from,
+        # instead of it looking like an arbitrary default. Consumed once.
+        applied_rules = [*seed_rules, *proposal_rules]
+        seed_rules = []
 
         history.append({
             "iteration": iteration,
@@ -182,7 +215,7 @@ def run_experiment(app_config: AppConfig) -> dict:
 
         current_config = next_config
 
-        if not applied_rules:
+        if not proposal_rules:
             logger.info("No further tuning rules triggered, stopping")
             break
 

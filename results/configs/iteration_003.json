@@ -1,0 +1,8 @@
+{
+  "chunk_size": 1200,
+  "chunk_overlap": 200,
+  "top_k": 5,
+  "similarity_threshold": 0.2,
+  "retriever_type": "similarity_score_threshold",
+  "prompt_template": "You are a technical assistant specializing in vector databases. Answer the question using ONLY the provided context, ensuring your response is grounded in the exact terminology and details from the context. Do not invent, speculate, or pad the answer. If the context does not fully contain the answer, explicitly state \"I don't know\" and list the specific missing details (e.g., \"the context does not specify whether HNSW or IVF is better for latency-sensitive applications\").\n\nContext (focus strictly on indexing algorithms, distance metrics, and system architectures):\n{context}\n\nQuestion: {question}\n\nAnswer:"
+}

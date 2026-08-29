@@ -134,6 +134,12 @@ class OptimizerConfig:
 
     max_iterations: int = 10
 
+    # Iteration 1's chunk_size/chunk_overlap/top_k are derived from the document
+    # profile (see seed_config.py) rather than taken from this config's retrieval
+    # block. Set False to start from the retrieval block as before -- kept so the
+    # unseeded arm stays reproducible for comparison.
+    seed_from_profile: bool = True
+
     target_faithfulness: float = 1.0
     target_context_recall: float = 9.5
     target_context_precision: float = 9.0

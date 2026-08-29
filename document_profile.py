@@ -90,6 +90,27 @@ def compute_profile(full_text: str, pages: int | None = None) -> DocumentProfile
     )
 
 
+def chars_per_section(profile: DocumentProfile) -> int:
+    """The document's natural unit of meaning: characters per detected section.
+
+    Falls back to the whole document when no headings were detected, so callers
+    never have to guard against `sections` being None or 0.
+    """
+    return profile.characters // profile.sections if profile.sections else profile.characters
+
+
+def estimate_chunk_count(characters: int, chunk_size: int, chunk_overlap: int) -> int:
+    """How many chunks a chunk_size/overlap pair yields over `characters`.
+
+    An estimate, not a count: the real splitter honours separators, so it lands
+    near this rather than on it.
+    """
+    if characters <= 0:
+        return 0
+    effective_step = max(1, chunk_size - chunk_overlap)
+    return (characters + effective_step - 1) // effective_step
+
+
 def save_profile(profile: DocumentProfile, path: str | Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
