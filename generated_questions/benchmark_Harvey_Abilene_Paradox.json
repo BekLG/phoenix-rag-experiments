@@ -1,0 +1,60 @@
+[
+  {
+    "question": "What is the Abilene Paradox, as defined in the article?",
+    "reference_answer": "Organizations frequently take actions in contradiction to what they really want to do and therefore defeat the very purposes they are trying to achieve.",
+    "reference_context": "This article is concerned with that paradox—the Abilene Paradox. Stated simply, it is as follows: Organizations frequently take actions in contradiction to what they really want to do and therefore defeat the very purposes they are trying to achieve.",
+    "question_type": "definition"
+  },
+  {
+    "question": "What is the primary symptom that defines organizations caught in the Abilene Paradox?",
+    "reference_answer": "The inability to manage agreement.",
+    "reference_context": "The inability to manage agreement, not the inability to manage conflict, is the essential symptom that defines organizations caught in the web of the Abilene Paradox.",
+    "question_type": "factual"
+  },
+  {
+    "question": "What is the Abilene Paradox, and how does it relate to the Watergate scandal?",
+    "reference_answer": "The Abilene Paradox occurs when organizations take actions contradictory to their shared agreement, leading to worsened problems. In Watergate, White House staff agreed the plan was inappropriate but proceeded anyway, compounding their issues.",
+    "reference_context": "The Abilene Paradox can be stated succinctly as follows: Organizations frequently take actions in contradiction to the data they have for dealing with problems and, as a result, compound their problems rather than solve them. ... First, they indicate agreement. Evidently, Mitchell, Porter, Dean, and Magruder agreed that the plan was inappropriate. ... Second, the data indicate that the principal figures then proceeded to implement the plan in contradiction to their shared agreement. ... And finally, the organization broke into subgroups with the various principals ... blaming one another for the dilemma in which they found themselves.",
+    "question_type": "relationship"
+  },
+  {
+    "question": "What is the concept of 'action anxiety' as described in the text?",
+    "reference_answer": "Action anxiety is the intense anxiety that causes organization members to take actions contrary to their understanding of the organization’s problems, leading them to endure negative consequences rather than act in a manner congruent with their beliefs.",
+    "reference_context": "The concept of action anxiety says that the reasons organization members take actions in contradiction to their understanding of the organization’s problems lies in the intense anxiety that is created as they think about acting in accordance with what they believe needs to be done.",
+    "question_type": "definition"
+  },
+  {
+    "question": "What fundamental human need does the text suggest is at the core of the Abilene Paradox?",
+    "reference_answer": "A fundamental need to be connected, engaged, and related and a reciprocal need not to be separated or alone.",
+    "reference_context": "Separation, alienation, and loneliness are things we do know about—and fear. Both research and experience indicate that ostracism is one of the most powerful punishments that can be devised. The evidence is overwhelming that we have a fundamental need to be connected, engaged, and related and a reciprocal need not to be separated or alone.",
+    "question_type": "factual"
+  },
+  {
+    "question": "What is the main cause of 'phony conflict' according to the Abilene paradox?",
+    "reference_answer": "Phony conflict occurs when people agree on actions they want to take but then do the opposite, resulting in anger and frustration.",
+    "reference_context": "Phony conflict, on the other hand, occurs when people agree on the actions they want to take, and then do the opposite. The resulting anger, frustration, and blaming behavior generally termed 'conflict' are not based on real differences.",
+    "question_type": "definition"
+  },
+  {
+    "question": "What is the primary psychological function of conceptualizing group behavior as conformity pressure in an organization?",
+    "reference_answer": "It releases the individual from responsibility for taking action and serves as a defense against action.",
+    "reference_context": "Conceptualizing, experiencing, and responding to such experiences as reflecting the tyrannical pressures of a group again serves as an important psychological use for the individual: As was previously said, it releases him from the responsibility of taking action and thus becomes a defense against action.",
+    "question_type": "why"
+  },
+  {
+    "question": "What is the first step the confronter should take during a group confrontation meeting according to the text?",
+    "reference_answer": "The confronter should own up to his position first and be open to feedback.",
+    "reference_context": "The first step in the meeting is for the individual who “calls” it (that is, the confronter) to own up to his position first and be open to the feedback he gets.",
+    "question_type": "factual"
+  },
+  {
+    "question": "What is the Abilene Paradox, and how does it relate to the myth of Sisyphus?",
+    "reference_answer": "The Abilene Paradox is a paradox of agreement where organizations avoid confronting reality, leading to absurd outcomes. It relates to Sisyphus because both involve pushing rocks (or dealing with absurd situations) in organizations, where occasional confrontation provides brief transcendence.",
+    "reference_context": [
+      "In essence, this paper proposes that there is an underlying organizational reality that includes both agreement and disagreement, cooperation and conflict. However, the decision to confront the possibility of organizational agreement is all too difficult and rare, and its opposite, the decision to accept the evils of the present, is all too common.",
+      "So it may be with confronting the Abilene Paradox. Confronting the absurd paradox of agreement may provide, through activity, what Sisyphus gained from his passive but conscious acceptance of his fate.",
+      "As you may remember, Sisyphus was condemned by Pluto to a perpetuity of pushing a large stone to the top of a mountain, only to see it return to its original position when he released it."
+    ],
+    "question_type": "relationship"
+  }
+]

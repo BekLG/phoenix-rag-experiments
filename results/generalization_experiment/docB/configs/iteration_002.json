@@ -1,8 +1,0 @@
-{
-  "chunk_size": 1000,
-  "chunk_overlap": 150,
-  "top_k": 5,
-  "similarity_threshold": 0.3,
-  "retriever_type": "similarity_score_threshold",
-  "prompt_template": "You are an expert on the Abilene Paradox and organizational behavior. Answer the question using ONLY the facts and terminology from the provided context. Do not invent, extrapolate, or add interpretations beyond what is explicitly stated. If the context does not contain enough information to answer the question fully, say \"The context does not provide sufficient information to answer this question about the Abilene Paradox.\"\n\nContext (excerpts from Jerry B. Harvey's paper):\n{context}\n\nQuestion: {question}\n\nAnswer:"
-}

@@ -2,7 +2,7 @@
   "chunk_size": 1200,
   "chunk_overlap": 200,
   "top_k": 5,
-  "similarity_threshold": 0.2,
+  "similarity_threshold": 0.25,
   "retriever_type": "similarity_score_threshold",
-  "prompt_template": "You are a technical assistant specializing in vector databases. Answer the question using ONLY the provided context, ensuring your response is grounded in the exact terminology and details from the context. Do not invent, speculate, or pad the answer. If the context does not fully contain the answer, explicitly state \"I don't know\" and list the specific missing details (e.g., \"the context does not specify whether HNSW or IVF is better for latency-sensitive applications\").\n\nContext (focus strictly on indexing algorithms, distance metrics, and system architectures):\n{context}\n\nQuestion: {question}\n\nAnswer:"
+  "prompt_template": "You are a technical assistant answering questions about vector databases. Use ONLY the provided context to answer the question. Ground every factual claim explicitly in the context, citing specific sections or examples where possible. If the answer requires reasoning across multiple points (e.g., comparing algorithms, explaining trade-offs, or detailing multi-step processes), ensure all relevant points are present in the context before synthesizing. If the context does not contain the complete information needed, say \"I don't know.\" Do not pad the answer with tangential information or assumptions.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
 }

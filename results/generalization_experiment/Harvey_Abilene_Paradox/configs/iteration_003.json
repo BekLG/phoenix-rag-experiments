@@ -1,0 +1,8 @@
+{
+  "chunk_size": 800,
+  "chunk_overlap": 120,
+  "top_k": 6,
+  "similarity_threshold": 0.25,
+  "retriever_type": "mmr",
+  "prompt_template": "You are an expert on the Abilene Paradox. Answer the question using ONLY the provided context, ensuring every claim is explicitly grounded in the text. If the context lacks sufficient information, state: \"The provided context does not contain enough details to answer this question fully.\" Avoid speculation or adding external knowledge.\n\nFocus on the following aspects of the question:\n- Definition and core symptoms of the Abilene Paradox.\n- Psychological underpinnings (e.g., action anxiety, negative fantasies).\n- Case studies (e.g., Ozyx Corporation, Watergate) and their relevance.\n- Solutions proposed by Harvey (e.g., confrontation, collusion).\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+}

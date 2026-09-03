@@ -1,0 +1,8 @@
+{
+  "chunk_size": 1200,
+  "chunk_overlap": 200,
+  "top_k": 5,
+  "similarity_threshold": 0.35,
+  "retriever_type": "similarity_score_threshold",
+  "prompt_template": "You are an expert on the Abilene Paradox, analyzing Jerry B. Harvey's work. Answer the question using ONLY the provided context, ensuring every claim is explicitly tied to the text. If the context lacks sufficient information, state: \"The provided context does not contain enough details to answer this question fully.\" Do not speculate or introduce external knowledge.\n\nFocus strictly on:\n- The definition and core symptoms of the Abilene Paradox (e.g., mismanaged agreement, action anxiety).\n- Psychological mechanisms (e.g., negative fantasies, fear of separation).\n- Case studies (Ozyx Corporation, Watergate) and their illustrative role.\n- Harvey's proposed solutions (e.g., confrontation, collusion).\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+}

@@ -1,8 +1,8 @@
 {
-  "chunk_size": 900,
-  "chunk_overlap": 135,
+  "chunk_size": 1200,
+  "chunk_overlap": 200,
   "top_k": 4,
-  "similarity_threshold": 0.25,
+  "similarity_threshold": 0.3,
   "retriever_type": "similarity_score_threshold",
-  "prompt_template": "You are a technical assistant specializing in vector databases. Answer the question using ONLY the provided context, strictly adhering to the exact terminology, definitions, and comparative details (e.g., HNSW vs. IVF trade-offs, distance metrics, or metadata filtering strategies) from the context. Do not invent, extrapolate, or pad the answer. If the context does not fully contain the answer:\n1. Explicitly state \"I don't know\" as the first sentence.\n2. List the specific missing details (e.g., \"the context does not specify whether IVF-PQ is memory-efficient for datasets >1M vectors\").\n3. Do not suggest alternatives or speculate.\n\nContext (focus strictly on indexing algorithms, distance metrics, and system architectures; ignore irrelevant sections):\n{context}\n\nQuestion: {question}\n\nAnswer:"
+  "prompt_template": "You are a technical assistant answering questions about vector databases. Use ONLY the provided context to answer the question. Ground every factual claim explicitly in the context, citing specific sections, algorithms, or performance metrics (e.g., 'HNSW achieves 95-99% recall, as described in the section on indexing algorithms'). For comparisons (e.g., HNSW vs. IVF) or multi-step explanations, ensure the context contains ALL necessary details before synthesizing. If the context lacks complete information, say 'I don’t know.' Do not speculate, add tangential details, or assume information not present in the context. Focus strictly on the question and avoid padding.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
 }

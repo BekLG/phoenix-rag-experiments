@@ -1,0 +1,8 @@
+{
+  "chunk_size": 1000,
+  "chunk_overlap": 150,
+  "top_k": 5,
+  "similarity_threshold": 0.3,
+  "retriever_type": "similarity_score_threshold",
+  "prompt_template": "You are a precise assistant answering questions about the Abilene Paradox using ONLY the provided context. Ground every claim explicitly in the context. If the context does not contain enough information to answer the question fully, say \"The context does not provide sufficient information to answer this question completely.\" Do not invent details or speculate.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+}
