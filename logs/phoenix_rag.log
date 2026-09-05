@@ -4868,3 +4868,955 @@ Traceback (most recent call last):
   File "/home/yared/workspace/phoenix-rag-experiments/mistral_client.py", line 119, in _with_retry
     raise RuntimeError(
 RuntimeError: Mistral API call failed after 5 attempts
+2026-09-03 20:39:56,573 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:39:56,610 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:39:56,898 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:39:56,934 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:39:57,187 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:39:57,215 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:39:57,553 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:39:57,608 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:39:57,913 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:39:57,949 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:40:00,015 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:40:00,053 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:40:09,637 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:40:09,671 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:40:09,683 | INFO     | phoenix_rag.operations | Harvey_Abilene_Paradox.pdf is already staged at /home/yared/workspace/phoenix-rag-experiments/data/Harvey_Abilene_Paradox.pdf
+2026-09-03 20:40:09,687 | INFO     | phoenix_rag.document_loader | Loading document Harvey_Abilene_Paradox.pdf (.pdf)
+2026-09-03 20:40:10,321 | INFO     | phoenix_rag.document_loader | Loaded 12 page(s)/section(s) from Harvey_Abilene_Paradox.pdf
+2026-09-03 20:40:10,322 | INFO     | phoenix_rag.question_generator | Loading cached benchmark from /home/yared/workspace/phoenix-rag-experiments/generated_questions/benchmark_Harvey_Abilene_Paradox.json
+2026-09-03 20:40:10,323 | INFO     | phoenix_rag.document_generalization_experiment | Benchmark for new document ready: 9 questions (used for BOTH conditions)
+2026-09-03 20:40:10,323 | INFO     | phoenix_rag.document_summarizer | Loading cached document summary from /home/yared/workspace/phoenix-rag-experiments/generated_questions/document_summary_Harvey_Abilene_Paradox.txt
+2026-09-03 20:40:10,323 | INFO     | phoenix_rag.document_loader | Loading document Harvey_Abilene_Paradox.pdf (.pdf)
+2026-09-03 20:40:10,928 | INFO     | phoenix_rag.document_loader | Loaded 12 page(s)/section(s) from Harvey_Abilene_Paradox.pdf
+2026-09-03 20:40:10,929 | INFO     | phoenix_rag.document_profile | Loading cached document profile from /home/yared/workspace/phoenix-rag-experiments/generated_questions/document_profile_Harvey_Abilene_Paradox.json
+2026-09-03 20:40:10,930 | INFO     | phoenix_rag.document_generalization_experiment | === FRESH condition: full self-optimization from scratch ===
+2026-09-03 20:40:10,931 | INFO     | phoenix_rag.storage | Results for this run will be written to /home/yared/workspace/phoenix-rag-experiments/results/generalization_experiment/Harvey_Abilene_Paradox
+2026-09-03 20:40:10,955 | INFO     | phoenix_rag.document_loader | Loading document Harvey_Abilene_Paradox.pdf (.pdf)
+2026-09-03 20:40:11,452 | INFO     | phoenix_rag.document_loader | Loaded 12 page(s)/section(s) from Harvey_Abilene_Paradox.pdf
+2026-09-03 20:40:11,453 | INFO     | phoenix_rag.question_generator | Loading cached benchmark from /home/yared/workspace/phoenix-rag-experiments/generated_questions/benchmark_Harvey_Abilene_Paradox.json
+2026-09-03 20:40:11,453 | INFO     | phoenix_rag.document_summarizer | Loading cached document summary from /home/yared/workspace/phoenix-rag-experiments/generated_questions/document_summary_Harvey_Abilene_Paradox.txt
+2026-09-03 20:40:11,454 | INFO     | phoenix_rag.experiment_runner | Document summary ready (3206 chars)
+2026-09-03 20:40:11,455 | INFO     | phoenix_rag.document_profile | Loading cached document profile from /home/yared/workspace/phoenix-rag-experiments/generated_questions/document_profile_Harvey_Abilene_Paradox.json
+2026-09-03 20:40:11,455 | INFO     | phoenix_rag.experiment_runner | Document profile ready: DocumentProfile(pages=12, characters=52238, estimated_tokens=13059, sections=14, median_chars_per_page=4353.0, min_chars_per_page=4353, max_chars_per_page=4354, doc_type='paper', table_heavy=False, list_heavy=False)
+2026-09-03 20:40:11,456 | INFO     | phoenix_rag.experiment_runner | Benchmark ready: 9 fixed evaluation questions (single document: Harvey_Abilene_Paradox.pdf)
+2026-09-03 20:40:11,456 | INFO     | phoenix_rag.seed_config | Profile-seeded starting configuration: seed_from_profile[prose-heavy]: doc_type=paper, median_chars_per_page=4353.0, characters=52238, sections=14, chars_per_section~3731 -> prose-heavy, so chunk_size=1200, chunk_overlap=180 (15% of chunk_size), top_k=4 (~10% document coverage over 52 estimated chunks). retriever_type/similarity_threshold/prompt_template left at base values -- those need measured scores to choose.
+2026-09-03 20:40:11,456 | INFO     | phoenix_rag.experiment_runner | === Iteration 1/4 ===
+2026-09-03 20:40:11,456 | INFO     | phoenix_rag.experiment_runner | Vector store needed for chunk_size=1200, chunk_overlap=180
+2026-09-03 20:40:11,458 | INFO     | phoenix_rag.chunking | Split 12 document(s) into 56 chunks (chunk_size=1200, overlap=180)
+2026-09-03 20:40:11,460 | INFO     | phoenix_rag.vector_store | Loading FAISS index from /home/yared/workspace/phoenix-rag-experiments/data/faiss_index/22a49f5eb68ee3fa8754
+2026-09-03 20:40:11,491 | INFO     | phoenix_rag.rag_pipeline | Answering question 1/9
+2026-09-03 20:40:20,351 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:40:23,200 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:40:23,201 | INFO     | phoenix_rag.rag_pipeline | Answering question 2/9
+2026-09-03 20:40:23,577 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:40:24,721 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:40:24,722 | INFO     | phoenix_rag.rag_pipeline | Answering question 3/9
+2026-09-03 20:40:25,307 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:40:29,252 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:40:29,254 | INFO     | phoenix_rag.rag_pipeline | Answering question 4/9
+2026-09-03 20:40:30,787 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:40:32,281 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:40:32,282 | INFO     | phoenix_rag.rag_pipeline | Answering question 5/9
+2026-09-03 20:40:33,500 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:40:39,683 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:40:39,686 | INFO     | phoenix_rag.rag_pipeline | Answering question 6/9
+2026-09-03 20:40:43,165 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:40:47,048 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:40:47,050 | INFO     | phoenix_rag.rag_pipeline | Answering question 7/9
+2026-09-03 20:40:49,611 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:40:52,118 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:40:52,119 | INFO     | phoenix_rag.rag_pipeline | Answering question 8/9
+2026-09-03 20:40:53,364 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:40:56,087 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:40:56,091 | INFO     | phoenix_rag.rag_pipeline | Answering question 9/9
+2026-09-03 20:40:57,758 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:41:00,744 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:41:00,783 | INFO     | phoenix_rag.evaluator | Running Ragas evaluation over 9 samples (max_workers=3)
+2026-09-03 20:41:09,541 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:10,088 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:10,673 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:11,631 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:12,173 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:12,950 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:13,424 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:14,467 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:14,577 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:15,253 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:16,537 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:17,604 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:19,432 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:23,077 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:23,107 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:25,180 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:28,012 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:29,547 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:44,216 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:47,593 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:48,537 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:57,394 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:41:58,480 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:42:17,195 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:42:40,201 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:42:40,202 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:42:40,206 | ERROR    | ragas.executor | Exception raised in Job[2]: HTTPStatusError(Error response 403 while fetching https://api.mistral.ai/v1/chat/completions: {"object":"error","message":"This model is not available in your subscription tier","type":"tier_not_allowed","param":null,"code":"1910","raw_status_code":403})
+2026-09-03 20:42:40,397 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:42:40,478 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:42:40,730 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:42:42,131 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:42:42,762 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:42:44,538 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:42:46,555 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:42:52,478 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:43:14,810 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:43:25,971 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:43:25,973 | ERROR    | ragas.executor | Exception raised in Job[1]: HTTPStatusError(Error response 403 while fetching https://api.mistral.ai/v1/chat/completions: {"object":"error","message":"This model is not available in your subscription tier","type":"tier_not_allowed","param":null,"code":"1910","raw_status_code":403})
+2026-09-03 20:43:26,223 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:43:27,349 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:43:28,266 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:43:29,455 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:43:33,138 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:43:36,324 | WARNING  | langchain_core.callbacks.manager | Error in RagasTracer.on_chat_model_start callback: RuntimeError('cannot schedule new futures after shutdown')
+2026-09-03 20:43:36,638 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:43:36,639 | WARNING  | langchain_core.callbacks.manager | Error in RagasTracer.on_llm_error callback: RuntimeError('cannot schedule new futures after shutdown')
+2026-09-03 20:43:36,639 | ERROR    | ragas.executor | Exception raised in Job[0]: HTTPStatusError(Error response 403 while fetching https://api.mistral.ai/v1/chat/completions: {"object":"error","message":"This model is not available in your subscription tier","type":"tier_not_allowed","param":null,"code":"1910","raw_status_code":403})
+2026-09-03 20:43:36,641 | WARNING  | langchain_core.callbacks.manager | Error in RagasTracer.on_chat_model_start callback: RuntimeError('cannot schedule new futures after shutdown')
+2026-09-03 20:43:37,030 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:43:37,031 | WARNING  | langchain_core.callbacks.manager | Error in RagasTracer.on_llm_error callback: RuntimeError('cannot schedule new futures after shutdown')
+2026-09-03 20:43:37,273 | WARNING  | langchain_core.callbacks.manager | Error in RagasTracer.on_chat_model_start callback: RuntimeError('cannot schedule new futures after shutdown')
+2026-09-03 20:43:37,813 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:43:37,814 | WARNING  | langchain_core.callbacks.manager | Error in RagasTracer.on_llm_error callback: RuntimeError('cannot schedule new futures after shutdown')
+2026-09-03 20:43:37,843 | WARNING  | langchain_core.callbacks.manager | Error in RagasTracer.on_chat_model_start callback: RuntimeError('cannot schedule new futures after shutdown')
+2026-09-03 20:43:38,267 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 403 Forbidden"
+2026-09-03 20:43:38,268 | WARNING  | langchain_core.callbacks.manager | Error in RagasTracer.on_llm_error callback: RuntimeError('cannot schedule new futures after shutdown')
+2026-09-03 20:43:39,021 | WARNING  | langchain_core.callbacks.manager | Error in RagasTracer.on_chat_model_start callback: RuntimeError('cannot schedule new futures after shutdown')
+2026-09-03 20:44:15,838 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:44:16,767 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:44:52,337 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:44:52,367 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:44:52,414 | INFO     | phoenix_rag.operations | Configuration field mistral.optimizer_model set to 'mistral-medium-latest'
+2026-09-03 20:44:52,415 | INFO     | phoenix_rag.operations | Configuration field mistral.judge_model set to 'mistral-medium-latest'
+2026-09-03 20:44:52,416 | INFO     | phoenix_rag.operations | Configuration saved to /home/yared/workspace/phoenix-rag-experiments/config/default_config.json
+2026-09-03 20:44:52,610 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:44:52,640 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:44:55,710 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:44:55,858 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:44:55,886 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:45:49,809 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:45:49,845 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:46:09,507 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:46:09,552 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:46:57,443 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:46:57,482 | INFO     | phoenix_rag.corpus | Loaded corpus from /home/yared/workspace/phoenix-rag-experiments/data/corpus/manifest.json: 1 document(s), 7 index variant(s)
+2026-09-03 20:47:00,522 | INFO     | phoenix_rag.operations | Harvey_Abilene_Paradox.pdf is already staged at /home/yared/workspace/phoenix-rag-experiments/data/Harvey_Abilene_Paradox.pdf
+2026-09-03 20:47:00,525 | INFO     | phoenix_rag.document_loader | Loading document Harvey_Abilene_Paradox.pdf (.pdf)
+2026-09-03 20:47:01,093 | INFO     | phoenix_rag.document_loader | Loaded 12 page(s)/section(s) from Harvey_Abilene_Paradox.pdf
+2026-09-03 20:47:01,094 | INFO     | phoenix_rag.question_generator | Loading cached benchmark from /home/yared/workspace/phoenix-rag-experiments/generated_questions/benchmark_Harvey_Abilene_Paradox.json
+2026-09-03 20:47:01,095 | INFO     | phoenix_rag.document_generalization_experiment | Benchmark for new document ready: 9 questions (used for BOTH conditions)
+2026-09-03 20:47:01,096 | INFO     | phoenix_rag.document_summarizer | Loading cached document summary from /home/yared/workspace/phoenix-rag-experiments/generated_questions/document_summary_Harvey_Abilene_Paradox.txt
+2026-09-03 20:47:01,097 | INFO     | phoenix_rag.document_loader | Loading document Harvey_Abilene_Paradox.pdf (.pdf)
+2026-09-03 20:47:01,784 | INFO     | phoenix_rag.document_loader | Loaded 12 page(s)/section(s) from Harvey_Abilene_Paradox.pdf
+2026-09-03 20:47:01,785 | INFO     | phoenix_rag.document_profile | Loading cached document profile from /home/yared/workspace/phoenix-rag-experiments/generated_questions/document_profile_Harvey_Abilene_Paradox.json
+2026-09-03 20:47:01,785 | INFO     | phoenix_rag.document_generalization_experiment | === FRESH condition: full self-optimization from scratch ===
+2026-09-03 20:47:01,786 | INFO     | phoenix_rag.storage | Results for this run will be written to /home/yared/workspace/phoenix-rag-experiments/results/generalization_experiment/Harvey_Abilene_Paradox
+2026-09-03 20:47:01,815 | INFO     | phoenix_rag.document_loader | Loading document Harvey_Abilene_Paradox.pdf (.pdf)
+2026-09-03 20:47:02,601 | INFO     | phoenix_rag.document_loader | Loaded 12 page(s)/section(s) from Harvey_Abilene_Paradox.pdf
+2026-09-03 20:47:02,601 | INFO     | phoenix_rag.question_generator | Loading cached benchmark from /home/yared/workspace/phoenix-rag-experiments/generated_questions/benchmark_Harvey_Abilene_Paradox.json
+2026-09-03 20:47:02,602 | INFO     | phoenix_rag.document_summarizer | Loading cached document summary from /home/yared/workspace/phoenix-rag-experiments/generated_questions/document_summary_Harvey_Abilene_Paradox.txt
+2026-09-03 20:47:02,602 | INFO     | phoenix_rag.experiment_runner | Document summary ready (3206 chars)
+2026-09-03 20:47:02,603 | INFO     | phoenix_rag.document_profile | Loading cached document profile from /home/yared/workspace/phoenix-rag-experiments/generated_questions/document_profile_Harvey_Abilene_Paradox.json
+2026-09-03 20:47:02,603 | INFO     | phoenix_rag.experiment_runner | Document profile ready: DocumentProfile(pages=12, characters=52238, estimated_tokens=13059, sections=14, median_chars_per_page=4353.0, min_chars_per_page=4353, max_chars_per_page=4354, doc_type='paper', table_heavy=False, list_heavy=False)
+2026-09-03 20:47:02,604 | INFO     | phoenix_rag.experiment_runner | Benchmark ready: 9 fixed evaluation questions (single document: Harvey_Abilene_Paradox.pdf)
+2026-09-03 20:47:02,604 | INFO     | phoenix_rag.seed_config | Profile-seeded starting configuration: seed_from_profile[prose-heavy]: doc_type=paper, median_chars_per_page=4353.0, characters=52238, sections=14, chars_per_section~3731 -> prose-heavy, so chunk_size=1200, chunk_overlap=180 (15% of chunk_size), top_k=4 (~10% document coverage over 52 estimated chunks). retriever_type/similarity_threshold/prompt_template left at base values -- those need measured scores to choose.
+2026-09-03 20:47:02,604 | INFO     | phoenix_rag.experiment_runner | === Iteration 1/4 ===
+2026-09-03 20:47:02,604 | INFO     | phoenix_rag.experiment_runner | Vector store needed for chunk_size=1200, chunk_overlap=180
+2026-09-03 20:47:02,608 | INFO     | phoenix_rag.chunking | Split 12 document(s) into 56 chunks (chunk_size=1200, overlap=180)
+2026-09-03 20:47:02,609 | INFO     | phoenix_rag.vector_store | Loading FAISS index from /home/yared/workspace/phoenix-rag-experiments/data/faiss_index/22a49f5eb68ee3fa8754
+2026-09-03 20:47:02,612 | INFO     | faiss.loader | Loading faiss with AVX2 support.
+2026-09-03 20:47:02,613 | INFO     | faiss.loader | Could not load library with AVX2 support due to:
+ModuleNotFoundError("No module named 'faiss.swigfaiss_avx2'")
+2026-09-03 20:47:02,613 | INFO     | faiss.loader | Loading faiss.
+2026-09-03 20:47:02,650 | INFO     | faiss.loader | Successfully loaded faiss.
+2026-09-03 20:47:02,675 | INFO     | phoenix_rag.rag_pipeline | Answering question 1/9
+2026-09-03 20:47:03,264 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:47:04,698 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:04,700 | INFO     | phoenix_rag.rag_pipeline | Answering question 2/9
+2026-09-03 20:47:05,053 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:47:05,841 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:05,847 | INFO     | phoenix_rag.rag_pipeline | Answering question 3/9
+2026-09-03 20:47:06,144 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:47:08,055 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:08,057 | INFO     | phoenix_rag.rag_pipeline | Answering question 4/9
+2026-09-03 20:47:08,691 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:47:10,534 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:10,537 | INFO     | phoenix_rag.rag_pipeline | Answering question 5/9
+2026-09-03 20:47:10,841 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:47:12,071 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:12,074 | INFO     | phoenix_rag.rag_pipeline | Answering question 6/9
+2026-09-03 20:47:12,480 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:47:13,404 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:13,407 | INFO     | phoenix_rag.rag_pipeline | Answering question 7/9
+2026-09-03 20:47:13,821 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:47:14,630 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:14,633 | INFO     | phoenix_rag.rag_pipeline | Answering question 8/9
+2026-09-03 20:47:14,937 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:47:15,756 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:15,759 | INFO     | phoenix_rag.rag_pipeline | Answering question 9/9
+2026-09-03 20:47:16,166 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:47:18,419 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:18,448 | INFO     | phoenix_rag.evaluator | Running Ragas evaluation over 9 samples (max_workers=3)
+2026-09-03 20:47:20,995 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:32,101 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:32,102 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:37,163 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:40,026 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:47:41,988 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:47:43,415 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:46,671 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:49,347 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:49,348 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:54,669 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:47:55,234 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:57,362 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:47:57,363 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:47:59,791 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:47:59,998 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:48:00,656 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:48:03,284 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:48:06,165 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:48:08,752 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:48:09,999 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:48:11,923 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:48:11,924 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:48:27,577 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:48:30,344 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:48:35,815 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:48:39,499 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:48:41,903 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:48:44,410 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:48:44,411 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:48:44,657 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:48:44,948 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:48:44,959 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:48:45,869 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:48:46,279 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:48:46,698 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:48:46,859 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:48:50,341 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:48:50,419 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:48:50,887 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:48:52,423 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:48:57,059 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:48:58,567 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:48:59,629 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:49:02,868 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:49:09,221 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:49:12,189 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:49:13,720 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:49:15,057 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:49:18,945 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:49:18,948 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:49:24,987 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:49:28,891 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:49:42,496 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:49:59,734 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:49:59,735 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:50:11,572 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:50:26,912 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:50:26,913 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:50:36,387 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:50:40,321 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:50:42,597 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:50:42,599 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:50:50,401 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:50:53,467 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:50:55,101 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:50:56,521 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:50:56,522 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:51:15,556 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:51:17,936 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:51:17,937 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:51:23,464 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:51:26,405 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:51:28,132 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:51:29,342 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:51:29,343 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:51:35,104 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:51:37,523 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:51:37,525 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:51:52,432 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:51:52,492 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:51:52,796 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:51:53,058 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:51:53,254 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:51:55,619 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:51:55,941 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:51:55,942 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:51:56,442 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:51:56,513 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:51:56,528 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:51:58,756 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:01,764 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:52:04,234 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:52:04,235 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:52:09,246 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:52:11,972 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:52:15,355 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:52:18,453 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:52:19,952 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:52:21,286 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:52:21,287 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:52:30,439 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:52:42,372 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:52:44,957 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:45,158 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:45,322 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:45,573 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:45,673 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:46,118 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:46,497 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:46,702 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:47,495 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:47,817 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:48,792 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:48,960 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:49,766 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:53,292 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:54,537 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:54,930 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:52:57,781 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 20:53:10,424 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:53:48,601 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:54:06,691 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:54:09,967 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:54:11,305 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:54:11,307 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:54:17,995 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:54:20,370 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:54:20,371 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:55:11,233 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:55:28,326 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:55:28,328 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:55:47,557 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:55:57,089 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:56:24,058 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:56:33,859 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:56:39,478 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:56:42,961 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:57:16,587 | INFO     | phoenix_rag.evaluator | Evaluation scores: {'faithfulness': 0.8787878787878788, 'context_recall': 0.8888888888888888, 'context_precision': 0.8148148147776235, 'response_relevancy': 0.9489887970849666}
+2026-09-03 20:57:16,596 | INFO     | phoenix_rag.storage | New best configuration saved (iteration 1): {'faithfulness': 0.8787878787878788, 'context_recall': 0.8888888888888888, 'context_precision': 0.8148148147776235, 'response_relevancy': 0.9489887970849666}
+2026-09-03 20:57:16,596 | INFO     | phoenix_rag.experiment_runner | New best configuration saved! (Weighted Score: 0.8821)
+2026-09-03 20:57:18,903 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:57:18,906 | INFO     | phoenix_rag.llm_optimizer | LLM optimizer proposed: {'chunk_size': 1000, 'chunk_overlap': 200, 'top_k': 5, 'similarity_threshold': 0.1, 'retriever_type': 'mmr', 'prompt_template': "You are a helpful assistant answering questions using ONLY the provided context. If the answer is not contained in the context, say you don't know.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"} | llm_optimizer[prompt_template_updated]: doc_type=paper, median_chars_per_page=4353, chars_per_section~3731 -> prose-heavy regime, so chunk_size=1000 (targeting ~1/3 of chars_per_section) with 20% overlap (200). Switch to MMR retriever and increase top_k to 5 to explore recall-precision tradeoff while maintaining structural diversity.
+2026-09-03 20:57:18,907 | INFO     | phoenix_rag.experiment_runner | === Iteration 2/4 ===
+2026-09-03 20:57:18,907 | INFO     | phoenix_rag.experiment_runner | Vector store needed for chunk_size=1000, chunk_overlap=200
+2026-09-03 20:57:18,913 | INFO     | phoenix_rag.chunking | Split 12 document(s) into 66 chunks (chunk_size=1000, overlap=200)
+2026-09-03 20:57:18,914 | INFO     | phoenix_rag.vector_store | Building FAISS index from 66 chunks
+2026-09-03 20:57:19,887 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:57:22,836 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:57:25,192 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:57:25,203 | INFO     | phoenix_rag.vector_store | Saved FAISS index to /home/yared/workspace/phoenix-rag-experiments/data/faiss_index/4e3b0352fedb5e2ddfe6
+2026-09-03 20:57:25,226 | INFO     | phoenix_rag.rag_pipeline | Answering question 1/9
+2026-09-03 20:57:25,777 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:57:26,972 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:57:27,194 | INFO     | phoenix_rag.rag_pipeline | Answering question 2/9
+2026-09-03 20:57:27,477 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:57:28,568 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:57:28,570 | INFO     | phoenix_rag.rag_pipeline | Answering question 3/9
+2026-09-03 20:57:28,932 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:57:31,313 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:57:31,315 | INFO     | phoenix_rag.rag_pipeline | Answering question 4/9
+2026-09-03 20:57:31,691 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:57:33,353 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:57:33,356 | INFO     | phoenix_rag.rag_pipeline | Answering question 5/9
+2026-09-03 20:57:33,858 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:57:35,389 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:57:35,392 | INFO     | phoenix_rag.rag_pipeline | Answering question 6/9
+2026-09-03 20:57:36,013 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:57:36,922 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:57:36,925 | INFO     | phoenix_rag.rag_pipeline | Answering question 7/9
+2026-09-03 20:57:37,464 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:57:38,702 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:57:38,706 | INFO     | phoenix_rag.rag_pipeline | Answering question 8/9
+2026-09-03 20:57:39,750 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:57:41,040 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:57:41,042 | INFO     | phoenix_rag.rag_pipeline | Answering question 9/9
+2026-09-03 20:57:43,088 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:57:46,371 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:57:46,407 | INFO     | phoenix_rag.evaluator | Running Ragas evaluation over 9 samples (max_workers=3)
+2026-09-03 20:57:58,649 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:58:22,146 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:58:22,148 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:59:25,999 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:59:40,023 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:59:52,217 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 20:59:56,784 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 20:59:56,785 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:00:22,349 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:00:27,073 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:00:48,943 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:01:26,125 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:01:26,131 | WARNING  | langchain_core.language_models.llms | Retrying langchain_mistralai.chat_models.acompletion_with_retry.<locals>._completion_with_retry in 4 seconds as it raised ConnectError: .
+2026-09-03 21:01:37,079 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:01:59,912 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:02:15,871 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:02:17,805 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:02:19,685 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:02:19,686 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:02:19,689 | ERROR    | ragas.executor | Exception raised in Job[2]: TimeoutError()
+2026-09-03 21:02:22,737 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:02:26,705 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:02:26,706 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:02:53,553 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:02:53,555 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:03:04,448 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:03:11,861 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:03:22,425 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:03:26,118 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:03:28,563 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:03:30,103 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:03:30,104 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:03:51,064 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:04:01,036 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:04:11,167 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:04:11,169 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:04:16,487 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:04:19,985 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:04:33,799 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:04:33,800 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:04:39,888 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:04:41,781 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:04:44,040 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:04:46,697 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:04:49,360 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:04:52,130 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:04:55,201 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:04:55,202 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:04:55,503 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:04:56,195 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:04:56,363 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:04:56,631 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:04:57,353 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:04:57,558 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:04:57,978 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:04:58,856 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:04:58,892 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:05:01,647 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:05:05,269 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:05:16,193 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:05:18,343 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:05:20,083 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:05:20,084 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:05:27,185 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:05:29,709 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:05:29,711 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:05:35,878 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:05:35,880 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:05:52,545 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:05:55,101 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:05:55,321 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:05:55,520 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:05:56,112 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:05:56,360 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:05:56,810 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:05:57,177 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:05:57,194 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:05:57,666 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:05:58,990 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:05:59,268 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:05:59,604 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:06:04,235 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:06:07,048 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:06:10,318 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:06:13,339 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:06:15,281 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:06:16,614 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:06:16,616 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:06:33,196 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:06:35,655 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:06:39,193 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:06:57,530 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:07:01,056 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:07:02,234 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:07:02,236 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:07:08,241 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:07:10,989 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:07:10,991 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:07:16,488 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:07:19,174 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:07:22,861 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:07:30,014 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:07:30,015 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:07:53,066 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:07:55,933 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:08:08,480 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:08:21,675 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:08:25,115 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:08:26,450 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:08:26,451 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:08:43,792 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:08:52,974 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:08:56,770 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:09:00,734 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:09:08,968 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:09:08,969 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:09:16,322 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:09:20,659 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:09:26,968 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:09:29,140 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:09:29,142 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:09:44,788 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:09:49,021 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:09:53,693 | INFO     | phoenix_rag.evaluator | Evaluation scores: {'faithfulness': 0.8490740740740741, 'context_recall': 1.0, 'context_precision': 0.7715277777183795, 'response_relevancy': 0.9468295955949144}
+2026-09-03 21:09:53,701 | INFO     | phoenix_rag.storage | New best configuration saved (iteration 2): {'faithfulness': 0.8490740740740741, 'context_recall': 1.0, 'context_precision': 0.7715277777183795, 'response_relevancy': 0.9468295955949144}
+2026-09-03 21:09:53,702 | INFO     | phoenix_rag.experiment_runner | New best configuration saved! (Weighted Score: 0.8833)
+2026-09-03 21:09:56,319 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:09:56,321 | INFO     | phoenix_rag.llm_optimizer | LLM optimizer proposed: {'chunk_size': 800, 'chunk_overlap': 160, 'top_k': 6, 'similarity_threshold': 0.3, 'retriever_type': 'similarity_score_threshold', 'prompt_template': "You are a helpful assistant answering questions using ONLY the provided context. If the answer is not contained in the context, say you don't know.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"} | llm_optimizer[prompt_template_updated]: doc_type=paper, median_chars_per_page=4353, chars_per_section~3731 -> prose-heavy regime, so chunk_size=800 (smaller than 1000 to test recall-precision tradeoff) with 20% overlap (160). Switch to similarity_score_threshold retriever with threshold=0.3 to improve precision while maintaining recall. Increase top_k to 6 to balance recall.
+2026-09-03 21:09:56,322 | INFO     | phoenix_rag.experiment_runner | === Iteration 3/4 ===
+2026-09-03 21:09:56,322 | INFO     | phoenix_rag.experiment_runner | Vector store needed for chunk_size=800, chunk_overlap=160
+2026-09-03 21:09:56,326 | INFO     | phoenix_rag.chunking | Split 12 document(s) into 85 chunks (chunk_size=800, overlap=160)
+2026-09-03 21:09:56,328 | INFO     | phoenix_rag.vector_store | Building FAISS index from 85 chunks
+2026-09-03 21:09:57,287 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:09:58,861 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:10:00,169 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:10:00,542 | INFO     | phoenix_rag.vector_store | Saved FAISS index to /home/yared/workspace/phoenix-rag-experiments/data/faiss_index/b481331d84d062bc3162
+2026-09-03 21:10:00,571 | INFO     | phoenix_rag.rag_pipeline | Answering question 1/9
+2026-09-03 21:10:01,347 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:10:02,609 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:02,612 | INFO     | phoenix_rag.rag_pipeline | Answering question 2/9
+2026-09-03 21:10:03,051 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:10:03,949 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:03,951 | INFO     | phoenix_rag.rag_pipeline | Answering question 3/9
+2026-09-03 21:10:04,462 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:10:06,052 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:06,054 | INFO     | phoenix_rag.rag_pipeline | Answering question 4/9
+2026-09-03 21:10:06,600 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:10:07,821 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:07,824 | INFO     | phoenix_rag.rag_pipeline | Answering question 5/9
+2026-09-03 21:10:08,230 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:10:09,373 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:09,374 | INFO     | phoenix_rag.rag_pipeline | Answering question 6/9
+2026-09-03 21:10:09,623 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:10:10,682 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:10,684 | INFO     | phoenix_rag.rag_pipeline | Answering question 7/9
+2026-09-03 21:10:11,521 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:10:12,255 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:12,257 | INFO     | phoenix_rag.rag_pipeline | Answering question 8/9
+2026-09-03 21:10:12,547 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:10:13,470 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:13,471 | INFO     | phoenix_rag.rag_pipeline | Answering question 9/9
+2026-09-03 21:10:13,770 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:10:15,856 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:15,891 | INFO     | phoenix_rag.evaluator | Running Ragas evaluation over 9 samples (max_workers=3)
+2026-09-03 21:10:18,915 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:18,918 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:21,458 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:27,694 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:27,695 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:33,290 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:10:34,855 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:10:36,573 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:42,374 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:47,207 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:50,937 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:10:50,941 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:11:04,352 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:11:06,799 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:11:06,800 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:11:26,543 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:11:38,759 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:11:40,726 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:11:41,989 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:11:41,990 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:11:48,301 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:11:50,736 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:11:50,737 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:11:55,658 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:11:59,778 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:11:59,779 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:00,081 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:01,693 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:12:04,152 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:12:06,995 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:12:06,997 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:12:14,591 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:12:19,254 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:12:22,298 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:12:22,299 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:12:25,655 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:12:27,293 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:12:31,058 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:12:33,747 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:12:36,507 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:36,714 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:36,729 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:37,022 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:37,326 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:37,531 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:37,840 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:38,345 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:38,608 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:38,767 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:40,546 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:42,347 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:42,921 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:42,987 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:45,120 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:45,421 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:46,032 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:51,977 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:12:55,732 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:13:15,337 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:13:19,162 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:13:22,182 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:13:24,837 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:13:40,203 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:13:44,307 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:13:46,248 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:13:47,475 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:13:47,477 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:13:52,806 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:13:57,640 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:13:57,858 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:14:05,256 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:14:25,313 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:14:32,104 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:14:32,105 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:14:38,780 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:14:49,499 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:14:56,696 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:15:10,832 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:15:12,367 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:15:13,702 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:15:13,704 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:15:28,750 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:15:28,751 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:15:33,670 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:15:50,868 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:15:50,873 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:15:53,840 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:15:55,482 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:15:59,575 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:16:03,474 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:16:03,475 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:16:05,928 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:16:10,926 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:16:19,515 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:16:19,517 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:16:33,794 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:16:33,795 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:16:39,013 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:16:41,473 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:16:43,065 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:17:16,942 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:17:42,280 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:17:42,281 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:17:50,165 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:17:52,590 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:17:52,591 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:18:26,036 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:18:26,039 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:18:26,040 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:18:35,556 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:18:38,543 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:18:53,659 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:18:54,987 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:18:54,988 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:19:01,261 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:19:05,133 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:19:05,134 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:19:19,969 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:19:26,116 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:19:26,119 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:19:36,825 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:19:39,336 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:19:39,337 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:19:43,828 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:19:53,070 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:20:08,406 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:20:21,821 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:20:25,402 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:20:29,403 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:20:32,980 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:20:36,464 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:20:41,583 | INFO     | phoenix_rag.evaluator | Evaluation scores: {'faithfulness': 0.9222222222222223, 'context_recall': 1.0, 'context_precision': 0.8726851851379052, 'response_relevancy': 0.9361859104877893}
+2026-09-03 21:20:41,592 | INFO     | phoenix_rag.storage | New best configuration saved (iteration 3): {'faithfulness': 0.9222222222222223, 'context_recall': 1.0, 'context_precision': 0.8726851851379052, 'response_relevancy': 0.9361859104877893}
+2026-09-03 21:20:41,592 | INFO     | phoenix_rag.experiment_runner | New best configuration saved! (Weighted Score: 0.9307)
+2026-09-03 21:20:44,038 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:20:44,040 | INFO     | phoenix_rag.llm_optimizer | LLM optimizer proposed: {'chunk_size': 1000, 'chunk_overlap': 200, 'top_k': 4, 'similarity_threshold': 0.4, 'retriever_type': 'similarity_score_threshold', 'prompt_template': "You are a helpful assistant answering questions using ONLY the provided context. If the answer is not contained in the context, say you don't know. Keep your answer concise and directly address the question without adding unrelated information.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"} | llm_optimizer[prompt_template_updated]: doc_type=paper, median_chars_per_page=4353, chars_per_section~3731 -> prose-heavy regime. Prioritizing context_precision (0.772 < 9.0) by lowering top_k to 4 and raising similarity_threshold to 0.4, while keeping chunk_size=1000/chunk_overlap=200 to preserve recall (1.0 in iter 2). Prompt tightened to reduce padding and improve response_relevancy.
+2026-09-03 21:20:44,040 | INFO     | phoenix_rag.experiment_runner | === Iteration 4/4 ===
+2026-09-03 21:20:44,041 | INFO     | phoenix_rag.experiment_runner | Vector store needed for chunk_size=1000, chunk_overlap=200
+2026-09-03 21:20:44,045 | INFO     | phoenix_rag.chunking | Split 12 document(s) into 66 chunks (chunk_size=1000, overlap=200)
+2026-09-03 21:20:44,046 | INFO     | phoenix_rag.vector_store | Loading FAISS index from /home/yared/workspace/phoenix-rag-experiments/data/faiss_index/4e3b0352fedb5e2ddfe6
+2026-09-03 21:20:44,065 | INFO     | phoenix_rag.rag_pipeline | Answering question 1/9
+2026-09-03 21:20:46,933 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:20:54,505 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:20:54,507 | INFO     | phoenix_rag.rag_pipeline | Answering question 2/9
+2026-09-03 21:20:55,537 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:21:02,175 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:21:02,180 | INFO     | phoenix_rag.rag_pipeline | Answering question 3/9
+2026-09-03 21:21:04,653 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:21:11,984 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:21:11,986 | INFO     | phoenix_rag.rag_pipeline | Answering question 4/9
+2026-09-03 21:21:12,491 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:21:13,184 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:21:13,189 | INFO     | phoenix_rag.rag_pipeline | Answering question 5/9
+2026-09-03 21:21:13,435 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:21:14,457 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:21:14,459 | INFO     | phoenix_rag.rag_pipeline | Answering question 6/9
+2026-09-03 21:21:14,885 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:21:15,486 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:21:15,488 | INFO     | phoenix_rag.rag_pipeline | Answering question 7/9
+2026-09-03 21:21:15,893 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:21:16,527 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:21:16,529 | INFO     | phoenix_rag.rag_pipeline | Answering question 8/9
+2026-09-03 21:21:17,040 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:21:17,606 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:21:17,611 | INFO     | phoenix_rag.rag_pipeline | Answering question 9/9
+2026-09-03 21:21:18,161 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:21:19,675 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:21:19,703 | INFO     | phoenix_rag.evaluator | Running Ragas evaluation over 9 samples (max_workers=3)
+2026-09-03 21:21:21,805 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:21:24,284 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:21:24,286 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:21:30,023 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:21:49,684 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:21:52,752 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:21:55,659 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:21:57,153 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:21:58,692 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:21:58,693 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:22:28,084 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:22:33,537 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:23:09,140 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:23:09,141 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:23:53,185 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:24:28,391 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:24:47,513 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:24:57,971 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:25:05,060 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:25:20,531 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:25:20,533 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:25:27,386 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:25:29,948 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:25:29,951 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:25:38,485 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:25:41,212 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:25:41,214 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:25:45,042 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:25:46,539 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:26:00,256 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:26:35,716 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:27:10,942 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:28:11,919 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:28:34,868 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:28:34,870 | ERROR    | ragas.executor | Exception raised in Job[10]: TimeoutError()
+2026-09-03 21:29:04,860 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:29:32,385 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:29:50,453 | ERROR    | ragas.executor | Exception raised in Job[14]: TimeoutError()
+2026-09-03 21:29:53,912 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:30:29,285 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:30:29,289 | WARNING  | langchain_core.language_models.llms | Retrying langchain_mistralai.chat_models.acompletion_with_retry.<locals>._completion_with_retry in 4 seconds as it raised RemoteProtocolError: Server disconnected without sending a response..
+2026-09-03 21:31:05,111 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:31:45,148 | ERROR    | ragas.executor | Exception raised in Job[16]: TimeoutError()
+2026-09-03 21:31:57,332 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:32:37,374 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:32:37,378 | WARNING  | langchain_core.language_models.llms | Retrying langchain_mistralai.chat_models.acompletion_with_retry.<locals>._completion_with_retry in 4 seconds as it raised RemoteProtocolError: Server disconnected without sending a response..
+2026-09-03 21:33:17,425 | ERROR    | ragas.executor | Exception raised in Job[18]: TimeoutError()
+2026-09-03 21:33:24,248 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:33:37,007 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:34:10,451 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:34:12,059 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:34:23,067 | WARNING  | langchain_core.language_models.llms | Retrying langchain_mistralai.chat_models.acompletion_with_retry.<locals>._completion_with_retry in 4 seconds as it raised ReadError: .
+2026-09-03 21:34:25,422 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:35:03,292 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:35:19,598 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:35:26,190 | WARNING  | langchain_core.language_models.llms | Retrying langchain_mistralai.chat_models.acompletion_with_retry.<locals>._completion_with_retry in 4 seconds as it raised ReadTimeout: .
+2026-09-03 21:35:28,036 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:35:33,827 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:36:05,564 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:36:05,565 | ERROR    | ragas.executor | Exception raised in Job[20]: TimeoutError()
+2026-09-03 21:36:06,085 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:36:10,153 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:36:10,155 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:36:15,711 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:36:18,859 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:36:20,368 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:36:21,665 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:36:21,667 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:36:40,834 | ERROR    | ragas.executor | Exception raised in Job[22]: TimeoutError()
+2026-09-03 21:36:41,585 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:36:45,717 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:36:45,719 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:36:51,187 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:36:51,766 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:36:51,822 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:36:51,919 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:36:52,323 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:36:52,420 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:36:52,936 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:36:53,066 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:36:53,414 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:36:54,057 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:36:56,232 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:36:56,846 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:36:59,207 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-03 21:37:02,715 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:37:06,213 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:37:08,911 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:37:22,334 | WARNING  | langchain_core.language_models.llms | Retrying langchain_mistralai.chat_models.acompletion_with_retry.<locals>._completion_with_retry in 4 seconds as it raised RemoteProtocolError: Server disconnected without sending a response..
+2026-09-03 21:37:22,982 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:37:35,739 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:37:37,276 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:37:38,732 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:37:53,423 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:37:55,877 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:37:55,879 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:38:39,446 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:40:17,967 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:40:31,552 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:40:34,147 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:40:59,334 | ERROR    | ragas.executor | Exception raised in Job[32]: TimeoutError()
+2026-09-03 21:41:00,256 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:41:05,273 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:41:07,353 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:41:13,347 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:41:22,226 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:41:27,096 | INFO     | phoenix_rag.evaluator | Evaluation scores: {'faithfulness': 1.0, 'context_recall': 1.0, 'context_precision': 0.8999999999513889, 'response_relevancy': 0.879889179554653}
+2026-09-03 21:41:27,107 | INFO     | phoenix_rag.storage | New best configuration saved (iteration 4): {'faithfulness': 1.0, 'context_recall': 1.0, 'context_precision': 0.8999999999513889, 'response_relevancy': 0.879889179554653}
+2026-09-03 21:41:27,107 | INFO     | phoenix_rag.experiment_runner | New best configuration saved! (Weighted Score: 0.9560)
+2026-09-03 21:41:30,363 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:41:30,365 | INFO     | phoenix_rag.llm_optimizer | LLM optimizer proposed: {'chunk_size': 1200, 'chunk_overlap': 240, 'top_k': 4, 'similarity_threshold': 0.45, 'retriever_type': 'similarity_score_threshold', 'prompt_template': "You are a helpful assistant answering questions using ONLY the provided context. If the answer is not contained in the context, say you don't know. Keep your answer concise and directly address the question without adding unrelated information.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"} | llm_optimizer[prompt_template_updated]: doc_type=paper, median_chars_per_page=4353, chars_per_section~3731 -> prose-heavy regime, so chunk_size=1200 (targeting ~1/3 of chars_per_section) with 20% overlap (240) to preserve multi-sentence reasoning units. Prioritizing context_precision (0.873 < 9.0) by raising similarity_threshold to 0.45 while keeping top_k=4 to avoid recall loss (1.0 in iter 3).
+2026-09-03 21:41:30,366 | INFO     | phoenix_rag.experiment_runner | Experiment complete. Best weighted score: 0.9560
+2026-09-03 21:41:30,366 | INFO     | phoenix_rag.document_generalization_experiment | FRESH condition scores: {'faithfulness': 1.0, 'context_recall': 1.0, 'context_precision': 0.8999999999513889, 'response_relevancy': 0.879889179554653} (weighted: 0.9560)
+2026-09-03 21:41:30,366 | INFO     | phoenix_rag.document_generalization_experiment | Prompt control applied: frozen arm's own prompt_template (418 chars, tuned on the OLD document) discarded in favour of the FRESH arm's (295 chars). prompt_template is now identical across both arms and is NOT a compared dimension.
+2026-09-03 21:41:30,366 | INFO     | phoenix_rag.document_generalization_experiment | Compared dimensions that differ: {'chunk_overlap': {'frozen': 150, 'fresh': 200}, 'similarity_threshold': {'frozen': 0.1, 'fresh': 0.4}, 'retriever_type': {'frozen': 'similarity', 'fresh': 'similarity_score_threshold'}}
+2026-09-03 21:41:30,367 | INFO     | phoenix_rag.document_generalization_experiment | === FROZEN condition: reusing old retrieval params unchanged ===
+2026-09-03 21:41:30,367 | INFO     | phoenix_rag.document_generalization_experiment | Frozen config: {'chunk_size': 1000, 'chunk_overlap': 150, 'top_k': 4, 'similarity_threshold': 0.1, 'retriever_type': 'similarity', 'prompt_template': "You are a helpful assistant answering questions using ONLY the provided context. If the answer is not contained in the context, say you don't know. Keep your answer concise and directly address the question without adding unrelated information.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"}
+2026-09-03 21:41:30,385 | INFO     | phoenix_rag.document_loader | Loading document Harvey_Abilene_Paradox.pdf (.pdf)
+2026-09-03 21:41:30,895 | INFO     | phoenix_rag.document_loader | Loaded 12 page(s)/section(s) from Harvey_Abilene_Paradox.pdf
+2026-09-03 21:41:30,898 | INFO     | phoenix_rag.chunking | Split 12 document(s) into 66 chunks (chunk_size=1000, overlap=150)
+2026-09-03 21:41:30,899 | INFO     | phoenix_rag.vector_store | Loading FAISS index from /home/yared/workspace/phoenix-rag-experiments/data/faiss_index/311958e8c782bb3b1a9a
+2026-09-03 21:41:30,918 | INFO     | phoenix_rag.rag_pipeline | Answering question 1/9
+2026-09-03 21:41:31,266 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:41:32,309 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:41:32,311 | INFO     | phoenix_rag.rag_pipeline | Answering question 2/9
+2026-09-03 21:41:32,819 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:41:33,353 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:41:33,355 | INFO     | phoenix_rag.rag_pipeline | Answering question 3/9
+2026-09-03 21:41:34,870 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:41:36,195 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:41:36,197 | INFO     | phoenix_rag.rag_pipeline | Answering question 4/9
+2026-09-03 21:41:36,708 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:41:37,425 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:41:37,426 | INFO     | phoenix_rag.rag_pipeline | Answering question 5/9
+2026-09-03 21:41:37,833 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:41:38,656 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:41:38,658 | INFO     | phoenix_rag.rag_pipeline | Answering question 6/9
+2026-09-03 21:41:39,172 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:41:40,035 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:41:40,038 | INFO     | phoenix_rag.rag_pipeline | Answering question 7/9
+2026-09-03 21:41:40,397 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:41:41,213 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:41:41,215 | INFO     | phoenix_rag.rag_pipeline | Answering question 8/9
+2026-09-03 21:41:41,520 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:41:42,240 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:41:42,242 | INFO     | phoenix_rag.rag_pipeline | Answering question 9/9
+2026-09-03 21:41:42,672 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:41:44,285 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:41:44,316 | INFO     | phoenix_rag.evaluator | Running Ragas evaluation over 9 samples (max_workers=3)
+2026-09-03 21:41:46,641 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:41:49,102 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:41:49,103 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:42:02,814 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:42:17,765 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:42:20,799 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:42:32,313 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:42:33,950 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:42:35,542 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:42:35,544 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:42:46,750 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:42:49,131 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:42:49,132 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:42:59,856 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:43:03,305 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:43:10,189 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:43:13,136 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:43:14,666 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:43:26,753 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:43:26,754 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:43:35,082 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:43:46,812 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:43:46,813 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:44:08,261 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:44:08,264 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:44:23,392 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:44:25,054 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:44:27,025 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:44:29,680 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:44:42,975 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:44:57,724 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:44:57,725 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:45:12,866 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:45:17,000 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:45:38,448 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:45:41,707 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:45:52,613 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:45:53,839 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:45:53,841 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:46:10,015 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:46:12,465 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:46:12,466 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:46:18,175 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:46:20,930 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:46:36,949 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:46:44,833 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:46:44,834 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:46:51,078 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:47:08,042 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:47:08,043 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:47:24,595 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:47:31,221 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:47:45,969 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:47:56,716 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:47:58,018 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:47:58,020 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:48:38,598 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:48:41,368 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:48:41,370 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:48:48,130 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:48:48,408 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:48:51,093 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:49:08,274 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:49:11,162 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:49:12,977 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:49:14,309 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:49:14,311 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:49:27,160 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:49:41,989 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:49:41,991 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:49:56,841 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:50:12,295 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:50:14,881 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:50:14,883 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:50:17,826 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:50:30,556 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:50:36,667 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:50:39,127 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:50:39,130 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:51:04,831 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:51:07,501 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:51:16,300 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:51:25,719 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:51:28,180 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:51:30,585 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:51:34,083 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:51:46,264 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/embeddings "HTTP/1.1 200 OK"
+2026-09-03 21:51:49,990 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:51:49,991 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:51:56,036 | INFO     | httpx | HTTP Request: POST https://api.mistral.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-03 21:52:23,232 | INFO     | phoenix_rag.evaluator | Evaluation scores: {'faithfulness': 0.8999999999999999, 'context_recall': 0.8888888888888888, 'context_precision': 0.8703703703277778, 'response_relevancy': 0.9138893708985881}
+2026-09-03 21:52:23,233 | INFO     | phoenix_rag.document_generalization_experiment | FROZEN condition scores: {'faithfulness': 0.8999999999999999, 'context_recall': 0.8888888888888888, 'context_precision': 0.8703703703277778, 'response_relevancy': 0.9138893708985881} (weighted: 0.8946)
+2026-09-03 21:52:23,234 | INFO     | phoenix_rag.storage | Results for this run will be written to /home/yared/workspace/phoenix-rag-experiments/results
+2026-09-03 21:52:23,236 | INFO     | phoenix_rag.document_generalization_experiment | Full experiment results saved to /home/yared/workspace/phoenix-rag-experiments/results/generalization_experiment/Harvey_Abilene_Paradox/comparison.json
