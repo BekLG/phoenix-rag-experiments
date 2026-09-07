@@ -2,7 +2,7 @@
 llm_optimizer.py
 ================
 LLM-driven optimizer for Phoenix RAG's retrieval configuration. This is now
-the ONLY optimizer used by experiment_runner.py -- the rule-based
+the ONLY optimizer used by optimization/runner.py -- the rule-based
 optimizer (optimizer.propose_next_config) and its bolted-on prompt-refiner
 escape hatch (prompt_refiner.refine_prompt) are no longer invoked anywhere
 in the loop.
@@ -38,10 +38,14 @@ import json
 import logging
 import re
 
-from config import MistralSettings, OptimizerConfig, RetrievalConfig
-from document_profile import DocumentProfile, chars_per_section, estimate_chunk_count
-from mistral_client import MistralClient
-from optimizer import _clamp, meets_targets
+from phoenix_rag.config import MistralSettings, OptimizerConfig, RetrievalConfig
+from phoenix_rag.core.document_profile import (
+    DocumentProfile,
+    chars_per_section,
+    estimate_chunk_count,
+)
+from phoenix_rag.optimization.optimizer import _clamp, meets_targets
+from phoenix_rag.providers.mistral import MistralClient
 
 logger = logging.getLogger("phoenix_rag.llm_optimizer")
 
@@ -341,12 +345,12 @@ def propose_next_config_llm(
     document_profile: DocumentProfile,
 ) -> tuple[RetrievalConfig, list[str]]:
     """LLM-driven proposer for the next configuration -- the sole optimizer
-    used by experiment_runner.py.
+    used by optimization/runner.py.
 
     `history` is a list of dicts, one per past iteration, each shaped:
         {"iteration": int, "config": RetrievalConfig.to_dict(),
          "scores": dict, "applied_rules": str}
-    experiment_runner.py builds this incrementally as the run progresses.
+    optimization/runner.py builds this incrementally as the run progresses.
 
     `document_summary` lets the LLM tailor the prompt_template it writes to
     what the source document actually is, the same way prompt_refiner.py

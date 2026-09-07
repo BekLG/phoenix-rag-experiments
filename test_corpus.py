@@ -22,10 +22,14 @@ from unittest import mock
 
 from langchain_core.embeddings import Embeddings
 
-import corpus
-from config import AppConfig
-from document_profile import DocumentProfile, aggregate_profiles, compute_profile
-from question_generator import BenchmarkQuestion, save_benchmark
+from phoenix_rag.benchmark.question_generator import BenchmarkQuestion, save_benchmark
+from phoenix_rag.config import AppConfig
+from phoenix_rag.core import corpus
+from phoenix_rag.core.document_profile import (
+    DocumentProfile,
+    aggregate_profiles,
+    compute_profile,
+)
 
 try:  # faiss is a heavy optional dependency; the manifest tests do not need it.
     import faiss  # noqa: F401

@@ -24,7 +24,7 @@ import logging
 from datasets import Dataset
 from langchain_mistralai import ChatMistralAI
 
-from ragas_compat import install_ragas_compat
+from phoenix_rag.evaluation.ragas_compat import install_ragas_compat
 
 install_ragas_compat()
 from ragas import evaluate
@@ -42,10 +42,10 @@ from ragas.metrics import (
     faithfulness,
 )
 
-from config import MistralSettings
-from embeddings import MistralEmbeddings
-from question_generator import BenchmarkQuestion
-from rag_pipeline import RagResult
+from phoenix_rag.benchmark.question_generator import BenchmarkQuestion
+from phoenix_rag.config import MistralSettings
+from phoenix_rag.core.embeddings import MistralEmbeddings
+from phoenix_rag.core.rag_pipeline import RagResult
 
 logger = logging.getLogger("phoenix_rag.evaluator")
 
@@ -64,7 +64,7 @@ def build_ragas_dataset(
     """Assemble the HuggingFace Dataset Ragas expects.
 
     `results` and `questions` must be aligned (same order, same question text)
-    -- the caller (experiment_runner) is responsible for that pairing.
+    -- the caller (optimization.runner) is responsible for that pairing.
     """
     records = {
         "question": [],

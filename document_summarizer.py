@@ -1,6 +1,6 @@
 """
-document_summarizer.py
-=======================
+summarizer.py
+=============
 Generates and caches a concise summary of the source document.
 
 This exists to give prompt_refiner.py real context about what kind of
@@ -17,10 +17,10 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from config import MistralSettings
-from mistral_client import MistralClient
+from phoenix_rag.config import MistralSettings
+from phoenix_rag.providers.mistral import MistralClient
 
-logger = logging.getLogger("phoenix_rag.document_summarizer")
+logger = logging.getLogger("phoenix_rag.summarizer")
 
 SUMMARY_SYSTEM_PROMPT = """You are an expert technical summarizer. Given a \
 document, produce a concise but information-dense summary (250-400 words) \

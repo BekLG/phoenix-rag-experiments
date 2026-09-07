@@ -1,8 +1,8 @@
 import unittest
 
-from config import OptimizerConfig, RetrievalConfig
-from document_profile import DocumentProfile
-from seed_config import propose_seed_config
+from phoenix_rag.config import OptimizerConfig, RetrievalConfig
+from phoenix_rag.core.document_profile import DocumentProfile
+from phoenix_rag.core.seed_config import propose_seed_config
 
 
 def _profile(**overrides) -> DocumentProfile:

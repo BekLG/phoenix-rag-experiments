@@ -2,4 +2,15 @@
 __pycache__/
 *.pyc
 .env
+
+# Runtime workspace config. `configs/default.yaml` is the committed, commented
+# example; `config/config.yaml` is the live copy the app reads and rewrites, so
+# it carries whatever the operator last tuned and is not a source artifact.
+config/config.yaml
 config/default_config.json
+
+# Packaging / test artifacts
+*.egg-info/
+build/
+dist/
+.pytest_cache/

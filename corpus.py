@@ -60,32 +60,33 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
-from chunking import split_documents
-from config import AppConfig
-from document_loader import load_document
-from document_profile import (
-    DocumentProfile,
-    aggregate_profiles,
-    compute_profile,
-    load_profile,
-)
-from document_summarizer import generate_summary
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
-from question_generator import (
+
+from phoenix_rag.benchmark.question_generator import (
     BenchmarkQuestion,
     _dedupe,
     generate_benchmark,
     load_benchmark,
     save_benchmark,
 )
-from storage import _atomic_write_json
-from vector_store import (
+from phoenix_rag.benchmark.summarizer import generate_summary
+from phoenix_rag.config import AppConfig
+from phoenix_rag.core.chunking import split_documents
+from phoenix_rag.core.document_loader import load_document
+from phoenix_rag.core.document_profile import (
+    DocumentProfile,
+    aggregate_profiles,
+    compute_profile,
+    load_profile,
+)
+from phoenix_rag.core.vector_store import (
     add_chunks_to_store,
     build_vector_store,
     load_vector_store,
     save_vector_store,
 )
+from phoenix_rag.storage import _atomic_write_json
 
 logger = logging.getLogger("phoenix_rag.corpus")
 
@@ -322,7 +323,7 @@ def _unique_label(corpus: Corpus, label: str) -> str:
 def _page_count(path: Path, loaded: list[Document]) -> int | None:
     """Pages, but only for formats where a page is a real thing.
 
-    Mirrors the guard in experiment_runner.run_experiment: for a .txt or .md the
+    Mirrors the guard in optimization.runner.run_experiment: for a .txt or .md the
     loader returns one Document for the whole file, and calling that "1 page"
     would feed document_profile a median_chars_per_page equal to the entire
     document, which then drives the sizing regime off a fiction.

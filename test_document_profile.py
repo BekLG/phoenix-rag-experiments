@@ -1,6 +1,6 @@
 import unittest
 
-from document_profile import compute_profile
+from phoenix_rag.core.document_profile import compute_profile
 
 
 class ComputeProfileTests(unittest.TestCase):

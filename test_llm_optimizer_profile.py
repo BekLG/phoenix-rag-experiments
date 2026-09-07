@@ -2,9 +2,9 @@ import json
 import unittest
 from unittest.mock import patch
 
-import llm_optimizer
-from config import MistralSettings, OptimizerConfig, RetrievalConfig
-from document_profile import DocumentProfile
+from phoenix_rag.config import MistralSettings, OptimizerConfig, RetrievalConfig
+from phoenix_rag.core.document_profile import DocumentProfile
+from phoenix_rag.optimization import llm_optimizer
 
 
 class _FakeClient:

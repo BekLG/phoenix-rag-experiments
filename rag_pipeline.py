@@ -6,7 +6,7 @@ The actual RAG pipeline being optimized: retrieve -> build prompt -> generate.
 Kept intentionally simple/stateless so it can be re-run cheaply for every
 question in the benchmark, for every configuration the optimizer tries.
 
-Generation calls go through MistralClient (mistral_client.py) rather than
+Generation calls go through MistralClient (providers/mistral.py) rather than
 a raw SDK client, so rate limiting and retry/backoff actually apply here.
 Without this, a 429 mid-benchmark crashes the whole experiment run instead
 of backing off and retrying -- this is not hypothetical, it's what actually
@@ -22,8 +22,8 @@ from dataclasses import dataclass, field
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 
-from config import MistralSettings, RetrievalConfig
-from mistral_client import MistralClient
+from phoenix_rag.config import MistralSettings, RetrievalConfig
+from phoenix_rag.providers.mistral import MistralClient
 
 logger = logging.getLogger("phoenix_rag.rag_pipeline")
 
@@ -97,7 +97,7 @@ class RagPipeline:
         prompt = self.build_prompt(question, contexts)
 
         # MistralClient.chat() handles rate limiting + exponential-backoff
-        # retry internally (see mistral_client.py), and returns the answer
+        # retry internally (see providers/mistral.py), and returns the answer
         # text directly rather than a raw SDK response object.
         answer_text = self._client.chat(
             messages=[{"role": "user", "content": prompt}],

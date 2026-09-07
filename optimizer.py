@@ -8,7 +8,7 @@ llm_optimizer.py still depends on:
 
 from __future__ import annotations
 
-from config import OptimizerConfig
+from phoenix_rag.config import OptimizerConfig
 
 _EPS = 1e-4
 

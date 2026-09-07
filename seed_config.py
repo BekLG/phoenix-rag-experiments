@@ -45,9 +45,13 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 
-from config import OptimizerConfig, RetrievalConfig
-from document_profile import DocumentProfile, chars_per_section, estimate_chunk_count
-from optimizer import _clamp
+from phoenix_rag.config import OptimizerConfig, RetrievalConfig
+from phoenix_rag.core.document_profile import (
+    DocumentProfile,
+    chars_per_section,
+    estimate_chunk_count,
+)
+from phoenix_rag.optimization.optimizer import _clamp
 
 logger = logging.getLogger("phoenix_rag.seed_config")
 

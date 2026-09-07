@@ -19,7 +19,7 @@ Workflow:
     4. Persist to disk. Later runs load this file instead of regenerating
        it (unless `regenerate_each_iteration` / `force` is set).
 
-Generation calls go through MistralClient (mistral_client.py) rather than
+Generation calls go through MistralClient (providers/mistral.py) rather than
 a raw SDK client, so rate limiting and retry/backoff actually apply here.
 Without this, a 429 mid-batch is caught by the broad except-Exception below
 and that batch's questions are silently lost rather than retried.
@@ -33,9 +33,9 @@ import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from config import MistralSettings, QuestionGenerationConfig
-from mistral_client import MistralClient
-from storage import _atomic_write_json
+from phoenix_rag.config import MistralSettings, QuestionGenerationConfig
+from phoenix_rag.providers.mistral import MistralClient
+from phoenix_rag.storage import _atomic_write_json
 
 logger = logging.getLogger("phoenix_rag.question_generator")
 

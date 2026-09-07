@@ -1,0 +1,147 @@
+# Phoenix RAG configuration
+# =========================
+# Copy to <workspace>/config/config.yaml and edit. Safe to commit: this file
+# names the environment variables holding your API keys, never the keys
+# themselves. Put the values in .env (gitignored).
+#
+#   cp configs/default.yaml config/config.yaml
+
+# --------------------------------------------------------------------------
+# Providers: which backend and model serve each of the four roles.
+# --------------------------------------------------------------------------
+# embedding  - embeds chunks and queries. Highest call volume by a wide margin.
+# generation - answers benchmark questions, writes the questions, summarizes.
+# optimizer  - proposes the next retrieval config. Exactly one call per iteration.
+# judge      - scores answers with Ragas. By far the most calls of any hosted
+#              role: each metric fires several sub-calls per sample.
+#
+# Only backend: mistral is implemented right now. The other backends below are
+# shown commented out because they are the intended destination, not because
+# they work yet -- setting one today raises UnsupportedBackendError.
+providers:
+  embedding:
+    backend: mistral
+    model: mistral-embed
+    api_key_env: MISTRAL_API_KEY
+    requests_per_minute: 45      # free tier is ~45-60; raise it if your plan allows
+    max_retries: 5
+    base_backoff_seconds: 2.0
+
+  generation:
+    backend: mistral
+    model: mistral-small-latest
+    api_key_env: MISTRAL_API_KEY
+
+  optimizer:
+    backend: mistral
+    model: mistral-large-latest
+    api_key_env: MISTRAL_API_KEY
+
+  judge:
+    backend: mistral
+    model: mistral-large-latest
+    api_key_env: MISTRAL_API_KEY
+
+# Target layout once the provider registry lands -- local models for the
+# high-volume roles, hosted models for the two that need real reasoning:
+#
+#   embedding:
+#     backend: sentence_transformers
+#     model: BAAI/bge-small-en-v1.5
+#   generation:
+#     backend: ollama
+#     model: llama3.1:8b
+#     base_url: http://localhost:11434
+#   optimizer:
+#     backend: openai
+#     model: gpt-4o
+#     api_key_env: OPENAI_API_KEY
+#   judge:
+#     backend: openai
+#     model: gpt-4o-mini
+#     api_key_env: OPENAI_API_KEY
+
+# --------------------------------------------------------------------------
+# Retrieval: the search space the optimizer moves through.
+# --------------------------------------------------------------------------
+# These are only the STARTING values, and only when optimizer.seed_from_profile
+# is false. With seeding on (the default), iteration 1 derives chunk_size,
+# chunk_overlap and top_k from the document's own profile and this block
+# supplies the rest.
+retrieval:
+  chunk_size: 300
+  chunk_overlap: 50
+  top_k: 1
+  similarity_threshold: 0.0      # only used when retriever_type is similarity_score_threshold
+  retriever_type: similarity     # similarity | mmr | similarity_score_threshold
+
+  # Must contain {context} and {question} exactly once each; they are filled in
+  # at answer time. The optimizer rewrites this template between iterations.
+  prompt_template: |-
+    You are a helpful assistant answering questions using ONLY the provided context. If the answer is not contained in the context, say you don't know.
+
+    Context:
+    {context}
+
+    Question: {question}
+
+    Answer:
+
+# --------------------------------------------------------------------------
+# Benchmark question generation.
+# --------------------------------------------------------------------------
+# Generated once from the FULL document and then frozen, so every configuration
+# is scored against identical questions. Raising questions_per_batch is the main
+# lever on benchmark size -- and therefore on judge cost, which scales with it.
+question_generation:
+  batch_size_chars: 6000
+  questions_per_batch: 1
+  dedup_similarity_threshold: 0.9
+  regenerate_each_iteration: false
+  question_types:
+    - factual
+    - reasoning
+    - comparison
+    - why
+    - multi-hop
+    - summarization
+    - definition
+    - relationship
+    - edge-case
+
+# --------------------------------------------------------------------------
+# Optimization loop: budget, targets, and the bounds proposals are clamped to.
+# --------------------------------------------------------------------------
+optimizer:
+  max_iterations: 10
+  seed_from_profile: true        # derive iteration 1 from the document profile
+
+  # Stop early once every metric clears its target. Faithfulness is 0-1; the
+  # other three targets are set deliberately above their attainable range so the
+  # loop runs its full budget rather than stopping at "good enough".
+  target_faithfulness: 1.0
+  target_context_recall: 9.5
+  target_context_precision: 9.0
+  target_response_relevancy: 9.5
+
+  top_k_bounds: [2, 10]
+  chunk_size_bounds: [300, 1500]
+  similarity_threshold_bounds: [0.1, 0.75]
+
+  top_k_step: 2
+  chunk_size_step: 200
+  similarity_threshold_step: 0.05
+
+# --------------------------------------------------------------------------
+# Paths. Omit any of these to have it resolved under the active workspace
+# (the current directory, or $PHOENIX_RAG_WORKSPACE).
+# --------------------------------------------------------------------------
+# source_document: data/source.pdf
+# faiss_index_path: data/faiss_index
+# benchmark_path: generated_questions/benchmark.json
+# summary_path: generated_questions/document_summary.txt
+# profile_path: generated_questions/document_profile.json
+
+# Set to a corpus root to optimize against every document added there instead of
+# a single file. Leave unset for single-document mode.
+corpus_path: null

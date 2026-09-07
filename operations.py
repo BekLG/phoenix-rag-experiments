@@ -3,19 +3,18 @@ operations.py
 =============
 The operator-facing operations, with no user interface attached.
 
-Both front-ends -- menu.py (terminal) and streamlit_app.py (GUI) -- are thin
-presentation layers over this module. Everything that involves a decision
+Both front-ends -- ui/menu.py (terminal) and ui/streamlit_app.py (GUI) -- are
+thin presentation layers over this module. Everything that involves a decision
 (which retrieval config is "current"? does the corpus need bootstrapping? is
-this edit to default_config.json valid?) lives here exactly once, so the two
+this edit to config.yaml valid?) lives here exactly once, so the two
 UIs cannot drift apart in behaviour. The UIs are responsible only for reading
 input and formatting output.
 
-The five operations the menu exposes map onto this module as:
+The four operations the menu exposes map onto this module as:
 
-    optimize RAG           -> experiment_runner.run_experiment, after ensure_corpus
+    optimize RAG           -> optimization.runner.run_experiment, after ensure_corpus
     add document           -> add_document
     ask the RAG            -> AskSession
-    compare old vs new     -> document_generalization_experiment.run_generalization_experiment
     modify configuration   -> editable_fields / apply_field / save_config
 
 Two of those are just re-exports of existing entry points, and that is the
@@ -30,22 +29,21 @@ import logging
 from dataclasses import dataclass, fields, is_dataclass
 from pathlib import Path
 
-import corpus
-import storage
-from chunking import split_documents
-from config import (
-    CORPUS_DIR,
-    DATA_DIR,
-    DEFAULT_CONFIG_PATH,
+from phoenix_rag import storage
+from phoenix_rag.config import (
     AppConfig,
     RetrievalConfig,
     load_or_create_default_config,
+    save_config as write_config,
 )
-from document_loader import load_document
-from embeddings import MistralEmbeddings
-from llm_optimizer import validate_prompt_template
-from rag_pipeline import RagPipeline, RagResult
-from vector_store import get_or_build_vector_store
+from phoenix_rag.core import corpus
+from phoenix_rag.core.chunking import split_documents
+from phoenix_rag.core.document_loader import load_document
+from phoenix_rag.core.embeddings import MistralEmbeddings
+from phoenix_rag.core.rag_pipeline import RagPipeline, RagResult
+from phoenix_rag.core.vector_store import get_or_build_vector_store
+from phoenix_rag.optimization.llm_optimizer import validate_prompt_template
+from phoenix_rag.workspace import active_workspace
 
 logger = logging.getLogger("phoenix_rag.operations")
 
@@ -55,15 +53,15 @@ logger = logging.getLogger("phoenix_rag.operations")
 # =====================================================================
 
 def load_config() -> AppConfig:
-    """The live configuration, creating config/default_config.json if absent."""
+    """The live configuration, creating config/config.yaml if absent."""
     return load_or_create_default_config()
 
 
 def save_config(app_config: AppConfig) -> Path:
     """Persist edits back to the same file load_config() reads."""
-    app_config.save(DEFAULT_CONFIG_PATH)
-    logger.info("Configuration saved to %s", DEFAULT_CONFIG_PATH)
-    return DEFAULT_CONFIG_PATH
+    path = write_config(app_config, active_workspace().config_path)
+    logger.info("Configuration saved to %s", path)
+    return path
 
 
 # =====================================================================
@@ -72,7 +70,9 @@ def save_config(app_config: AppConfig) -> Path:
 
 def corpus_root(app_config: AppConfig) -> Path:
     """Where this configuration's corpus lives, whether or not it is enabled."""
-    return Path(app_config.corpus_path) if app_config.corpus_path else CORPUS_DIR
+    if app_config.corpus_path:
+        return Path(app_config.corpus_path)
+    return active_workspace().corpus_dir
 
 
 def enable_corpus(app_config: AppConfig, save: bool = True) -> AppConfig:
@@ -81,11 +81,12 @@ def enable_corpus(app_config: AppConfig, save: bool = True) -> AppConfig:
     Called by add_document rather than asked of the operator: adding a second
     document IS the request to run in corpus mode, and a corpus that only the
     current process knows about would be silently ignored by the next
-    `python app.py` run.
+    `phoenix-rag` run.
     """
     if not app_config.corpus_path:
-        app_config.corpus_path = str(CORPUS_DIR)
-        logger.info("Multi-document corpus mode enabled (root: %s)", CORPUS_DIR)
+        corpus_dir = active_workspace().corpus_dir
+        app_config.corpus_path = str(corpus_dir)
+        logger.info("Multi-document corpus mode enabled (root: %s)", corpus_dir)
         if save:
             save_config(app_config)
     return app_config
@@ -181,7 +182,7 @@ def _benchmark_size(state: corpus.Corpus) -> int:
 
 
 def _single_benchmark_size(app_config: AppConfig) -> int:
-    from question_generator import load_benchmark
+    from phoenix_rag.benchmark.question_generator import load_benchmark
 
     path = Path(app_config.benchmark_path)
     if not path.exists() or path.stat().st_size == 0:
@@ -343,7 +344,9 @@ def resolve_active_retrieval(app_config: AppConfig) -> ActiveRetrieval:
             )
     return ActiveRetrieval(
         config=app_config.retrieval,
-        provenance=f"{DEFAULT_CONFIG_PATH.name} retrieval block (not yet optimized)",
+        provenance=(
+            f"{active_workspace().config_path.name} retrieval block (not yet optimized)"
+        ),
         from_best=False,
     )
 
@@ -453,7 +456,7 @@ class ConfigEditError(ValueError):
 
 # Fields whose runtime value does not reveal the intended type. Everything else
 # is classified from the value itself, which is both simpler and more reliable
-# than parsing annotations -- config.py uses `from __future__ import annotations`,
+# than parsing annotations -- config/schema.py uses `from __future__ import annotations`,
 # so dataclasses.fields() hands back strings like "tuple", not real types.
 _FLOAT_FIELDS = {
     "retrieval.similarity_threshold",
@@ -764,15 +767,16 @@ def stage_document(uploaded_name: str, data: bytes) -> Path:
     the manifest records that path so later chunk-parameter changes can re-read
     the file. Uploads therefore have to land somewhere durable, not a temp dir.
     """
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    target = DATA_DIR / Path(uploaded_name).name
+    data_dir = active_workspace().data_dir
+    data_dir.mkdir(parents=True, exist_ok=True)
+    target = data_dir / Path(uploaded_name).name
     if target.exists() and target.read_bytes() == data:
         logger.info("%s is already staged at %s", uploaded_name, target)
         return target
     stem, suffix = target.stem, target.suffix
     counter = 1
     while target.exists() and target.read_bytes() != data:
-        target = DATA_DIR / f"{stem}_{counter}{suffix}"
+        target = data_dir / f"{stem}_{counter}{suffix}"
         counter += 1
     target.write_bytes(data)
     logger.info("Staged upload %s at %s (%d bytes)", uploaded_name, target, len(data))
@@ -782,9 +786,9 @@ def stage_document(uploaded_name: str, data: bytes) -> Path:
 class ListLogHandler(logging.Handler):
     """Collect log records into a list so a GUI can render a running log.
 
-    The optimize and compare operations are long, and their only progress signal
-    is the logging they already emit. Rather than adding a parallel callback
-    mechanism through five modules, both front-ends attach one of these.
+    The optimize and add-document operations are long, and their only progress
+    signal is the logging they already emit. Rather than adding a parallel
+    callback mechanism through five modules, both front-ends attach one of these.
     """
 
     def __init__(self, limit: int = 2000):

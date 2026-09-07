@@ -18,8 +18,8 @@ import logging
 
 from langchain_core.embeddings import Embeddings
 
-from config import MistralSettings
-from mistral_client import MistralClient
+from phoenix_rag.config import MistralSettings
+from phoenix_rag.providers.mistral import MistralClient
 
 logger = logging.getLogger("phoenix_rag.embeddings")
 

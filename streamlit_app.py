@@ -3,9 +3,13 @@ streamlit_app.py
 ================
 GUI front-end for Phoenix RAG.
 
-    streamlit run streamlit_app.py
+    streamlit run src/phoenix_rag/ui/streamlit_app.py
 
-Same five operations as menu.py, driven through the same operations.py functions.
+Streamlit executes this file as a script rather than importing it as part of the
+package, so `phoenix_rag` has to be installed (`pip install -e '.[ui]'`) for the
+imports below to resolve.
+
+Same four operations as menu.py, driven through the same operations.py functions.
 Neither front-end contains logic the other lacks -- if the behaviour of "add a
 document" needs to change, it changes in operations.py and both UIs follow.
 
@@ -26,14 +30,13 @@ import logging
 from pathlib import Path
 
 import streamlit as st
-from dotenv import load_dotenv
 
-import corpus
-import operations
-import storage
-from config import LOGS_DIR
+from phoenix_rag import operations, storage
+from phoenix_rag.config import load_env
+from phoenix_rag.core import corpus
+from phoenix_rag.workspace import active_workspace
 
-load_dotenv()
+load_env()
 
 st.set_page_config(page_title="Phoenix RAG", page_icon="🔥", layout="wide")
 
@@ -55,7 +58,7 @@ def _install_log_handler() -> operations.ListLogHandler:
         root.setLevel(logging.INFO)
         root.addHandler(handler)
         if not any(isinstance(h, logging.FileHandler) for h in root.handlers):
-            file_handler = logging.FileHandler(LOGS_DIR / "phoenix_rag.log")
+            file_handler = logging.FileHandler(active_workspace().ensure().log_file)
             file_handler.setFormatter(
                 logging.Formatter("%(asctime)s | %(levelname)-8s | %(name)s | %(message)s")
             )
@@ -144,8 +147,8 @@ st.title("Phoenix RAG")
 st.caption(report.headline if report is not None else "status unavailable")
 render_flashes()
 
-optimize_tab, documents_tab, ask_tab, compare_tab, config_tab = st.tabs(
-    ["Optimize", "Documents", "Ask", "Compare", "Config"]
+optimize_tab, documents_tab, ask_tab, config_tab = st.tabs(
+    ["Optimize", "Documents", "Ask", "Config"]
 )
 
 
@@ -182,7 +185,7 @@ with optimize_tab:
     )
 
     if st.button("Run optimization", type="primary"):
-        from experiment_runner import run_experiment
+        from phoenix_rag.optimization.runner import run_experiment
 
         config.optimizer.max_iterations = int(iterations)
         with st.spinner(
@@ -441,126 +444,6 @@ with ask_tab:
 
 
 # =====================================================================
-# Compare
-# =====================================================================
-
-with compare_tab:
-    st.subheader("Compare old parameters vs re-optimized")
-    st.write(
-        "Two arms on **one new document**: *frozen* reuses the old document's tuned "
-        "parameters as-is, *fresh* re-runs the optimizer from scratch on the new "
-        "document. The prompt template is held constant across both, so the delta is "
-        "attributable to the retrieval parameters alone."
-    )
-    st.info(
-        "This is inherently a single-document experiment -- it does not use the "
-        "corpus, and it writes under results/generalization_experiment/<label>/ so "
-        "your top-level results are untouched."
-    )
-
-    frozen_source = st.text_input(
-        "Frozen configuration (old best_configuration.json)",
-        value=str(storage.BEST_CONFIG_PATH),
-    )
-    compare_upload = st.file_uploader(
-        "New document to test on",
-        type=["pdf", "txt", "md", "markdown"],
-        key="compare_upload",
-    )
-    compare_path = st.text_input(
-        "...or a path already on disk", key="compare_path", placeholder="data/other.pdf"
-    )
-    compare_label = st.text_input(
-        "Label for this comparison",
-        value=(
-            Path(compare_upload.name).stem
-            if compare_upload is not None
-            else Path(compare_path.strip()).stem if compare_path.strip() else ""
-        ),
-        help="Namespaces this document's benchmark, summary, profile and results.",
-    )
-    compare_iterations = st.number_input(
-        "Max iterations for the fresh arm", min_value=1, max_value=30, value=6
-    )
-
-    ready = (compare_upload is not None or bool(compare_path.strip())) and bool(
-        compare_label.strip()
-    )
-    if st.button("Run comparison", type="primary", disabled=not ready):
-        from document_generalization_experiment import run_generalization_experiment
-
-        try:
-            if compare_upload is not None:
-                new_source = operations.stage_document(
-                    compare_upload.name, compare_upload.getvalue()
-                )
-            else:
-                new_source = Path(compare_path.strip()).expanduser()
-            with st.spinner(
-                "Running the fresh arm, then the frozen arm. This is the longest "
-                "operation here -- watch the sidebar log."
-            ):
-                comparison = run_generalization_experiment(
-                    old_best_config=frozen_source,
-                    new_source=new_source,
-                    label=compare_label.strip(),
-                    max_iterations=int(compare_iterations),
-                )
-        except FileNotFoundError as error:
-            st.error(str(error))
-        except Exception as error:  # noqa: BLE001
-            logging.getLogger("phoenix_rag.streamlit").exception("Comparison failed")
-            st.error(f"Comparison failed: {error}")
-        else:
-            st.session_state.comparison = comparison
-
-    comparison = st.session_state.get("comparison")
-    if comparison:
-        frozen, fresh = comparison["frozen"], comparison["fresh"]
-        differing = comparison["control"]["differing_dimensions"]
-
-        if not differing:
-            st.warning(
-                "The two arms are identical on every compared dimension, so the delta "
-                "below is a run-to-run noise estimate, not an effect."
-            )
-        else:
-            st.markdown("**Parameters that differ**")
-            st.dataframe(
-                [
-                    {"dimension": dimension, "frozen": str(values["frozen"]),
-                     "fresh": str(values["fresh"])}
-                    for dimension, values in differing.items()
-                ],
-                use_container_width=True,
-                hide_index=True,
-            )
-
-        metrics = sorted(set(frozen.get("scores", {})) | set(fresh.get("scores", {})))
-        st.markdown("**Scores**")
-        st.dataframe(
-            [
-                {
-                    "metric": metric,
-                    "frozen": round(frozen.get("scores", {}).get(metric, 0.0), 4),
-                    "fresh": round(fresh.get("scores", {}).get(metric, 0.0), 4),
-                    "delta (fresh - frozen)": round(
-                        fresh.get("scores", {}).get(metric, 0.0)
-                        - frozen.get("scores", {}).get(metric, 0.0),
-                        4,
-                    ),
-                }
-                for metric in metrics
-            ],
-            use_container_width=True,
-            hide_index=True,
-        )
-        st.caption(f"Full payload: {comparison['output_path']}")
-        with st.expander("Prompt template held constant across both arms"):
-            st.code(comparison["control"]["shared_prompt_template"], language="text")
-
-
-# =====================================================================
 # Config
 # =====================================================================
 
@@ -568,7 +451,7 @@ with config_tab:
     st.subheader("Configuration")
     st.caption(
         "Edits apply to this session immediately and are written to "
-        "config/default_config.json only when you save."
+        "config/config.yaml only when you save."
     )
 
     editable = operations.editable_fields(config)

@@ -2,9 +2,9 @@
 menu.py
 =======
 Terminal front-end for Phoenix RAG. Standard library only -- no new dependency,
-so it works anywhere `app.py` already works.
+so it works anywhere the `phoenix-rag` CLI already works.
 
-    python menu.py
+    phoenix-rag --menu
 
 Every option is a thin wrapper over operations.py, which is also what
 streamlit_app.py drives. Nothing decisional lives in this file: it reads input,
@@ -17,14 +17,13 @@ session to a typo in a file path.
       1) Optimize RAG
       2) Add document to existing FAISS index
       3) Ask the RAG
-      4) Compare old parameters vs re-optimized (new document)
-      5) Modify configuration
-      6) Show corpus / status
+      4) Modify configuration
+      5) Show corpus / status
       0) Exit
 
-Options 1 and 4 run in the foreground and can take a long time (they are full
-optimization runs against the Mistral API); their progress is the normal log
-output, which is why logging goes to stdout here exactly as it does in app.py.
+Option 1 runs in the foreground and can take a long time (it is a full
+optimization run against the Mistral API); its progress is the normal log
+output, which is why logging goes to stdout here exactly as it does in cli.py.
 """
 
 from __future__ import annotations
@@ -34,13 +33,11 @@ import sys
 import traceback
 from pathlib import Path
 
-from dotenv import load_dotenv
+from phoenix_rag import operations, storage
+from phoenix_rag.config import load_env
+from phoenix_rag.workspace import active_workspace
 
-import operations
-import storage
-from config import LOGS_DIR, RESULTS_DIR
-
-load_dotenv()
+load_env()
 
 logger = logging.getLogger("phoenix_rag.menu")
 
@@ -57,7 +54,7 @@ def _setup_logging(verbose: bool = False) -> None:
         format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
         handlers=[
             logging.StreamHandler(sys.stdout),
-            logging.FileHandler(LOGS_DIR / "phoenix_rag.log"),
+            logging.FileHandler(active_workspace().ensure().log_file),
         ],
     )
 
@@ -108,7 +105,7 @@ def ask_path(prompt: str, must_exist: bool = True) -> Path:
 
 
 # =====================================================================
-# 6) Status
+# 5) Status
 # =====================================================================
 
 def show_status(app_config) -> None:
@@ -169,7 +166,7 @@ def show_status(app_config) -> None:
 # =====================================================================
 
 def optimize(app_config) -> None:
-    from experiment_runner import run_experiment
+    from phoenix_rag.optimization.runner import run_experiment
 
     report = operations.status(app_config)
     print(f"\n{RULE}\nOPTIMIZE RAG\n{RULE}")
@@ -300,64 +297,7 @@ def ask_the_rag(app_config) -> None:
 
 
 # =====================================================================
-# 4) Compare old parameters vs re-optimized
-# =====================================================================
-
-def compare(app_config) -> None:
-    from document_generalization_experiment import (
-        print_comparison,
-        run_generalization_experiment,
-    )
-
-    print(f"\n{RULE}\nCOMPARE OLD PARAMETERS vs RE-OPTIMIZED\n{RULE}")
-    print(
-        "Two arms are run on ONE new document:\n"
-        "  frozen -- the old document's tuned parameters, applied as-is\n"
-        "  fresh  -- the optimizer re-run from scratch on the new document\n"
-        "The prompt template is held constant across both arms, so the delta is\n"
-        "attributable to the retrieval parameters alone.\n"
-        "\nThis is a single-document experiment: it does NOT use the corpus, and it\n"
-        "writes to results/generalization_experiment/<label>/ so your top-level\n"
-        "results are left alone."
-    )
-
-    if not storage.BEST_CONFIG_PATH.exists():
-        print(
-            f"\nNo saved best configuration at {storage.BEST_CONFIG_PATH} to use as "
-            "the frozen arm. Run option 1 first."
-        )
-        return
-
-    old_best = storage.BEST_CONFIG_PATH
-    if ask_yes_no(f"Use a different frozen config than {old_best}?", False):
-        old_best = ask_path("old best_configuration.json", must_exist=True)
-    new_source = ask_path("path to the NEW document to test on")
-    label = ask_text("label for this comparison", new_source.stem)
-    iterations = ask_int("max iterations for the fresh arm", 6)
-
-    if not ask_yes_no(
-        f"Run both arms now? The fresh arm alone is up to {iterations} iterations "
-        "against the Mistral API"
-    ):
-        print("cancelled")
-        return
-
-    result = run_generalization_experiment(
-        old_best_config=old_best,
-        new_source=new_source,
-        label=label,
-        max_iterations=iterations,
-    )
-    print_comparison(
-        result["frozen"], result["fresh"], result["control"]["differing_dimensions"]
-    )
-    print(f"\nfull payload: {result['output_path']}")
-    print(f"arm results : {RESULTS_DIR / 'generalization_experiment' / label}")
-    print(RULE)
-
-
-# =====================================================================
-# 5) Modify configuration
+# 4) Modify configuration
 # =====================================================================
 
 def modify_config(app_config) -> None:
@@ -372,7 +312,7 @@ def modify_config(app_config) -> None:
                 section = head
                 print(f"\n  [{section}]")
             print(f"   {number:>2}) {field_.path:<44} {field_.display_value}")
-        print("\n    s) save to config/default_config.json")
+        print("\n    s) save to config/config.yaml")
         print("    0) back (discarding unsaved changes)")
 
         choice = ask_text("\nfield number to edit, or s/0", "0").lower()
@@ -459,9 +399,8 @@ ACTIONS = {
     "1": ("Optimize RAG", optimize),
     "2": ("Add document to existing FAISS index", add_document),
     "3": ("Ask the RAG", ask_the_rag),
-    "4": ("Compare old parameters vs re-optimized (new document)", compare),
-    "5": ("Modify configuration", modify_config),
-    "6": ("Show corpus / status", show_status),
+    "4": ("Modify configuration", modify_config),
+    "5": ("Show corpus / status", show_status),
 }
 
 
@@ -471,9 +410,10 @@ def main() -> int:
 
     if not app_config.mistral.api_key:
         print(
-            "WARNING: no Mistral API key found. Set MISTRAL_API_KEY in .env, or set\n"
-            "mistral.api_key via option 5. Options 1-4 all call the API and will fail\n"
-            "without it; options 5 and 6 work offline.\n"
+            "WARNING: no Mistral API key found. Set MISTRAL_API_KEY in .env (the\n"
+            "variable name each role reads is providers.<role>.api_key_env in\n"
+            "config/config.yaml). Options 1-3 all call the API and will fail\n"
+            "without it; options 4 and 5 work offline.\n"
         )
 
     while True:

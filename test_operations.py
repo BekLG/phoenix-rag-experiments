@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import unittest
 
-import operations
-from config import AppConfig
+from phoenix_rag import operations
+from phoenix_rag.config import AppConfig
 
 
 class EditableFieldsTests(unittest.TestCase):

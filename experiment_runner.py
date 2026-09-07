@@ -1,6 +1,6 @@
 """
-experiment_runner.py
-=====================
+runner.py
+=========
 Orchestrates the full self-optimization loop:
 
     1. Load + chunk the source document, build the FAISS index (once,
@@ -54,23 +54,26 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-import corpus
-import storage
-from chunking import split_documents
-from config import AppConfig
-from document_loader import load_document
-from document_profile import DocumentProfile, get_or_create_profile
-from document_summarizer import get_or_create_summary
-from embeddings import MistralEmbeddings
-from evaluator import run_evaluation
-from llm_optimizer import propose_next_config_llm
-from optimizer import meets_targets
-from question_generator import BenchmarkQuestion, get_or_create_benchmark
-from rag_pipeline import RagPipeline
-from seed_config import propose_seed_config
-from vector_store import get_or_build_vector_store
+from phoenix_rag import storage
+from phoenix_rag.benchmark.question_generator import (
+    BenchmarkQuestion,
+    get_or_create_benchmark,
+)
+from phoenix_rag.benchmark.summarizer import get_or_create_summary
+from phoenix_rag.config import AppConfig
+from phoenix_rag.core import corpus
+from phoenix_rag.core.chunking import split_documents
+from phoenix_rag.core.document_loader import load_document
+from phoenix_rag.core.document_profile import DocumentProfile, get_or_create_profile
+from phoenix_rag.core.embeddings import MistralEmbeddings
+from phoenix_rag.core.rag_pipeline import RagPipeline
+from phoenix_rag.core.seed_config import propose_seed_config
+from phoenix_rag.core.vector_store import get_or_build_vector_store
+from phoenix_rag.evaluation.evaluator import run_evaluation
+from phoenix_rag.optimization.llm_optimizer import propose_next_config_llm
+from phoenix_rag.optimization.optimizer import meets_targets
 
-logger = logging.getLogger("phoenix_rag.experiment_runner")
+logger = logging.getLogger("phoenix_rag.runner")
 
 
 @dataclass
