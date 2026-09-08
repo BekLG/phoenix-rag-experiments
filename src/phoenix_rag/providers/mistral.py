@@ -22,6 +22,7 @@ from typing import Any
 from mistralai.client import Mistral
 
 from phoenix_rag.config import MistralSettings
+from phoenix_rag.providers.base import ChatProvider
 from phoenix_rag.providers.ratelimit import RateLimiter
 
 logger = logging.getLogger("phoenix_rag.providers.mistral")
@@ -30,7 +31,7 @@ logger = logging.getLogger("phoenix_rag.providers.mistral")
 class MistralClient:
     """Rate-limited, retrying wrapper around the raw Mistral SDK client."""
 
-    def __init__(self, settings: MistralSettings):
+    def __init__(self, settings: MistralSettings, *, limiter: RateLimiter | None = None):
         if not settings.api_key:
             raise ValueError(
                 "MISTRAL_API_KEY is not set. Export it or put it in a .env file "
@@ -39,7 +40,14 @@ class MistralClient:
             )
         self.settings = settings
         self._client = Mistral(api_key=settings.api_key)
-        self._limiter = RateLimiter(settings.requests_per_minute, period_seconds=60.0)
+        # A limiter may be *injected* so several clients hitting the same API
+        # share one budget (see providers/registry.build_providers). Left unset,
+        # the client owns a private limiter -- the historical behaviour, and the
+        # source of the "N clients => N x the quota" overshoot the injected path
+        # exists to fix.
+        self._limiter = limiter or RateLimiter(
+            settings.requests_per_minute, period_seconds=60.0
+        )
 
     # -- embeddings ---------------------------------------------------
 
@@ -98,3 +106,42 @@ class MistralClient:
         raise RuntimeError(
             f"Mistral API call failed after {self.settings.max_retries} attempts"
         ) from last_error
+
+
+class MistralChatProvider(ChatProvider):
+    """A :class:`~phoenix_rag.providers.base.ChatProvider` for one Mistral role.
+
+    Thin by design: chat text goes through the shared :class:`MistralClient`
+    (rate limiting + retry), and the LangChain view is a plain ``ChatMistralAI``
+    on the same model and key -- the exact object the evaluator built inline
+    before providers existed.
+    """
+
+    def __init__(self, client: MistralClient, *, model: str, api_key: str):
+        self._client = client
+        self._model = model
+        self._api_key = api_key
+
+    def chat(
+        self,
+        messages: list[dict[str, str]],
+        *,
+        temperature: float = 0.3,
+        response_format: dict | None = None,
+    ) -> str:
+        return self._client.chat(
+            messages,
+            model=self._model,
+            temperature=temperature,
+            response_format=response_format,
+        )
+
+    def as_langchain_chat_model(self, *, temperature: float = 0.0):
+        # Imported lazily: langchain_mistralai is only needed by the judge role,
+        # and only when an evaluation actually runs -- not at every import of the
+        # providers package.
+        from langchain_mistralai import ChatMistralAI
+
+        return ChatMistralAI(
+            model=self._model, api_key=self._api_key, temperature=temperature
+        )

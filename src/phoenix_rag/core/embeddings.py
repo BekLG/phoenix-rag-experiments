@@ -31,9 +31,14 @@ _MAX_BATCH = 32
 class MistralEmbeddings(Embeddings):
     """Adapter so FAISS / LangChain can use Mistral embeddings directly."""
 
-    def __init__(self, settings: MistralSettings | None = None):
+    def __init__(self, settings: MistralSettings | None = None, *, client: MistralClient | None = None):
         self.settings = settings or MistralSettings()
-        self._client = MistralClient(self.settings)
+        # An injected client lets this share one rate limiter with the other
+        # Mistral roles (see providers/registry.build_providers). Unset, it owns
+        # a private client -- the historical behaviour, kept so the many existing
+        # `MistralEmbeddings(settings)` call sites work unchanged until they are
+        # migrated to injected providers.
+        self._client = client or MistralClient(self.settings)
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         vectors: list[list[float]] = []
