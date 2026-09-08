@@ -80,6 +80,7 @@ from phoenix_rag.core.document_profile import (
     compute_profile,
     load_profile,
 )
+from phoenix_rag.providers.base import ChatProvider
 from phoenix_rag.core.vector_store import (
     add_chunks_to_store,
     build_vector_store,
@@ -369,6 +370,8 @@ def register_document(
     path: str | Path,
     label: str,
     generate_questions: bool = True,
+    *,
+    generation: ChatProvider,
 ) -> CorpusDocument | None:
     """Add one document to the manifest, generating its derived artifacts.
 
@@ -410,7 +413,7 @@ def register_document(
     profile = compute_profile(full_text, pages=pages)
     logger.info("Profile for %s: %s", path.name, profile)
 
-    summary = generate_summary(full_text, app_config.mistral)
+    summary = generate_summary(full_text, generation)
 
     document = CorpusDocument(
         doc_id=doc_id,
@@ -428,7 +431,7 @@ def register_document(
     if generate_questions:
         questions = generate_benchmark(
             full_text=full_text,
-            mistral_settings=app_config.mistral,
+            generation=generation,
             qg_config=app_config.question_generation,
         )
         document.question_count = _extend_benchmark(corpus, questions)
@@ -451,7 +454,7 @@ def register_document(
 
 
 def bootstrap_from_single_document(
-    corpus: Corpus, app_config: AppConfig
+    corpus: Corpus, app_config: AppConfig, *, generation: ChatProvider
 ) -> CorpusDocument | None:
     """Seed an empty corpus with app_config.source_document, reusing its caches.
 
@@ -492,7 +495,7 @@ def bootstrap_from_single_document(
         logger.info("Adopting the cached document summary at %s", cached_summary)
         summary = cached_summary.read_text(encoding="utf-8")
     else:
-        summary = generate_summary(full_text, app_config.mistral)
+        summary = generate_summary(full_text, generation)
 
     document = CorpusDocument(
         doc_id=document_digest(source),
@@ -519,7 +522,7 @@ def bootstrap_from_single_document(
     elif not corpus_has_benchmark:
         questions = generate_benchmark(
             full_text=full_text,
-            mistral_settings=app_config.mistral,
+            generation=generation,
             qg_config=app_config.question_generation,
         )
         document.question_count = _extend_benchmark(corpus, questions)
@@ -843,7 +846,7 @@ def write_rendered_artifacts(corpus: Corpus) -> None:
 
 
 def corpus_benchmark(
-    corpus: Corpus, app_config: AppConfig
+    corpus: Corpus, app_config: AppConfig, *, generation: ChatProvider
 ) -> list[BenchmarkQuestion]:
     """The fixed benchmark every configuration in a corpus run is scored against.
 
@@ -873,7 +876,7 @@ def corpus_benchmark(
     )
     questions = generate_benchmark(
         full_text=joined,
-        mistral_settings=app_config.mistral,
+        generation=generation,
         qg_config=app_config.question_generation,
     )
     save_benchmark(questions, corpus.benchmark_path)

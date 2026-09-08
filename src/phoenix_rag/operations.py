@@ -39,10 +39,10 @@ from phoenix_rag.config import (
 from phoenix_rag.core import corpus
 from phoenix_rag.core.chunking import split_documents
 from phoenix_rag.core.document_loader import load_document
-from phoenix_rag.core.embeddings import MistralEmbeddings
 from phoenix_rag.core.rag_pipeline import RagPipeline, RagResult
 from phoenix_rag.core.vector_store import get_or_build_vector_store
 from phoenix_rag.optimization.llm_optimizer import validate_prompt_template
+from phoenix_rag.providers import build_providers
 from phoenix_rag.workspace import active_workspace
 
 logger = logging.getLogger("phoenix_rag.operations")
@@ -253,10 +253,16 @@ def add_document(
     enable_corpus(app_config)
     state = corpus_state(app_config)
 
+    # One provider bundle for both the generation this add needs (summary +
+    # questions for the new document) and the embeddings the sync uses.
+    providers = build_providers(app_config)
+
     # First add converts the single-document setup into a corpus. Doing this here
     # rather than making the operator do it explicitly is what keeps the existing
     # document from being silently dropped out of the index.
-    bootstrapped = corpus.bootstrap_from_single_document(state, app_config)
+    bootstrapped = corpus.bootstrap_from_single_document(
+        state, app_config, generation=providers.generation
+    )
 
     questions_before = _benchmark_size(state)
     document = corpus.register_document(
@@ -265,6 +271,7 @@ def add_document(
         path=path,
         label=label or path.stem,
         generate_questions=generate_questions,
+        generation=providers.generation,
     )
     if document is None:
         logger.info("%s is already in the corpus; nothing to do", path.name)
@@ -274,11 +281,10 @@ def add_document(
     sync_report = None
     if sync:
         active = resolve_active_retrieval(app_config)
-        embeddings = MistralEmbeddings(app_config.mistral)
         _store, sync_report = corpus.sync_index(
             state,
-            embeddings=embeddings,
-            embedding_model=app_config.mistral.embedding_model,
+            embeddings=providers.embedding,
+            embedding_model=app_config.providers.embedding.model,
             chunk_size=active.config.chunk_size,
             chunk_overlap=active.config.chunk_overlap,
         )
@@ -369,12 +375,17 @@ class AskSession:
         self.retrieval_config = active.config
         self.provenance = active.provenance
 
-        embeddings = MistralEmbeddings(app_config.mistral)
+        # One provider bundle for this session: embeddings for the index and the
+        # generation provider the pipeline answers with.
+        providers = build_providers(app_config)
+        embeddings = providers.embedding
 
         if app_config.corpus_path:
             state = corpus_state(app_config)
             if state.is_empty:
-                corpus.bootstrap_from_single_document(state, app_config)
+                corpus.bootstrap_from_single_document(
+                    state, app_config, generation=providers.generation
+                )
             if state.is_empty:
                 raise RuntimeError(
                     "The corpus is empty and could not be seeded from "
@@ -383,7 +394,7 @@ class AskSession:
             store, report = corpus.sync_index(
                 state,
                 embeddings=embeddings,
-                embedding_model=app_config.mistral.embedding_model,
+                embedding_model=app_config.providers.embedding.model,
                 chunk_size=self.retrieval_config.chunk_size,
                 chunk_overlap=self.retrieval_config.chunk_overlap,
             )
@@ -408,7 +419,7 @@ class AskSession:
                 embeddings=embeddings,
                 cache_root=app_config.faiss_index_path,
                 source_document=str(source),
-                embedding_model=app_config.mistral.embedding_model,
+                embedding_model=app_config.providers.embedding.model,
                 chunk_size=self.retrieval_config.chunk_size,
                 chunk_overlap=self.retrieval_config.chunk_overlap,
             )
@@ -417,7 +428,7 @@ class AskSession:
             self.labels = [source.stem]
 
         self.store = store
-        self.pipeline = RagPipeline(store, app_config.mistral, self.retrieval_config)
+        self.pipeline = RagPipeline(store, providers.generation, self.retrieval_config)
 
     def ask(self, question: str) -> RagResult:
         return self.pipeline.answer(question)

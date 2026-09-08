@@ -38,14 +38,14 @@ import json
 import logging
 import re
 
-from phoenix_rag.config import MistralSettings, OptimizerConfig, RetrievalConfig
+from phoenix_rag.config import OptimizerConfig, RetrievalConfig
 from phoenix_rag.core.document_profile import (
     DocumentProfile,
     chars_per_section,
     estimate_chunk_count,
 )
 from phoenix_rag.optimization.optimizer import _clamp, meets_targets
-from phoenix_rag.providers.mistral import MistralClient
+from phoenix_rag.providers.base import ChatProvider
 
 logger = logging.getLogger("phoenix_rag.llm_optimizer")
 
@@ -339,7 +339,7 @@ def propose_next_config_llm(
     current_config: RetrievalConfig,
     scores: dict[str, float],
     opt_config: OptimizerConfig,
-    mistral_settings: MistralSettings,
+    optimizer: ChatProvider,
     history: list[dict],
     document_summary: str,
     document_profile: DocumentProfile,
@@ -375,8 +375,6 @@ def propose_next_config_llm(
         logger.info("All metrics meet target thresholds.")
         return current_config, ["all_targets_met"]
 
-    client = MistralClient(mistral_settings)
-
     user_message = (
         f"{BALANCED_SEARCH_POLICY}\n\n"
         f"{_format_bounds(opt_config)}\n\n"
@@ -391,12 +389,11 @@ def propose_next_config_llm(
         "Propose the next configuration."
     )
 
-    raw = client.chat(
+    raw = optimizer.chat(
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_message},
         ],
-        model=mistral_settings.optimizer_model,
         temperature=0.4,
     )
 

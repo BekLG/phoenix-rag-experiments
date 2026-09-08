@@ -17,8 +17,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from phoenix_rag.config import MistralSettings
-from phoenix_rag.providers.mistral import MistralClient
+from phoenix_rag.providers.base import ChatProvider
 
 logger = logging.getLogger("phoenix_rag.summarizer")
 
@@ -35,10 +34,8 @@ that appear in the document."""
 _MAX_CHARS_FOR_SUMMARY = 40000
 
 
-def generate_summary(full_text: str, mistral_settings: MistralSettings) -> str:
+def generate_summary(full_text: str, generation: ChatProvider) -> str:
     """Generate a concise summary of the full document text."""
-    client = MistralClient(mistral_settings)
-
     text_for_summary = full_text
     if len(full_text) > _MAX_CHARS_FOR_SUMMARY:
         text_for_summary = (
@@ -50,12 +47,11 @@ def generate_summary(full_text: str, mistral_settings: MistralSettings) -> str:
             len(full_text), _MAX_CHARS_FOR_SUMMARY,
         )
 
-    summary = client.chat(
+    summary = generation.chat(
         messages=[
             {"role": "system", "content": SUMMARY_SYSTEM_PROMPT},
             {"role": "user", "content": text_for_summary},
         ],
-        model=mistral_settings.generation_model,
         temperature=0.2,
     )
     logger.info("Generated document summary (%d chars)", len(summary))
@@ -75,7 +71,7 @@ def load_summary(path: str | Path) -> str:
 
 def get_or_create_summary(
     full_text: str,
-    mistral_settings: MistralSettings,
+    generation: ChatProvider,
     summary_path: str | Path,
     force_regenerate: bool = False,
 ) -> str:
@@ -101,6 +97,6 @@ def get_or_create_summary(
             path,
         )
 
-    summary = generate_summary(full_text, mistral_settings)
+    summary = generate_summary(full_text, generation)
     save_summary(summary, path)
     return summary

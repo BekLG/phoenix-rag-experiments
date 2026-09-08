@@ -121,7 +121,8 @@ class CorpusTestCase(unittest.TestCase):
             corpus, "generate_benchmark", return_value=fake_questions(label, questions)
         ):
             return corpus.register_document(
-                state, self.app_config, path=path, label=label
+                state, self.app_config, path=path, label=label,
+                generation=mock.Mock(),
             )
 
 
@@ -234,7 +235,7 @@ class BenchmarkGrowthTests(CorpusTestCase):
         )
         self.assertEqual(second.question_count, 2)
 
-        questions = corpus.corpus_benchmark(state, self.app_config)
+        questions = corpus.corpus_benchmark(state, self.app_config, generation=mock.Mock())
         self.assertEqual(len(questions), 5)
         # The older document's questions are still there -- growing the corpus must
         # not stop testing what was already in it.
@@ -255,10 +256,11 @@ class BenchmarkGrowthTests(CorpusTestCase):
                 self.app_config,
                 path=make_document(self.docs_dir, "beta.txt"),
                 label="beta",
+                generation=mock.Mock(),
             )
 
         self.assertEqual(second.question_count, 0)
-        self.assertEqual(len(corpus.corpus_benchmark(state, self.app_config)), 2)
+        self.assertEqual(len(corpus.corpus_benchmark(state, self.app_config, generation=mock.Mock())), 2)
 
     def test_registering_without_question_generation_leaves_the_benchmark_alone(self):
         state = corpus.load(self.corpus_root)
@@ -272,11 +274,12 @@ class BenchmarkGrowthTests(CorpusTestCase):
                 path=make_document(self.docs_dir, "beta.txt"),
                 label="beta",
                 generate_questions=False,
+                generation=mock.Mock(),
             )
 
         generator.assert_not_called()
         self.assertEqual(document.question_count, 0)
-        self.assertEqual(len(corpus.corpus_benchmark(state, self.app_config)), 2)
+        self.assertEqual(len(corpus.corpus_benchmark(state, self.app_config, generation=mock.Mock())), 2)
 
 
 # =====================================================================
@@ -548,7 +551,7 @@ class BootstrapTests(CorpusTestCase):
         state = corpus.load(self.corpus_root)
         with mock.patch.object(corpus, "generate_summary") as summarizer, \
              mock.patch.object(corpus, "generate_benchmark") as generator:
-            document = corpus.bootstrap_from_single_document(state, self.app_config)
+            document = corpus.bootstrap_from_single_document(state, self.app_config, generation=mock.Mock())
 
         self.assertIsNotNone(document)
         # The whole point: converting a single-document setup into a corpus spends
@@ -557,20 +560,20 @@ class BootstrapTests(CorpusTestCase):
         generator.assert_not_called()
         self.assertEqual(document.summary, "Cached summary from an earlier run.")
         self.assertEqual(document.question_count, 4)
-        self.assertEqual(len(corpus.corpus_benchmark(state, self.app_config)), 4)
+        self.assertEqual(len(corpus.corpus_benchmark(state, self.app_config, generation=mock.Mock())), 4)
 
     def test_bootstrap_is_a_noop_on_a_populated_corpus(self):
         state = corpus.load(self.corpus_root)
         self.register(state, make_document(self.docs_dir, "alpha.txt"), "alpha")
         self.app_config.source_document = str(make_document(self.docs_dir, "other.txt"))
 
-        self.assertIsNone(corpus.bootstrap_from_single_document(state, self.app_config))
+        self.assertIsNone(corpus.bootstrap_from_single_document(state, self.app_config, generation=mock.Mock()))
         self.assertEqual(len(state.documents), 1)
 
     def test_bootstrap_of_a_missing_source_document_is_survivable(self):
         state = corpus.load(self.corpus_root)
         self.app_config.source_document = str(self.root / "does_not_exist.pdf")
-        self.assertIsNone(corpus.bootstrap_from_single_document(state, self.app_config))
+        self.assertIsNone(corpus.bootstrap_from_single_document(state, self.app_config, generation=mock.Mock()))
         self.assertTrue(state.is_empty)
 
 

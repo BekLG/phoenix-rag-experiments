@@ -6,7 +6,7 @@ The actual RAG pipeline being optimized: retrieve -> build prompt -> generate.
 Kept intentionally simple/stateless so it can be re-run cheaply for every
 question in the benchmark, for every configuration the optimizer tries.
 
-Generation calls go through MistralClient (providers/mistral.py) rather than
+Generation calls go through an injected ChatProvider (providers/) rather than
 a raw SDK client, so rate limiting and retry/backoff actually apply here.
 Without this, a 429 mid-benchmark crashes the whole experiment run instead
 of backing off and retrying -- this is not hypothetical, it's what actually
@@ -22,8 +22,8 @@ from dataclasses import dataclass, field
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 
-from phoenix_rag.config import MistralSettings, RetrievalConfig
-from phoenix_rag.providers.mistral import MistralClient
+from phoenix_rag.config import RetrievalConfig
+from phoenix_rag.providers.base import ChatProvider
 
 logger = logging.getLogger("phoenix_rag.rag_pipeline")
 
@@ -47,15 +47,14 @@ class RagPipeline:
     def __init__(
         self,
         vector_store: FAISS,
-        mistral_settings: MistralSettings,
+        generation: ChatProvider,
         retrieval_config: RetrievalConfig,
     ):
         self.vector_store = vector_store
         self.retrieval_config = retrieval_config
 
-        # Rate-limited, retrying client -- see module docstring.
-        self._client = MistralClient(mistral_settings)
-        self._model = mistral_settings.generation_model
+        # Rate-limited, retrying generation provider -- see module docstring.
+        self._generation = generation
 
         # ---------------------------------------------------------
         # Retriever construction, including mmr support.
@@ -96,12 +95,11 @@ class RagPipeline:
         contexts = [d.page_content for d in docs]
         prompt = self.build_prompt(question, contexts)
 
-        # MistralClient.chat() handles rate limiting + exponential-backoff
-        # retry internally (see providers/mistral.py), and returns the answer
+        # The ChatProvider handles rate limiting + exponential-backoff retry
+        # inside its backend client (see providers/), and returns the answer
         # text directly rather than a raw SDK response object.
-        answer_text = self._client.chat(
+        answer_text = self._generation.chat(
             messages=[{"role": "user", "content": prompt}],
-            model=self._model,
             temperature=0.2,
         )
         return RagResult(

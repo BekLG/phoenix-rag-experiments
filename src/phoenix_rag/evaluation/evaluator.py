@@ -2,19 +2,21 @@
 evaluator.py
 ============
 Runs Ragas metrics (faithfulness, context_recall, context_precision,
-answer_relevancy) over a set of RAG results using Mistral Small as the
-judge LLM and Mistral embeddings as the embedding backend.
+answer_relevancy) over a set of RAG results, using the judge and embedding
+providers handed to run_evaluation() -- the judge's LangChain chat model and
+the embedding provider (already a LangChain Embeddings).
 
 Ragas evaluates metrics as a batch of internally-concurrent async calls --
 each metric can fire multiple sub-calls per sample (e.g. faithfulness
 decomposes an answer into statements, then verifies each one separately),
 so the real number of judge API calls is well above len(dataset) *
-len(METRICS). The judge client here (ChatMistralAI) is built directly,
-NOT routed through mistral_client.MistralClient, so none of that module's
-rate limiting applies to judge calls -- Ragas's default concurrency can
-burst well past Mistral's actual per-minute limit and trigger a wall of
-429s. run_evaluation() below caps Ragas's own concurrency via RunConfig
-to keep it under the limit instead.
+len(METRICS). The judge here is a LangChain chat model (via
+ChatProvider.as_langchain_chat_model), which Ragas drives directly -- it does
+NOT go through the provider's rate-limited chat() path, so none of that
+pacing applies to judge calls, and Ragas's default concurrency can burst well
+past the backend's actual per-minute limit and trigger a wall of 429s.
+run_evaluation() below caps Ragas's own concurrency via RunConfig to keep it
+under the limit instead.
 """
 
 from __future__ import annotations
@@ -22,7 +24,7 @@ from __future__ import annotations
 import logging
 
 from datasets import Dataset
-from langchain_mistralai import ChatMistralAI
+from langchain_core.embeddings import Embeddings
 
 from phoenix_rag.evaluation.ragas_compat import install_ragas_compat
 
@@ -43,9 +45,8 @@ from ragas.metrics import (
 )
 
 from phoenix_rag.benchmark.question_generator import BenchmarkQuestion
-from phoenix_rag.config import MistralSettings
-from phoenix_rag.core.embeddings import MistralEmbeddings
 from phoenix_rag.core.rag_pipeline import RagResult
+from phoenix_rag.providers.base import ChatProvider
 
 logger = logging.getLogger("phoenix_rag.evaluator")
 
@@ -86,17 +87,15 @@ def build_ragas_dataset(
 def run_evaluation(
     results: list[RagResult],
     questions: list[BenchmarkQuestion],
-    mistral_settings: MistralSettings,
+    judge: ChatProvider,
+    judge_embeddings: Embeddings,
 ) -> dict[str, float]:
     """Evaluate a batch of RAG results with Ragas, return mean metric scores."""
     dataset = build_ragas_dataset(results, questions)
 
-    judge_llm = ChatMistralAI(
-        model=mistral_settings.judge_model,
-        api_key=mistral_settings.api_key,
-        temperature=0,
-    )
-    judge_embeddings = MistralEmbeddings(mistral_settings)
+    # Ragas needs LangChain-shaped objects: the judge role supplies its own
+    # BaseChatModel view, and the embedding provider IS a LangChain Embeddings.
+    judge_llm = judge.as_langchain_chat_model(temperature=0)
 
     # Ragas's own concurrency, capped -- see module docstring. Also raises
     # Ragas's own max_wait/max_retries so a 429 that does slip through

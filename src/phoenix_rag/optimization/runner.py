@@ -65,13 +65,13 @@ from phoenix_rag.core import corpus
 from phoenix_rag.core.chunking import split_documents
 from phoenix_rag.core.document_loader import load_document
 from phoenix_rag.core.document_profile import DocumentProfile, get_or_create_profile
-from phoenix_rag.core.embeddings import MistralEmbeddings
 from phoenix_rag.core.rag_pipeline import RagPipeline
 from phoenix_rag.core.seed_config import propose_seed_config
 from phoenix_rag.core.vector_store import get_or_build_vector_store
 from phoenix_rag.evaluation.evaluator import run_evaluation
 from phoenix_rag.optimization.llm_optimizer import propose_next_config_llm
 from phoenix_rag.optimization.optimizer import meets_targets
+from phoenix_rag.providers import Providers, build_providers
 
 logger = logging.getLogger("phoenix_rag.runner")
 
@@ -98,7 +98,7 @@ class ExperimentInputs:
 
 
 def _single_document_inputs(
-    app_config: AppConfig, embeddings: MistralEmbeddings
+    app_config: AppConfig, providers: Providers
 ) -> ExperimentInputs:
     """The original single-document path, moved here verbatim in behaviour."""
     source_documents = load_document(app_config.source_document)
@@ -106,13 +106,13 @@ def _single_document_inputs(
 
     benchmark = get_or_create_benchmark(
         full_text=full_text,
-        mistral_settings=app_config.mistral,
+        generation=providers.generation,
         qg_config=app_config.question_generation,
         benchmark_path=app_config.benchmark_path,
     )
     document_summary = get_or_create_summary(
         full_text=full_text,
-        mistral_settings=app_config.mistral,
+        generation=providers.generation,
         summary_path=app_config.summary_path,
     )
     logger.info("Document summary ready (%d chars)", len(document_summary))
@@ -135,10 +135,10 @@ def _single_document_inputs(
         )
         return get_or_build_vector_store(
             chunks=chunks,
-            embeddings=embeddings,
+            embeddings=providers.embedding,
             cache_root=app_config.faiss_index_path,
             source_document=app_config.source_document,
-            embedding_model=app_config.mistral.embedding_model,
+            embedding_model=app_config.providers.embedding.model,
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
         )
@@ -153,7 +153,7 @@ def _single_document_inputs(
 
 
 def _corpus_inputs(
-    app_config: AppConfig, embeddings: MistralEmbeddings
+    app_config: AppConfig, providers: Providers
 ) -> ExperimentInputs:
     """The multi-document path: every artifact describes the whole corpus."""
     corpus_state = corpus.load(app_config.corpus_path)
@@ -162,7 +162,9 @@ def _corpus_inputs(
         # An operator who turned corpus mode on without adding anything yet still
         # has a configured source_document; seeding from it (reusing its cached
         # artifacts) is much friendlier than refusing to run.
-        corpus.bootstrap_from_single_document(corpus_state, app_config)
+        corpus.bootstrap_from_single_document(
+            corpus_state, app_config, generation=providers.generation
+        )
     if corpus_state.is_empty:
         raise RuntimeError(
             f"Corpus at {app_config.corpus_path} is empty and could not be "
@@ -172,7 +174,9 @@ def _corpus_inputs(
     for problem in corpus.verify_documents(corpus_state):
         logger.warning("Corpus integrity: %s", problem)
 
-    benchmark = corpus.corpus_benchmark(corpus_state, app_config)
+    benchmark = corpus.corpus_benchmark(
+        corpus_state, app_config, generation=providers.generation
+    )
     document_summary = corpus.summary_text(corpus_state)
     document_profile = corpus.profile(corpus_state)
 
@@ -197,8 +201,8 @@ def _corpus_inputs(
     def build_store(chunk_size: int, chunk_overlap: int):
         store, _report = corpus.sync_index(
             corpus_state,
-            embeddings=embeddings,
-            embedding_model=app_config.mistral.embedding_model,
+            embeddings=providers.embedding,
+            embedding_model=app_config.providers.embedding.model,
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
         )
@@ -216,22 +220,24 @@ def _corpus_inputs(
 
 
 def prepare_inputs(
-    app_config: AppConfig, embeddings: MistralEmbeddings
+    app_config: AppConfig, providers: Providers
 ) -> ExperimentInputs:
     """Gather the loop's document-dependent inputs for whichever mode is active."""
     if app_config.corpus_path:
-        return _corpus_inputs(app_config, embeddings)
-    return _single_document_inputs(app_config, embeddings)
+        return _corpus_inputs(app_config, providers)
+    return _single_document_inputs(app_config, providers)
 
 
 def run_experiment(app_config: AppConfig) -> dict:
     """Run the full optimization loop. Returns the best result found."""
 
-    embeddings = MistralEmbeddings(app_config.mistral)
+    # One composition root for the whole run: every role's backend + model, with
+    # a rate limiter shared across roles that hit the same API.
+    providers = build_providers(app_config)
 
     # Benchmark is generated ONCE and never touched again during the run, so
     # every configuration is scored against exactly the same questions.
-    inputs = prepare_inputs(app_config, embeddings)
+    inputs = prepare_inputs(app_config, providers)
     question_texts = [question.question for question in inputs.benchmark]
     logger.info(
         "Benchmark ready: %d fixed evaluation questions (%s)",
@@ -284,10 +290,12 @@ def run_experiment(app_config: AppConfig) -> dict:
             vector_store = inputs.build_store(*chunk_params)
             cached_chunk_params = chunk_params
 
-        pipeline = RagPipeline(vector_store, app_config.mistral, current_config)
+        pipeline = RagPipeline(vector_store, providers.generation, current_config)
         results = pipeline.answer_many(question_texts)
 
-        scores = run_evaluation(results, inputs.benchmark, app_config.mistral)
+        scores = run_evaluation(
+            results, inputs.benchmark, providers.judge, providers.embedding
+        )
 
         storage.save_iteration_config(iteration, current_config)
         storage.append_experiment_result(iteration, current_config, scores)
@@ -334,7 +342,7 @@ def run_experiment(app_config: AppConfig) -> dict:
             current_config,
             scores,
             app_config.optimizer,
-            app_config.mistral,
+            providers.optimizer,
             history,
             document_summary,
             document_profile,

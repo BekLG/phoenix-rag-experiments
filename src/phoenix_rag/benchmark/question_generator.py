@@ -19,8 +19,9 @@ Workflow:
     4. Persist to disk. Later runs load this file instead of regenerating
        it (unless `regenerate_each_iteration` / `force` is set).
 
-Generation calls go through MistralClient (providers/mistral.py) rather than
-a raw SDK client, so rate limiting and retry/backoff actually apply here.
+Generation calls go through an injected ChatProvider (providers/) rather than
+a raw SDK client, so rate limiting and retry/backoff actually apply here (for
+the Mistral backend the provider wraps the shared rate-limited MistralClient).
 Without this, a 429 mid-batch is caught by the broad except-Exception below
 and that batch's questions are silently lost rather than retried.
 """
@@ -33,8 +34,8 @@ import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from phoenix_rag.config import MistralSettings, QuestionGenerationConfig
-from phoenix_rag.providers.mistral import MistralClient
+from phoenix_rag.config import QuestionGenerationConfig
+from phoenix_rag.providers.base import ChatProvider
 from phoenix_rag.storage import _atomic_write_json
 
 logger = logging.getLogger("phoenix_rag.question_generator")
@@ -97,25 +98,23 @@ def _parse_llm_json(raw: str) -> list[dict]:
 
 
 def _generate_for_batch(
-    client: MistralClient,
+    generation: ChatProvider,
     batch_text: str,
     qg_config: QuestionGenerationConfig,
-    mistral_settings: MistralSettings,
 ) -> list[BenchmarkQuestion]:
     system = SYSTEM_PROMPT.format(question_types=", ".join(qg_config.question_types))
     user = (
         f"Generate {qg_config.questions_per_batch} questions from this text:\n\n"
         f"{batch_text}"
     )
-    # MistralClient.chat() handles rate limiting + exponential-backoff retry
-    # internally and returns the answer text directly (not a raw SDK
+    # The ChatProvider handles rate limiting + exponential-backoff retry inside
+    # its backend client and returns the answer text directly (not a raw SDK
     # response object needing .choices[0].message.content).
-    raw = client.chat(
+    raw = generation.chat(
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
-        model=mistral_settings.generation_model,
         temperature=0.4,
     )
     items = _parse_llm_json(raw)
@@ -151,8 +150,8 @@ def _dedupe(questions: list[BenchmarkQuestion]) -> list[BenchmarkQuestion]:
     """Remove exact/near-exact duplicate questions (case/whitespace-insensitive).
 
     A lightweight normalized-string dedupe. For stricter semantic
-    dedup, swap in an embedding-similarity comparison using
-    MistralClient.embed and qg_config.dedup_similarity_threshold.
+    dedup, swap in an embedding-similarity comparison using an
+    embedding provider (providers/) and qg_config.dedup_similarity_threshold.
     """
     seen: set[str] = set()
     unique: list[BenchmarkQuestion] = []
@@ -167,11 +166,10 @@ def _dedupe(questions: list[BenchmarkQuestion]) -> list[BenchmarkQuestion]:
 
 def generate_benchmark(
     full_text: str,
-    mistral_settings: MistralSettings,
+    generation: ChatProvider,
     qg_config: QuestionGenerationConfig,
 ) -> list[BenchmarkQuestion]:
     """Generate the full benchmark question set from the complete document."""
-    client = MistralClient(mistral_settings)
     batches = _batch_text(full_text, qg_config.batch_size_chars)
     logger.info("Generating questions from %d batch(es)", len(batches))
 
@@ -180,7 +178,7 @@ def generate_benchmark(
         logger.info("Generating questions for batch %d/%d", i, len(batches))
         try:
             all_questions.extend(
-                _generate_for_batch(client, batch, qg_config, mistral_settings)
+                _generate_for_batch(generation, batch, qg_config)
             )
         except Exception:
             logger.exception(
@@ -208,7 +206,7 @@ def load_benchmark(path: str | Path) -> list[BenchmarkQuestion]:
 
 def get_or_create_benchmark(
     full_text: str,
-    mistral_settings: MistralSettings,
+    generation: ChatProvider,
     qg_config: QuestionGenerationConfig,
     benchmark_path: str | Path,
     force_regenerate: bool = False,
@@ -223,6 +221,6 @@ def get_or_create_benchmark(
         logger.info("Loading cached benchmark from %s", path)
         return load_benchmark(path)
 
-    questions = generate_benchmark(full_text, mistral_settings, qg_config)
+    questions = generate_benchmark(full_text, generation, qg_config)
     save_benchmark(questions, path)
     return questions
