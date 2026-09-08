@@ -32,7 +32,9 @@ class EditableFieldsTests(unittest.TestCase):
             "retrieval.chunk_overlap",
             "retrieval.top_k",
             "retrieval.prompt_template",
-            "mistral.requests_per_minute",
+            "providers.generation.backend",
+            "providers.generation.model",
+            "providers.embedding.requests_per_minute",
             "source_document",
         ):
             self.assertIn(path, self.fields)
@@ -61,12 +63,15 @@ class EditableFieldsTests(unittest.TestCase):
         fields = {f.path: f for f in operations.editable_fields(self.config)}
         self.assertEqual(fields["retrieval.similarity_threshold"].kind, "float")
 
-    def test_the_api_key_is_masked_for_display(self):
-        self.config.mistral.api_key = "sk-abcdefghijklmnopqrstuvwxyz"
-        fields = {f.path: f for f in operations.editable_fields(self.config)}
-        field_ = fields["mistral.api_key"]
-        self.assertTrue(field_.secret)
-        self.assertNotIn("efghijklmnopqrstuv", field_.display_value)
+    def test_the_api_key_value_is_never_an_editable_field(self):
+        # The project rule is that API keys live in .env and the config only
+        # names the variable that holds them (api_key_env). So no editable leaf
+        # may be the key itself, and the api_key_env leaf that IS present is a
+        # plain, non-secret variable name.
+        self.assertEqual([p for p in self.fields if p.endswith(".api_key")], [])
+        env_field = self.fields["providers.embedding.api_key_env"]
+        self.assertEqual(env_field.value, "MISTRAL_API_KEY")
+        self.assertFalse(env_field.secret)
 
     def test_bool_is_classified_before_int(self):
         # bool IS an int in Python; misordering the checks would turn every
@@ -166,7 +171,7 @@ class ValidationTests(unittest.TestCase):
             ("optimizer.max_iterations", "0"),
             ("question_generation.questions_per_batch", "0"),
             ("question_generation.batch_size_chars", "-1"),
-            ("mistral.requests_per_minute", "0"),
+            ("providers.embedding.requests_per_minute", "0"),
         ):
             with self.subTest(path=path), self.assertRaises(operations.ConfigEditError):
                 operations.apply_field(self.config, path, value)

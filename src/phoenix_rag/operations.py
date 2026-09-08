@@ -460,7 +460,6 @@ class ConfigEditError(ValueError):
 # so dataclasses.fields() hands back strings like "tuple", not real types.
 _FLOAT_FIELDS = {
     "retrieval.similarity_threshold",
-    "mistral.base_backoff_seconds",
     "question_generation.dedup_similarity_threshold",
     "optimizer.target_faithfulness",
     "optimizer.target_context_recall",
@@ -470,7 +469,11 @@ _FLOAT_FIELDS = {
 }
 _FLOAT_PAIR_FIELDS = {"optimizer.similarity_threshold_bounds"}
 _TEXT_FIELDS = {"retrieval.prompt_template"}
-_SECRET_FIELDS = {"mistral.api_key"}
+# No configuration field holds a secret. API keys are referenced by variable
+# NAME (`api_key_env`) and read from .env at run time; the value never enters a
+# config file. The masking in ConfigField.display_value is kept as a dormant
+# safety net -- add a path here and it is masked in both front-ends.
+_SECRET_FIELDS: set[str] = set()
 _CHOICE_FIELDS = {
     "retrieval.retriever_type": ("similarity", "mmr", "similarity_score_threshold"),
 }
@@ -502,9 +505,33 @@ _HELP = {
     "retrieval.prompt_template": (
         "Answer prompt. Must contain exactly one {context} and one {question}."
     ),
-    "mistral.requests_per_minute": "Client-side rate limit shared by every Mistral call.",
     "source_document": "The document used when corpus mode is off, and the seed for a new corpus.",
 }
+
+# Provider fields repeat under providers.embedding / generation / optimizer /
+# judge, so their help is matched by path suffix rather than by full path.
+_HELP_SUFFIX = {
+    ".backend": "Which provider serves this role (e.g. mistral, openai, anthropic, local).",
+    ".model": "Model name for this role, spelled as the chosen backend expects it.",
+    ".api_key_env": (
+        "Environment variable holding this provider's API key. The key itself "
+        "lives in .env, never in this file."
+    ),
+    ".base_url": "Override the provider endpoint (e.g. a local server). Blank uses the default.",
+    ".requests_per_minute": "Client-side rate limit for this provider's calls.",
+    ".max_retries": "How many times to retry a failed call before giving up.",
+    ".base_backoff_seconds": "Initial delay between retries; doubles each attempt.",
+}
+
+
+def _help_for(path: str) -> str:
+    """Help text for a leaf: exact match first, then a provider-field suffix."""
+    if path in _HELP:
+        return _HELP[path]
+    for suffix, text in _HELP_SUFFIX.items():
+        if path.endswith(suffix):
+            return text
+    return ""
 
 
 @dataclass
@@ -540,7 +567,7 @@ def _classify(path: str, value: object) -> tuple[str, tuple[str, ...] | None]:
         return "text", None
     if path in _FLOAT_PAIR_FIELDS:
         return "float_pair", None
-    if path in _FLOAT_FIELDS:
+    if path in _FLOAT_FIELDS or path.endswith(".base_backoff_seconds"):
         return "float", None
     if isinstance(value, bool):  # before int -- bool IS an int in Python
         return "bool", None
@@ -580,7 +607,7 @@ def editable_fields(app_config: AppConfig) -> list[ConfigField]:
                     kind=kind,
                     choices=choices,
                     secret=path in _SECRET_FIELDS,
-                    help=_HELP.get(path, ""),
+                    help=_help_for(path),
                 )
             )
 
@@ -678,7 +705,6 @@ def validate(app_config: AppConfig) -> list[str]:
     retrieval = app_config.retrieval
     optimizer = app_config.optimizer
     qg = app_config.question_generation
-    mistral = app_config.mistral
 
     if retrieval.chunk_size <= 0:
         problems.append("retrieval.chunk_size must be positive")
@@ -719,10 +745,13 @@ def validate(app_config: AppConfig) -> list[str]:
             "question_generation.dedup_similarity_threshold must be in (0, 1]"
         )
 
-    if mistral.requests_per_minute <= 0:
-        problems.append("mistral.requests_per_minute must be positive")
-    if mistral.max_retries < 0:
-        problems.append("mistral.max_retries cannot be negative")
+    # Each provider role carries its own pacing, so check them all rather than
+    # only the role the MistralSettings shim happens to read.
+    for role, provider in app_config.providers.as_map().items():
+        if provider.requests_per_minute <= 0:
+            problems.append(f"providers.{role}.requests_per_minute must be positive")
+        if provider.max_retries < 0:
+            problems.append(f"providers.{role}.max_retries cannot be negative")
 
     return problems
 
