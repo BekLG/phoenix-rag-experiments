@@ -1,0 +1,155 @@
+===============================================================================
+PHOENIX RAG -- SESSION STATUS / HANDOFF
+Last updated: 2026-09-09
+Branch: feat-library-phase1   |   HEAD commit: cae9e32 (Phase 2c)
+===============================================================================
+
+Purpose of this file: a catch-up note so the next session starts with full
+context on what exists, what is proven to work, and -- most importantly -- what
+has NOT been tested yet. Read the "NOT TESTED" section carefully before claiming
+anything works end-to-end.
+
+-------------------------------------------------------------------------------
+WHAT THIS PROJECT IS
+-------------------------------------------------------------------------------
+A self-optimizing RAG library. It loops: build a RAG pipeline with some
+parameters -> answer a fixed benchmark question set -> an LLM "judge" scores the
+answers (Ragas) -> an LLM "optimizer" proposes better parameters -> repeat, keep
+the best. Four provider ROLES: embedding, generation, optimizer, judge. Each role
+can run on a different backend. Shipped split: embedding + generation LOCAL,
+optimizer + judge CLOUD (Mistral).
+
+docs/UNDERSTANDING_PHOENIX_RAG.md is the full guide:
+  - Concepts / architecture .......... sections 1-8 and 10
+  - How to RUN it from scratch ....... section 9 (9.1 prerequisites checklist,
+    9.2 install, 9.3 .env key, 9.4 Ollama, 9.5 config, 9.6 run,
+    9.7 troubleshooting table, 9.8 all-cloud shortcut)
+
+-------------------------------------------------------------------------------
+DONE AND COMMITTED (at cae9e32 and the commits before it on this branch)
+-------------------------------------------------------------------------------
+[x] Flat script collection -> Python library, src/ layout, package `phoenix_rag`
+    (36 modules across benchmark/ config/ core/ evaluation/ optimization/
+    providers/ ui/, plus cli.py, workspace.py, operations.py, storage.py).
+[x] Provider seam (the core design):
+      - providers/base.py     : ChatProvider ABC (two surfaces: chat()->str and
+                                 as_langchain_chat_model()->BaseChatModel),
+                                 EmbeddingProvider = Embeddings (alias, no wrapper),
+                                 Providers dataclass bundle.
+      - providers/registry.py : build_providers(app_config) composition root;
+                                 rate limiters shared by identity
+                                 (backend, api_key_env, base_url), sized to
+                                 min(requests_per_minute).
+      - providers/langchain_backends.py : generic LangChainChatProvider,
+                                 RateLimitedEmbeddings, and builders for
+                                 openai/anthropic/local chat + openai/local
+                                 embedding. Vendor SDKs imported lazily.
+      - providers/mistral.py  : default backend (hard dependency).
+      - providers/ratelimit.py: thread-safe sliding-window RateLimiter.
+      - providers/__init__.py : PEP 562 lazy __getattr__ (no heavy SDK on import).
+[x] Config split: config/schema.py (data + validation, no I/O) and
+    config/loader.py (YAML/env I/O + legacy migration).
+      - Removed dead code: MistralSettings.from_providers guard and
+        AppConfig.mistral property.
+      - CREDENTIALS RULE enforced: YAML holds only api_key_env (the VARIABLE
+        NAME), never a key value. .env holds the value and is gitignored. The
+        migration path deliberately DROPS any inline api_key it finds.
+[x] configs/default.yaml (committable example) updated to the cloud/local split.
+[x] pyproject.toml extras: [openai] [anthropic] [local] [all]; mistral stays a
+    hard dep. Console script: `phoenix-rag`. pytest pythonpath=["src"].
+[x] Phase 2c unit tests appended to tests/test_providers.py (~340 lines):
+    LangChainChatProvider, RateLimitedEmbeddings, OpenAI backend shapes,
+    OpenAI-compatible builder, missing-dependency install hints, missing API keys.
+[x] scripts/validate_split_run.py written (one-iteration end-to-end validator).
+
+-------------------------------------------------------------------------------
+DOCS ADDED THIS SESSION (committed on feat-library-phase1)
+-------------------------------------------------------------------------------
+[x] docs/UNDERSTANDING_PHOENIX_RAG.md  -- architecture (sec 1-8,10) + step-by-step
+                                           run guide with prerequisites (sec 9).
+[x] docs/SESSION_STATUS.txt            -- this file.
+    (.claude/settings.local.json stays modified = local permission noise,
+     intentionally NOT committed.)
+
+-------------------------------------------------------------------------------
+VERIFIED / TESTED  (what we actually confirmed, and how)
+-------------------------------------------------------------------------------
+[x] Unit test suite: 104 passed + 1 skipped after installing the [local] extra.
+    The 1 skip is EXPECTED and correct -- a test that only runs when
+    langchain_huggingface is ABSENT skipIf-skips once [local] is installed.
+    (This count is from the prior session; adding the docs did not touch code,
+     so it still holds. Re-run to be certain -- command below.)
+[x] Local roles proven live IN ISOLATION (task log bs8k67prl.output):
+      - local embedding: sentence-transformers MiniLM returned a 384-dim vector.
+      - local chat: Ollama qwen2.5:3b-instruct returned 'pong'.
+[x] Mixed-role bundle builds through the REAL build_providers path with the
+    correct shared-rate-limiter behavior (confirmed during the completeness
+    assessment; the four Mistral roles share one ._limiter).
+[x] Security check: the plaintext Mistral key in config/default_config.json is
+    NOT git-tracked and NOT in git history (no leak). Both YAML config files
+    (config/config.yaml, configs/default.yaml) contain NO key values.
+
+-------------------------------------------------------------------------------
+NOT TESTED / UNVERIFIED  (READ THIS -- do not claim these work)
+-------------------------------------------------------------------------------
+[!] THE FULL FOUR-ROLE END-TO-END RUN WAS NEVER EXECUTED.
+    scripts/validate_split_run.py has NOT been run successfully. It was blocked
+    by the Bash safety-classifier outage (see quirks). This is the single most
+    important untested item. It would exercise, on the real pipeline for one
+    iteration: local embedding building FAISS -> local generation answering ->
+    cloud Mistral judge (Ragas scoring) -> cloud Mistral optimizer proposal.
+    Until this runs green, "the split works end-to-end" is UNPROVEN.
+[!] OpenAI and Anthropic backends: only unit-tested with fakes / skipIf. NO live
+    OpenAI or Anthropic API call has ever been made from this code.
+[!] Corpus mode (corpus_path / --corpus) has NOT been run against the new
+    provider split this session.
+[!] The UIs (ui/menu.py, ui/streamlit_app.py) have NOT been exercised against the
+    new provider seam this session.
+[!] Test suite has NOT been re-run this session (only docs were added, which is
+    non-code, but the green count above is inherited, not freshly observed).
+
+-------------------------------------------------------------------------------
+ENVIRONMENT QUIRKS (things that bit us; remember them)
+-------------------------------------------------------------------------------
+- venv is uv-created: THERE IS NO pip in it. Install with:
+      uv pip install -e '.[local]' --python .venv/bin/python
+  Run tests with:
+      .venv/bin/python -m pytest
+- Bash safety-classifier (claude-opus-4-8) was intermittently DOWN this session.
+  It blocked code-executing Bash commands (but NOT read-only Read/Grep). This is
+  the direct reason validate_split_run.py never ran. If a command is refused with
+  "cannot determine the safety of Bash", it's the outage, not the command.
+- Ollama is live locally with qwen2.5:3b-instruct already pulled. torch is
+  already installed, which made the [local] extra cheap to add.
+- config/config.yaml is GITIGNORED (it is the live copy the app rewrites). The
+  COMMITTABLE example is configs/default.yaml. Edit the right one.
+- config/default_config.json contains a real Mistral key but is untracked and
+  never committed; the loader drops it on migration. Do not propagate it.
+
+-------------------------------------------------------------------------------
+OPEN DECISIONS (waiting on the user)
+-------------------------------------------------------------------------------
+[ ] Run scripts/validate_split_run.py to prove the full split end-to-end.
+[ ] Push branch feat-library-phase1 and/or open a PR to master.
+
+-------------------------------------------------------------------------------
+HOW TO RESUME / USEFUL COMMANDS
+-------------------------------------------------------------------------------
+# Full four-role validation (the big untested item). Prefix with ! so it runs
+# in the session shell and its output lands in the transcript:
+    ! .venv/bin/python scripts/validate_split_run.py
+
+# Re-run the unit tests:
+    .venv/bin/python -m pytest -q
+
+# Reinstall with local extras if the venv is fresh:
+    uv pip install -e '.[local]' --python .venv/bin/python
+
+# Normal run once validated:
+    phoenix-rag --source data/source.pdf --max-iterations 10
+
+# Files to read first next time:
+    docs/UNDERSTANDING_PHOENIX_RAG.md   (architecture in 1-8/10; how to RUN in sec 9)
+    src/phoenix_rag/optimization/runner.py   (the loop)
+    src/phoenix_rag/providers/registry.py     (how backends are wired)
+===============================================================================
