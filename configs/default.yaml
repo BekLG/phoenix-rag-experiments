@@ -15,51 +15,53 @@
 # judge      - scores answers with Ragas. By far the most calls of any hosted
 #              role: each metric fires several sub-calls per sample.
 #
-# Only backend: mistral is implemented right now. The other backends below are
-# shown commented out because they are the intended destination, not because
-# they work yet -- setting one today raises UnsupportedBackendError.
+# Wired backends (per role):
+#   mistral    - chat + embedding          (hard dependency; always available)
+#   openai     - chat + embedding          pip install 'phoenix-rag[openai]'
+#   anthropic  - chat only                 pip install 'phoenix-rag[anthropic]'
+#   local      - OpenAI-compatible chat (Ollama/vLLM/LM Studio via base_url)
+#                + in-process embeddings (sentence-transformers)
+#                                          pip install 'phoenix-rag[local]'
+#
+# This example ships the intended split: the two high-volume roles run LOCALLY
+# (no per-call cost), while the two roles that need the strongest model run in
+# the CLOUD. Point everything at mistral instead if you'd rather not run a local
+# model -- the migration path from the old all-Mistral config still works.
 providers:
+  # Local embeddings via in-process sentence-transformers: no key, no endpoint.
   embedding:
-    backend: mistral
-    model: mistral-embed
-    api_key_env: MISTRAL_API_KEY
-    requests_per_minute: 45      # free tier is ~45-60; raise it if your plan allows
+    backend: local
+    model: sentence-transformers/all-MiniLM-L6-v2
+    api_key_env: null
+    requests_per_minute: 45      # ignored for in-process embeddings; kept for parity
     max_retries: 5
     base_backoff_seconds: 2.0
 
+  # Local generation via an OpenAI-compatible endpoint (here: Ollama). No key;
+  # base_url is required. Start the server and pull the model first.
   generation:
-    backend: mistral
-    model: mistral-small-latest
-    api_key_env: MISTRAL_API_KEY
+    backend: local
+    model: qwen2.5:3b-instruct
+    base_url: http://localhost:11434/v1
+    api_key_env: null
 
+  # Cloud roles read their key from the named environment variable (value in
+  # .env, never here). Swap to openai/anthropic by changing backend + model +
+  # api_key_env and installing that backend's extra.
   optimizer:
     backend: mistral
-    model: mistral-large-latest
+    model: mistral-medium-latest
     api_key_env: MISTRAL_API_KEY
 
   judge:
     backend: mistral
-    model: mistral-large-latest
+    model: mistral-medium-latest
     api_key_env: MISTRAL_API_KEY
 
-# Target layout once the provider registry lands -- local models for the
-# high-volume roles, hosted models for the two that need real reasoning:
-#
-#   embedding:
-#     backend: sentence_transformers
-#     model: BAAI/bge-small-en-v1.5
-#   generation:
-#     backend: ollama
-#     model: llama3.1:8b
-#     base_url: http://localhost:11434
-#   optimizer:
-#     backend: openai
-#     model: gpt-4o
-#     api_key_env: OPENAI_API_KEY
-#   judge:
-#     backend: openai
-#     model: gpt-4o-mini
-#     api_key_env: OPENAI_API_KEY
+# All-Mistral alternative (no local model needed) -- set every role to:
+#   backend: mistral
+#   api_key_env: MISTRAL_API_KEY
+# with models mistral-embed / mistral-small-latest / mistral-large-latest.
 
 # --------------------------------------------------------------------------
 # Retrieval: the search space the optimizer moves through.

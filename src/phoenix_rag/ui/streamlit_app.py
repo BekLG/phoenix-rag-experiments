@@ -127,10 +127,12 @@ with st.sidebar:
         for problem in report.integrity_problems:
             st.error(problem)
 
-    if not config.mistral.api_key:
+    missing_keys = config.providers.missing_api_keys()
+    if missing_keys:
+        roles = ", ".join(f"{role} ({env})" for role, env in missing_keys)
         st.error(
-            "No Mistral API key. Set MISTRAL_API_KEY in .env or fill it in on the "
-            "Config tab. Everything except the Config tab needs it."
+            f"No API key for: {roles}. Set the variable(s) in .env or on the "
+            "Config tab. Everything except the Config tab needs them."
         )
 
     with st.expander("Run log", expanded=False):

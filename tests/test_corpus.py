@@ -103,7 +103,6 @@ class CorpusTestCase(unittest.TestCase):
         self.corpus_root = self.root / "corpus"
 
         self.app_config = AppConfig()
-        self.app_config.mistral.api_key = "test-key-not-used"
         self.app_config.corpus_path = str(self.corpus_root)
         self.app_config.source_document = str(self.root / "nonexistent.pdf")
         self.app_config.benchmark_path = str(self.root / "benchmark.json")

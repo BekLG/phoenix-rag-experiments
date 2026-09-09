@@ -756,8 +756,7 @@ def validate(app_config: AppConfig) -> list[str]:
             "question_generation.dedup_similarity_threshold must be in (0, 1]"
         )
 
-    # Each provider role carries its own pacing, so check them all rather than
-    # only the role the MistralSettings shim happens to read.
+    # Each provider role carries its own pacing, so check them all.
     for role, provider in app_config.providers.as_map().items():
         if provider.requests_per_minute <= 0:
             problems.append(f"providers.{role}.requests_per_minute must be positive")

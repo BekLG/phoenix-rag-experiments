@@ -408,12 +408,15 @@ def main() -> int:
     _setup_logging()
     app_config = operations.load_config()
 
-    if not app_config.mistral.api_key:
+    missing_keys = app_config.providers.missing_api_keys()
+    if missing_keys:
+        roles = ", ".join(f"{role} -> {env}" for role, env in missing_keys)
         print(
-            "WARNING: no Mistral API key found. Set MISTRAL_API_KEY in .env (the\n"
-            "variable name each role reads is providers.<role>.api_key_env in\n"
-            "config/config.yaml). Options 1-3 all call the API and will fail\n"
-            "without it; options 4 and 5 work offline.\n"
+            "WARNING: no API key found for these roles: " + roles + ".\n"
+            "Set the variable(s) in .env (the name each role reads is\n"
+            "providers.<role>.api_key_env in config/config.yaml). Options that\n"
+            "call those backends will fail without them; options 4 and 5 work\n"
+            "offline.\n"
         )
 
     while True:

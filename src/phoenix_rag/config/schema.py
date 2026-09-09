@@ -15,11 +15,11 @@ WHAT CHANGED FROM THE FLAT config.py
    ``judge_model``), so this makes an existing distinction addressable rather
    than inventing one.
 
-Only the ``mistral`` backend is actually wired up at this point. The config
-*shape* is multi-provider so the YAML and the loader are settled before the
-provider implementations land, but declaring any other backend raises
-:class:`UnsupportedBackendError` rather than failing obscurely somewhere deep in
-a call stack. See :class:`MistralSettings`.
+Each role's backend is built by :mod:`phoenix_rag.providers.registry`. The wired
+backends are ``mistral`` and ``openai`` (chat + embedding), ``anthropic`` (chat),
+and ``local`` (an OpenAI-compatible chat endpoint plus in-process embeddings).
+Declaring a backend that has no builder raises :class:`UnsupportedBackendError`
+at build time rather than failing obscurely somewhere deep in a call stack.
 """
 
 from __future__ import annotations
@@ -123,6 +123,22 @@ class ProvidersConfig:
     def backends(self) -> set[str]:
         return {provider.backend for provider in self.as_map().values()}
 
+    def missing_api_keys(self) -> list[tuple[str, str]]:
+        """Roles whose configured API-key variable is unset in the environment.
+
+        Backend-agnostic: a role is flagged only if it *names* an ``api_key_env``
+        (hosted backends do; a local backend leaves it ``None``) and that
+        variable resolves empty. Returns ``(role, env_var)`` pairs so a UI can
+        name exactly which variable to set, for whichever backends are in play --
+        without going through the Mistral-only :attr:`AppConfig.mistral` view,
+        which raises for any non-Mistral config.
+        """
+        return [
+            (role, provider.api_key_env)
+            for role, provider in self.as_map().items()
+            if provider.api_key_env and not provider.resolve_api_key()
+        ]
+
     def to_dict(self) -> dict:
         return {role: provider.to_dict() for role, provider in self.as_map().items()}
 
@@ -150,18 +166,14 @@ class ProvidersConfig:
 
 @dataclass
 class MistralSettings:
-    """Flattened, Mistral-only projection of :class:`ProvidersConfig`.
+    """Per-role settings consumed by the Mistral client.
 
-    COMPATIBILITY SHIM. Every consumer in the codebase still takes one of these
-    (``mistral_settings: MistralSettings``) and constructs its own client from
-    it. Replacing all of those signatures with injected provider clients is its
-    own change -- and one worth doing separately, because it also fixes the
-    per-client rate limiter -- so this class keeps them all working untouched
-    while the configuration underneath becomes provider-shaped.
-
-    It is a lossless projection only while every role really is Mistral, since
-    the four roles collapse onto one key and one pacing budget here.
-    :meth:`from_providers` refuses to build a misleading one.
+    :class:`~phoenix_rag.providers.mistral.MistralClient` and
+    :class:`~phoenix_rag.core.embeddings.MistralEmbeddings` each take one of
+    these. The registry builds one per Mistral role from that role's
+    :class:`ProviderConfig` (see ``providers.registry._mistral_settings_for``),
+    so the four ``*_model`` fields just carry that role's model -- whichever
+    field the role actually reads holds the right value, and the rest are inert.
     """
 
     api_key: str = field(default_factory=lambda: os.getenv("MISTRAL_API_KEY", ""))
@@ -175,39 +187,6 @@ class MistralSettings:
     requests_per_minute: int = 45
     max_retries: int = 5
     base_backoff_seconds: float = 2.0
-
-    @classmethod
-    def from_providers(cls, providers: ProvidersConfig) -> "MistralSettings":
-        backends = providers.backends()
-        if backends != {"mistral"}:
-            unsupported = sorted(backends - {"mistral"})
-            offending = [
-                f"{role}={provider.backend}"
-                for role, provider in providers.as_map().items()
-                if provider.backend != "mistral"
-            ]
-            raise UnsupportedBackendError(
-                f"No implementation yet for backend(s): {', '.join(unsupported)} "
-                f"({', '.join(offending)}). Only 'mistral' is wired up so far -- "
-                "the config schema accepts per-role backends ahead of the clients "
-                "that serve them. Set these roles to backend: mistral for now."
-            )
-
-        roles = providers.as_map()
-        # All four roles are Mistral here, so they share one credential and one
-        # pacing budget. Take them from the embedding role: it is by far the
-        # highest-frequency caller, so its limit is the one that binds.
-        pacing = roles["embedding"]
-        return cls(
-            api_key=pacing.resolve_api_key(),
-            embedding_model=roles["embedding"].model,
-            generation_model=roles["generation"].model,
-            optimizer_model=roles["optimizer"].model,
-            judge_model=roles["judge"].model,
-            requests_per_minute=pacing.requests_per_minute,
-            max_retries=pacing.max_retries,
-            base_backoff_seconds=pacing.base_backoff_seconds,
-        )
 
 
 # --------------------------------------------------------------------------
@@ -375,13 +354,6 @@ class AppConfig:
     # benchmark, summary, profile and FAISS index from the corpus manifest under
     # this root instead -- see core/corpus.py.
     corpus_path: str | None = None
-
-    @property
-    def mistral(self) -> MistralSettings:
-        """Mistral-shaped view of :attr:`providers`, for consumers not yet
-        converted to injected provider clients. See :class:`MistralSettings`.
-        """
-        return MistralSettings.from_providers(self.providers)
 
     def to_dict(self) -> dict:
         return {

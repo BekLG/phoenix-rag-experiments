@@ -8,7 +8,9 @@ lives in :mod:`~phoenix_rag.providers.base` (:class:`ChatProvider`,
 :data:`EmbeddingProvider`, and the :class:`Providers` bundle);
 :func:`~phoenix_rag.providers.registry.build_providers` picks one per role from
 an :class:`~phoenix_rag.config.AppConfig` and shares a rate limiter across roles
-that hit the same API. ``mistral`` is the only backend wired up so far.
+that hit the same API. Wired backends: ``mistral`` and ``openai`` (chat +
+embedding), ``anthropic`` (chat), and ``local`` (OpenAI-compatible chat +
+in-process embeddings).
 
 The shared machinery that is not specific to any one backend -- request pacing
 and retry -- lives in :mod:`~phoenix_rag.providers.ratelimit` so the next backend
@@ -29,11 +31,13 @@ _LAZY_EXPORTS = {
     "build_providers": "phoenix_rag.providers.registry",
     "MistralClient": "phoenix_rag.providers.mistral",
     "MistralChatProvider": "phoenix_rag.providers.mistral",
+    "LangChainChatProvider": "phoenix_rag.providers.langchain_backends",
     "RateLimiter": "phoenix_rag.providers.ratelimit",
 }
 
 if TYPE_CHECKING:  # pragma: no cover - type checkers / IDEs only
     from phoenix_rag.providers.base import ChatProvider, EmbeddingProvider, Providers
+    from phoenix_rag.providers.langchain_backends import LangChainChatProvider
     from phoenix_rag.providers.mistral import MistralChatProvider, MistralClient
     from phoenix_rag.providers.ratelimit import RateLimiter
     from phoenix_rag.providers.registry import build_providers

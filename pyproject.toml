@@ -38,9 +38,10 @@ dependencies = [
     "python-dotenv>=1.2",
     "pandas>=2.0",
     "pyyaml>=6.0",
-    # Mistral is currently the only implemented backend, so its client is a hard
-    # dependency. These move to an optional [mistral] extra once the provider
-    # registry lands and no module imports a backend directly.
+    # Mistral is the default backend and the registry imports its client
+    # eagerly, so its packages stay hard dependencies. The other backends
+    # (openai, anthropic, local) import their vendor SDKs lazily and live in the
+    # optional extras below.
     "mistralai>=2.7,<3",
     "langchain-mistralai>=1.1,<2",
 ]
@@ -48,6 +49,20 @@ dependencies = [
 [project.optional-dependencies]
 ui = ["streamlit>=1.51"]
 dev = ["pytest>=8.0"]
+# One extra per non-Mistral backend. Each backend imports its vendor package
+# lazily (providers/langchain_backends.py), so these are only needed if a config
+# actually selects that backend. "local" covers both surfaces: chat via an
+# OpenAI-compatible endpoint (langchain-openai) and embeddings via in-process
+# sentence-transformers.
+openai = ["langchain-openai>=1.4,<2"]
+anthropic = ["langchain-anthropic>=1,<2"]
+local = ["langchain-openai>=1.4,<2", "langchain-huggingface>=1,<2", "sentence-transformers>=3"]
+all = [
+    "langchain-openai>=1.4,<2",
+    "langchain-anthropic>=1,<2",
+    "langchain-huggingface>=1,<2",
+    "sentence-transformers>=3",
+]
 
 [project.scripts]
 phoenix-rag = "phoenix_rag.cli:main"
