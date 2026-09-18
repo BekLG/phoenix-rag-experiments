@@ -13,18 +13,20 @@ def install_ragas_compat() -> None:
     ``ChatVertexAI`` at package import time, while recent langchain-community
     releases moved that integration out of the package.
     """
-    module_name = "langchain_community.chat_models.vertexai"
-    if module_name in sys.modules:
-        return
+    vertex_module = "langchain_community.chat_models.vertexai"
+    if vertex_module not in sys.modules:
+        module = types.ModuleType(vertex_module)
 
-    module = types.ModuleType(module_name)
+        class ChatVertexAI:
+            def __init__(self, *args, **kwargs):
+                raise ImportError(
+                    "ChatVertexAI is not used by Phoenix RAG; install "
+                    "langchain-google-vertexai only if a Ragas integration needs it."
+                )
 
-    class ChatVertexAI:
-        def __init__(self, *args, **kwargs):
-            raise ImportError(
-                "ChatVertexAI is not used by Phoenix RAG; install "
-                "langchain-google-vertexai only if a Ragas integration needs it."
-            )
+        module.ChatVertexAI = ChatVertexAI
+        sys.modules[vertex_module] = module
 
-    module.ChatVertexAI = ChatVertexAI
-    sys.modules[module_name] = module
+    mistral_module = "mistralai.async_client"
+    if mistral_module not in sys.modules:
+        sys.modules[mistral_module] = types.ModuleType(mistral_module)
