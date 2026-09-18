@@ -14,3 +14,9 @@ config/default_config.json
 build/
 dist/
 .pytest_cache/
+
+# Generated run artifacts and local tooling config
+results/
+logs/
+data/corpus/indexes/
+.claude/
