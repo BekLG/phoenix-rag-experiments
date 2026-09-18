@@ -16,10 +16,11 @@ WHAT CHANGED FROM THE FLAT config.py
    than inventing one.
 
 Each role's backend is built by :mod:`phoenix_rag.providers.registry`. The wired
-backends are ``mistral`` and ``openai`` (chat + embedding), ``anthropic`` (chat),
-and ``local`` (an OpenAI-compatible chat endpoint plus in-process embeddings).
-Declaring a backend that has no builder raises :class:`UnsupportedBackendError`
-at build time rather than failing obscurely somewhere deep in a call stack.
+backends are ``mistral`` and ``openai`` (chat + embedding), ``anthropic`` and
+``deepseek`` (chat), and ``local`` (an OpenAI-compatible chat endpoint plus
+in-process embeddings). Declaring a backend that has no builder raises
+:class:`UnsupportedBackendError` at build time rather than failing obscurely
+somewhere deep in a call stack.
 """
 
 from __future__ import annotations

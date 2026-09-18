@@ -178,7 +178,8 @@ class LangChainChatProvider(ChatProvider):
     # parameterized by model_factory: Callable[[float], BaseChatModel]
 ```
 
-`build_openai_chat`, `build_anthropic_chat`, and `build_local_chat` all produce
+`build_openai_chat`, `build_anthropic_chat`, `build_deepseek_chat`, and
+`build_local_chat` all produce
 one of these — they differ only in *which* `BaseChatModel` they construct.
 `RateLimitedEmbeddings` does the same decorator trick for any embeddings backend.
 The **local** chat backend is just `ChatOpenAI` pointed at an OpenAI-compatible
@@ -432,7 +433,7 @@ where to see each:
 | **Decorator/wrapper class** | `RateLimitedEmbeddings`, `LangChainChatProvider` | Add rate limiting without touching the wrapped object |
 | **Sliding-window rate limiter** | `ratelimit.py` | Respect an API quota across threads |
 | **Content-addressed cache** | `get_or_build_vector_store`, `get_or_create_*` | Cheap, reproducible reruns |
-| **Optional extras** | `pyproject.toml` `[openai]`/`[anthropic]`/`[local]`/`[all]` | Only install the backend you use |
+| **Optional extras** | `pyproject.toml` `[openai]`/`[anthropic]`/`[deepseek]`/`[local]`/`[all]` | Only install the backend you use |
 
 ---
 

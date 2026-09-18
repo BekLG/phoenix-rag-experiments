@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv/bin/python -c ' *)",
+      "Bash(.venv/bin/python -m pytest -q)",
+      "Bash(curl -s --max-time 60 http://localhost:11434/api/chat -d '{\"model\":\"qwen2.5:3b-instruct\",\"messages\":[{\"role\":\"user\",\"content\":\"say pong\"}],\"stream\":false}')",
+      "Bash(.venv/bin/python -c \"import json,sys; print\\(json.load\\(sys.stdin\\)['message']['content'][:80]\\)\")",
+      "WebSearch",
+      "WebFetch(domain:docs.mistral.ai)",
+      "WebFetch(domain:api-docs.deepseek.com)",
+      "Bash(.venv/bin/python -m pytest tests/test_providers.py -q)"
+    ]
+  }
+}

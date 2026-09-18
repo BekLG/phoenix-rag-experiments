@@ -390,6 +390,121 @@ class OpenAICompatibleBuilderTests(unittest.TestCase):
         self.assertIsInstance(provider, LangChainChatProvider)
 
 
+class DeepSeekChatTests(unittest.TestCase):
+    """The deepseek backend: OpenAI-compatible chat against a default endpoint.
+
+    It has no vendor SDK of its own, so what is worth pinning is the wiring --
+    the endpoint it defaults to, that an explicit base_url still wins, that a key
+    is mandatory (it is a hosted API, unlike ``local``), and that it is chat-only.
+    """
+
+    def _provider(self, **overrides):
+        from phoenix_rag.config.schema import ProviderConfig
+
+        return ProviderConfig(**overrides)
+
+    def _limiter(self):
+        from phoenix_rag.providers.ratelimit import RateLimiter
+
+        return RateLimiter(1000)
+
+    def test_it_defaults_to_the_deepseek_endpoint(self):
+        # The point of the default: a role names backend/model/key and nothing
+        # else, yet still reaches DeepSeek rather than api.openai.com.
+        from phoenix_rag.providers.langchain_backends import (
+            DEEPSEEK_BASE_URL,
+            build_deepseek_chat,
+        )
+
+        with patch.dict(os.environ, {"DEEPSEEK_API_KEY": "test-key-not-real"}):
+            provider = build_deepseek_chat(
+                self._provider(
+                    backend="deepseek",
+                    model="deepseek-flash",
+                    api_key_env="DEEPSEEK_API_KEY",
+                ),
+                self._limiter(),
+            )
+        model = provider.as_langchain_chat_model()
+        self.assertEqual(str(model.openai_api_base), DEEPSEEK_BASE_URL)
+
+    def test_an_explicit_base_url_overrides_the_default(self):
+        # So a proxy or a region-specific host stays reachable.
+        from phoenix_rag.providers.langchain_backends import build_deepseek_chat
+
+        with patch.dict(os.environ, {"DEEPSEEK_API_KEY": "test-key-not-real"}):
+            provider = build_deepseek_chat(
+                self._provider(
+                    backend="deepseek",
+                    model="deepseek-flash",
+                    api_key_env="DEEPSEEK_API_KEY",
+                    base_url="https://proxy.internal/v1",
+                ),
+                self._limiter(),
+            )
+        model = provider.as_langchain_chat_model()
+        self.assertEqual(str(model.openai_api_base), "https://proxy.internal/v1")
+
+    def test_it_yields_a_langchain_model_for_the_judge_role(self):
+        from langchain_core.language_models.chat_models import BaseChatModel
+
+        from phoenix_rag.providers.langchain_backends import build_deepseek_chat
+
+        with patch.dict(os.environ, {"DEEPSEEK_API_KEY": "test-key-not-real"}):
+            provider = build_deepseek_chat(
+                self._provider(
+                    backend="deepseek",
+                    model="deepseek-flash",
+                    api_key_env="DEEPSEEK_API_KEY",
+                ),
+                self._limiter(),
+            )
+        self.assertIsInstance(provider.as_langchain_chat_model(), BaseChatModel)
+
+    def test_a_missing_key_is_rejected_naming_the_variable(self):
+        # Unlike 'local', the default endpoint is a hosted API that authenticates
+        # every request, so a keyless build must fail rather than 401 later.
+        from phoenix_rag.providers.langchain_backends import build_deepseek_chat
+
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("DEEPSEEK_API_KEY", None)
+            with self.assertRaises(ValueError) as caught:
+                build_deepseek_chat(
+                    self._provider(
+                        backend="deepseek",
+                        model="deepseek-flash",
+                        api_key_env="DEEPSEEK_API_KEY",
+                    ),
+                    self._limiter(),
+                )
+        self.assertIn("DEEPSEEK_API_KEY", str(caught.exception))
+
+    def test_the_registry_wires_it_for_a_chat_role(self):
+        config = AppConfig()
+        config.providers.judge.backend = "deepseek"
+        config.providers.judge.model = "deepseek-flash"
+        config.providers.judge.api_key_env = "DEEPSEEK_API_KEY"
+
+        env = {"MISTRAL_API_KEY": "test-key-not-real", "DEEPSEEK_API_KEY": "test-key-not-real"}
+        with patch.dict(os.environ, env):
+            providers = build_providers(config)
+        self.assertIsInstance(providers.judge, ChatProvider)
+
+    def test_the_embedding_role_rejects_it_since_deepseek_has_no_embeddings(self):
+        # DeepSeek publishes no embeddings endpoint, so it is absent from the
+        # embedding map; the failure must name the role rather than surfacing as
+        # a 404 on the first embed call.
+        config = AppConfig()
+        config.providers.embedding.backend = "deepseek"
+
+        with patch.dict(os.environ, {"MISTRAL_API_KEY": "test-key-not-real"}):
+            with self.assertRaises(UnsupportedBackendError) as caught:
+                build_providers(config)
+        message = str(caught.exception)
+        self.assertIn("embedding", message)
+        self.assertIn("deepseek", message)
+
+
 class MissingBackendDependencyTests(unittest.TestCase):
     """A selected backend whose vendor package is absent must fail with a
     "pip install 'phoenix-rag[<extra>]'" hint, not an opaque ImportError."""

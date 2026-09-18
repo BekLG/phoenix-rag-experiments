@@ -1,17 +1,17 @@
 {
-  "iteration": 2,
+  "iteration": 1,
   "config": {
-    "chunk_size": 1000,
-    "chunk_overlap": 150,
+    "chunk_size": 1200,
+    "chunk_overlap": 180,
     "top_k": 4,
-    "similarity_threshold": 0.1,
+    "similarity_threshold": 0.0,
     "retriever_type": "similarity",
-    "prompt_template": "You are a technical assistant answering questions about vector databases using ONLY the provided context. Ground every factual claim explicitly in the context. If the answer requires reasoning across multiple points, ensure all points are present in the context before synthesizing. If the context does not contain the complete information needed, say you don't know.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
+    "prompt_template": "You are a helpful assistant answering questions using ONLY the provided context. If the answer is not contained in the context, say you don't know.\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
   },
   "scores": {
-    "faithfulness": 0.9888888888888889,
-    "context_recall": 1.0,
-    "context_precision": 0.8690476189970238,
-    "response_relevancy": 0.9773234483226821
+    "faithfulness": 0.9518304388918425,
+    "context_recall": 0.9444444444444444,
+    "context_precision": 0.8734567900955761,
+    "response_relevancy": 0.972429029499718
   }
 }

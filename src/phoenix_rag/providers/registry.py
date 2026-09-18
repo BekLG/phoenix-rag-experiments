@@ -7,10 +7,10 @@ The composition root: turn an :class:`~phoenix_rag.config.AppConfig` into a
 Two jobs live here and nowhere else:
 
 1. **Backend dispatch.** Each role names a ``backend`` string ("mistral",
-   "openai", "anthropic", "local"); the maps below turn that string into a
-   concrete provider. A backend the config names but the code does not implement
-   raises :class:`~phoenix_rag.config.UnsupportedBackendError` here, naming
-   the role, rather than failing obscurely deep in a call stack.
+   "openai", "anthropic", "deepseek", "local"); the maps below turn that string
+   into a concrete provider. A backend the config names but the code does not
+   implement raises :class:`~phoenix_rag.config.UnsupportedBackendError` here,
+   naming the role, rather than failing obscurely deep in a call stack.
 
 2. **Shared rate limiting.** Every role that talks to the same API shares ONE
    :class:`~phoenix_rag.providers.ratelimit.RateLimiter`. That is the fix for
@@ -21,9 +21,10 @@ Two jobs live here and nowhere else:
    the tightest ``requests_per_minute`` among the roles in the group.
 
 Wired backends: ``mistral`` (chat + embedding), ``openai`` (chat + embedding),
-``anthropic`` (chat), and ``local`` (chat via an OpenAI-compatible endpoint;
-embedding via in-process sentence-transformers). Every backend except Mistral
-loads its vendor package lazily, inside its builder in
+``anthropic`` (chat), ``deepseek`` (chat, via its OpenAI-compatible endpoint),
+and ``local`` (chat via an OpenAI-compatible endpoint; embedding via in-process
+sentence-transformers). Every backend except Mistral loads its vendor package
+lazily, inside its builder in
 :mod:`phoenix_rag.providers.langchain_backends` -- so importing this module stays
 cheap and an install without a given backend's extra is only felt if a config
 actually selects it.
@@ -39,6 +40,7 @@ from phoenix_rag.core.embeddings import MistralEmbeddings
 from phoenix_rag.providers.base import ChatProvider, EmbeddingProvider, Providers
 from phoenix_rag.providers.langchain_backends import (
     build_anthropic_chat,
+    build_deepseek_chat,
     build_local_chat,
     build_local_embedding,
     build_openai_chat,
@@ -95,12 +97,13 @@ def _build_mistral_embedding(
 # backend name -> builder. Split by surface because the two are not
 # interchangeable: an embedding backend produces a LangChain Embeddings, a chat
 # backend a ChatProvider. "local" chat is an OpenAI-compatible endpoint; "local"
-# embedding is in-process sentence-transformers. Anthropic has no embedding model
-# of its own, so it is chat-only here.
+# embedding is in-process sentence-transformers. Anthropic and DeepSeek have no
+# embedding model of their own, so both are chat-only here.
 _CHAT_BACKENDS: dict[str, Callable[[ProviderConfig, RateLimiter], ChatProvider]] = {
     "mistral": _build_mistral_chat,
     "openai": build_openai_chat,
     "anthropic": build_anthropic_chat,
+    "deepseek": build_deepseek_chat,
     "local": build_local_chat,
 }
 _EMBEDDING_BACKENDS: dict[

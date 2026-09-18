@@ -9,8 +9,8 @@ lives in :mod:`~phoenix_rag.providers.base` (:class:`ChatProvider`,
 :func:`~phoenix_rag.providers.registry.build_providers` picks one per role from
 an :class:`~phoenix_rag.config.AppConfig` and shares a rate limiter across roles
 that hit the same API. Wired backends: ``mistral`` and ``openai`` (chat +
-embedding), ``anthropic`` (chat), and ``local`` (OpenAI-compatible chat +
-in-process embeddings).
+embedding), ``anthropic`` and ``deepseek`` (chat), and ``local``
+(OpenAI-compatible chat + in-process embeddings).
 
 The shared machinery that is not specific to any one backend -- request pacing
 and retry -- lives in :mod:`~phoenix_rag.providers.ratelimit` so the next backend

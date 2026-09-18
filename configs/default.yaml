@@ -19,6 +19,8 @@
 #   mistral    - chat + embedding          (hard dependency; always available)
 #   openai     - chat + embedding          pip install 'phoenix-rag[openai]'
 #   anthropic  - chat only                 pip install 'phoenix-rag[anthropic]'
+#   deepseek   - chat only                 pip install 'phoenix-rag[deepseek]'
+#                base_url defaults to https://api.deepseek.com; no embeddings API
 #   local      - OpenAI-compatible chat (Ollama/vLLM/LM Studio via base_url)
 #                + in-process embeddings (sentence-transformers)
 #                                          pip install 'phoenix-rag[local]'
@@ -46,8 +48,8 @@ providers:
     api_key_env: null
 
   # Cloud roles read their key from the named environment variable (value in
-  # .env, never here). Swap to openai/anthropic by changing backend + model +
-  # api_key_env and installing that backend's extra.
+  # .env, never here). Swap to openai/anthropic/deepseek by changing backend +
+  # model + api_key_env and installing that backend's extra.
   optimizer:
     backend: mistral
     model: mistral-medium-latest
@@ -62,6 +64,20 @@ providers:
 #   backend: mistral
 #   api_key_env: MISTRAL_API_KEY
 # with models mistral-embed / mistral-small-latest / mistral-large-latest.
+
+# DeepSeek alternative for the two cloud roles -- chat only, so the embedding
+# role must stay on local (or mistral/openai). base_url is optional; it defaults
+# to https://api.deepseek.com.
+#   optimizer:
+#     backend: deepseek
+#     model: deepseek-flash
+#     api_key_env: DEEPSEEK_API_KEY
+#   judge:
+#     backend: deepseek
+#     model: deepseek-flash
+#     api_key_env: DEEPSEEK_API_KEY
+# Models: deepseek-flash (fast/cheap) or deepseek-v4-pro (stronger). The older
+# deepseek-v4-flash / deepseek-chat names still resolve but are retired aliases.
 
 # --------------------------------------------------------------------------
 # Retrieval: the search space the optimizer moves through.

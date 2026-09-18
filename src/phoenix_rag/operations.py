@@ -522,7 +522,7 @@ _HELP = {
 # Provider fields repeat under providers.embedding / generation / optimizer /
 # judge, so their help is matched by path suffix rather than by full path.
 _HELP_SUFFIX = {
-    ".backend": "Which provider serves this role (e.g. mistral, openai, anthropic, local).",
+    ".backend": "Which provider serves this role (e.g. mistral, openai, anthropic, deepseek, local).",
     ".model": "Model name for this role, spelled as the chosen backend expects it.",
     ".api_key_env": (
         "Environment variable holding this provider's API key. The key itself "

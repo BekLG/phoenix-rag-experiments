@@ -1,62 +1,56 @@
 [
   {
-    "question": "What is the primary purpose of a vector database?",
-    "reference_answer": "A specialized storage system designed to index and query high-dimensional numerical vectors, commonly called embeddings.",
-    "reference_context": "A vector database is a specialized storage system designed to index and query high-dimensional numerical vectors, commonly called embeddings.",
+    "question": "What is the primary paradox described in the article, and how does it manifest in organizational behavior?",
+    "reference_answer": "The Abilene Paradox refers to organizations taking actions that contradict their true preferences, thereby defeating their intended purposes. It manifests when group members feign agreement to avoid conflict, leading everyone to act against their actual desires—like the family trip to Abilene despite no one wanting to go.",
+    "reference_context": "This article is concerned with that paradox—the Abilene Paradox. Stated simply, it is as follows: Organizations frequently take actions in contradiction to what they really want to do and therefore defeat the very purposes they are trying to achieve... The whole situation simply didn’t make sense. At least it didn’t make sense at the time.",
     "question_type": "definition"
   },
   {
-    "question": "Why do traditional relational databases perform poorly for similarity search tasks?",
-    "reference_answer": "They are optimized for exact matches and range queries on structured columns, not for finding the 'most similar' items.",
-    "reference_context": "Vector databases exist because traditional relational databases, which are optimized for exact matches and range queries on structured columns, perform poorly when the task is to find the 'most similar' items in a dataset rather than an exact match.",
-    "question_type": "why"
+    "question": "What is the primary symptom that defines organizations experiencing the Abilene Paradox, and how does it differ from managing conflict?",
+    "reference_answer": "The inability to manage agreement, not conflict, is the essential symptom. This is expressed through six subsymptoms, such as private agreement on the situation and steps to address it, followed by miscommunication and counterproductive actions.",
+    "reference_context": "The inability to manage agreement, not the inability to manage conflict, is the essential symptom that defines organizations caught in the web of the Abilene Paradox. That inability to manage agreement effectively is expressed by six specific subsymptoms...",
+    "question_type": "definition"
   },
   {
-    "question": "What are the three common distance or similarity functions used for measuring similarity between vectors?",
-    "reference_answer": "Cosine similarity, Euclidean distance (L2), and Dot product.",
-    "reference_context": "similarity between two vectors is typically measured using one of three distance or similarity functions: Cosine similarity, Euclidean distance (L2), and Dot product.",
-    "question_type": "factual"
+    "question": "What is the Abilene Paradox, and how does the text illustrate its occurrence in the context of the Watergate scandal?",
+    "reference_answer": "The Abilene Paradox is the phenomenon where organizations take actions that contradict their shared agreement and worsen problems instead of solving them. The text illustrates this through Watergate, where key figures like Mitchell, Porter, Dean, and Magruder initially agreed the Watergate bugging plan was inappropriate but later approved and implemented it, leading to further organizational chaos.",
+    "reference_context": "\"Organizations frequently take actions in contradiction to the data they have for dealing with problems and, as a result, compound their problems rather than solve them. [...] First, they indicate agreement. Evidently, Mitchell, Porter, Dean, and Magruder agreed that the plan was inappropriate. [...] Second, the data indicate that the principal figures then proceeded to implement the plan in contradiction to their shared agreement.\"",
+    "question_type": "definition"
   },
   {
-    "question": "How does HNSW achieve faster search compared to brute-force search?",
-    "reference_answer": "It builds a multi-layer graph and uses greedy search with long-range connections to reduce the search space.",
-    "reference_context": "HNSW builds a multi-layer graph where each vector is a node... A search starts at an entry point in the top layer and greedily moves toward the query vector, dropping down a layer each time no closer neighbor can be found at the current layer.",
+    "question": "What is the primary psychological mechanism that prevents organization members from acting in accordance with their understanding of what needs to be done, even when they are fully aware of the issues?",
+    "reference_answer": "Action anxiety, driven by negative fantasies about the consequences of taking action.",
+    "reference_context": "The concept of action anxiety says that the reasons organization members take actions in contradiction to their understanding of the organization’s problems lies in the intense anxiety that is created as they think about acting in accordance with what they believe needs to be done. ... The negative fantasies, in turn, serve an important function for the persons who have them. Specifically, they provide the individual with an excuse that releases him psychologically from the responsibility of having to act to solve organization problems.",
+    "question_type": "definition"
+  },
+  {
+    "question": "According to the text, what specific psychological mechanism causes individuals to avoid taking risks in organizational settings, even when those risks could prevent greater separation and isolation?",
+    "reference_answer": "The psychological reversal of risk and certainty, where individuals fear being labeled 'disloyal' or 'non-team players' and thus avoid action, ensuring the very separation and aloneness they dread.",
+    "reference_context": "But therein lies a paradox within a paradox, because our very unwillingness to take such risks virtually ensures the separation and aloneness we so fear. In effect, we reverse 'real existential risk' and 'fantasied risk' and by doing so transform what is a probability statement into what, for all practical purposes, becomes a certainty.",
     "question_type": "reasoning"
   },
   {
-    "question": "What is the difference between pre-filtering and post-filtering in metadata filtering?",
-    "reference_answer": "Pre-filtering applies metadata filters first to narrow candidates before similarity search; post-filtering runs similarity search first and applies filters afterward.",
-    "reference_context": "Vector databases support this through two strategies: Pre-filtering (metadata filter first) and Post-filtering (similarity search first, then metadata filter).",
+    "question": "What is the key difference between real conflict and phony conflict as described in the text?",
+    "reference_answer": "Real conflict arises from genuine differences in opinion or approach, while phony conflict occurs when people secretly agree on an action but publicly oppose it, leading to anger and blame due to the failure of an unpopular decision.",
+    "reference_context": "Real conflict occurs when people have real differences ('My reading of the research printouts says that we can make the project profitable.' 'I come to the opposite conclusion.') ('I suggest we 'bug' the Watergate.' 'I'm not in favor of it.') Phony conflict, on the other hand, occurs when people agree on the actions they want to take, and then do the opposite. The resulting anger, frustration, and blaming behavior generally termed 'conflict' are not based on real differences. Rather, they stem from the protective reactions that occur when a decision that no one believed in or was committed to in the first place goes sour.",
     "question_type": "comparison"
   },
   {
-    "question": "What is the default index type used by Chroma?",
-    "reference_answer": "HNSW",
-    "reference_context": "It runs in-process (no separate server required) and uses HNSW as its default index.",
-    "question_type": "factual"
-  },
-  {
-    "question": "How does Qdrant handle payload (metadata) filtering compared to other vector databases?",
-    "reference_answer": "Qdrant combines payload filtering directly into the HNSW graph traversal rather than as a separate pre- or post-filtering step.",
-    "reference_context": "Qdrant: an open-source vector database written in Rust, designed to be run either embedded or as a standalone server, with built-in support for payload (metadata) filtering combined directly into the HNSW graph traversal rather than as a separate pre- or post-filtering step.",
+    "question": "What is the primary psychological function served by individuals when they attribute their inaction to external conformity pressures rather than their own reluctance to act?",
+    "reference_answer": "It serves as a defense mechanism that releases the individual from the responsibility of taking action.",
+    "reference_context": "‘Conceptualizing, experiencing, and responding to such experiences as reflecting the tyrannical pressures of a group again serves as an important psychological use for the individual: As was previously said, it releases him from the responsibility of taking action and thus becomes a defense against action.’",
     "question_type": "definition"
   },
   {
-    "question": "What is the relationship between Recall@k and Latency in vector database evaluation?",
-    "reference_answer": "Recall and latency trade off against each other for every ANN algorithm: increasing search parameters improves recall but reduces QPS.",
-    "reference_context": "Recall and latency trade off against each other for every ANN algorithm: increasing the search parameters (for example, the number of IVF cells probed, or the HNSW search width) improves recall but reduces QPS.",
+    "question": "What is the primary reason why addressing the Abilene Paradox requires a group setting rather than individual or small subgroup discussions?",
+    "reference_answer": "Because the dynamics of the Abilene Paradox involve collusion among group members, attempting to solve the dilemma with individuals or small subgroups would perpetuate the collusive behavior that led to the paradox.",
+    "reference_context": "Working within the context of a group is important because the dynamics of the Abilene Paradox involve collusion among group members; therefore, to try to solve the dilemma by working with individuals and small subgroups would involve further collusion with the dynamics leading up to the paradox.",
+    "question_type": "reasoning"
+  },
+  {
+    "question": "What does the author suggest is the psychological benefit of confronting the Abilene Paradox, and how does this relate to the myth of Sisyphus?",
+    "reference_answer": "The act of confrontation provides intrinsic psychological satisfaction, similar to how Sisyphus, despite his absurd task, occasionally transcended his fate by recognizing its absurdity and finding brief moments of meaning.",
+    "reference_context": "\"Most important, the act of confrontation apparently provides intrinsic psychological satisfaction, regardless of the technological outcomes for those who attempt it. [...] So it may be with confronting the Abilene Paradox. [...] through the process of active confrontation with reality, we may take respite from pushing our rocks on their endless journeys and, for brief moments, experience what C. P. Snow termed 'the triumphs of life we make for ourselves.'\"",
     "question_type": "relationship"
-  },
-  {
-    "question": "Why might embeddings generated by one model version and queried with another model version lead to unreliable similarity scores?",
-    "reference_answer": "Because the two models do not share the same vector space.",
-    "reference_context": "if a collection's embeddings are generated by one model version and later queries are embedded with a newer or different model version, similarity scores become unreliable, because the two models do not share the same vector space.",
-    "question_type": "why"
-  },
-  {
-    "question": "What are the two most commonly used metrics for evaluating a vector database's retrieval quality?",
-    "reference_answer": "Recall@k and Latency (queries per second, or QPS).",
-    "reference_context": "Two metrics are most commonly used to evaluate a vector database's retrieval quality for a given configuration: Recall@k and Latency (queries per second, or QPS).",
-    "question_type": "factual"
   }
 ]

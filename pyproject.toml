@@ -40,8 +40,8 @@ dependencies = [
     "pyyaml>=6.0",
     # Mistral is the default backend and the registry imports its client
     # eagerly, so its packages stay hard dependencies. The other backends
-    # (openai, anthropic, local) import their vendor SDKs lazily and live in the
-    # optional extras below.
+    # (openai, anthropic, deepseek, local) import their vendor SDKs lazily and
+    # live in the optional extras below.
     "mistralai>=2.7,<3",
     "langchain-mistralai>=1.1,<2",
 ]
@@ -56,6 +56,10 @@ dev = ["pytest>=8.0"]
 # sentence-transformers.
 openai = ["langchain-openai>=1.4,<2"]
 anthropic = ["langchain-anthropic>=1,<2"]
+# DeepSeek speaks the OpenAI wire format, so its client is langchain-openai. The
+# extra exists under its own name so selecting the backend yields a
+# "pip install 'phoenix-rag[deepseek]'" hint rather than naming another vendor.
+deepseek = ["langchain-openai>=1.4,<2"]
 local = ["langchain-openai>=1.4,<2", "langchain-huggingface>=1,<2", "sentence-transformers>=3"]
 all = [
     "langchain-openai>=1.4,<2",

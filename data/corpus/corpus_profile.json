@@ -1,12 +1,12 @@
 {
-  "pages": 4,
-  "characters": 9599,
-  "estimated_tokens": 2399,
-  "sections": 12,
-  "median_chars_per_page": 2400.0,
-  "min_chars_per_page": 2399,
-  "max_chars_per_page": 2400,
-  "doc_type": "unknown",
+  "pages": 12,
+  "characters": 52238,
+  "estimated_tokens": 13059,
+  "sections": 14,
+  "median_chars_per_page": 4353.0,
+  "min_chars_per_page": 4353,
+  "max_chars_per_page": 4354,
+  "doc_type": "paper",
   "table_heavy": false,
   "list_heavy": false
 }

@@ -2,19 +2,21 @@
 providers/langchain_backends.py
 ===============================
 The backends that reach their model through a LangChain integration package:
-``openai``, ``anthropic``, and ``local`` (an OpenAI-compatible endpoint served
-by an in-process runner such as Ollama, vLLM or LM Studio).
+``openai``, ``anthropic``, ``deepseek``, and ``local`` (an OpenAI-compatible
+endpoint served by an in-process runner such as Ollama, vLLM or LM Studio).
 
-WHY ONE MODULE FOR THREE BACKENDS
----------------------------------
-Mistral gets its own module because it wraps the raw ``mistralai`` SDK. These
-three do not need a raw SDK: LangChain already ships a chat model for each
+WHY ONE MODULE FOR SEVERAL BACKENDS
+-----------------------------------
+Mistral gets its own module because it wraps the raw ``mistralai`` SDK. These do
+not need a raw SDK: LangChain already ships a chat model for each
 (``ChatOpenAI``, ``ChatAnthropic``), and such an object is exactly what the judge
 role must hand to Ragas. So one :class:`LangChainChatProvider` -- a
-``BaseChatModel`` plus the shared rate limiter -- serves all three, and the
+``BaseChatModel`` plus the shared rate limiter -- serves all of them, and the
 per-backend code here is just a factory that builds the right ``BaseChatModel``.
-``local`` chat is ``openai`` chat pointed at a ``base_url``: the OpenAI client
-speaks to any server that implements the same wire format.
+``local`` and ``deepseek`` chat are both ``openai`` chat pointed at a different
+``base_url``: the OpenAI client speaks to any server implementing the same wire
+format. They differ only in whether a key is required and whether the endpoint
+has a sensible default.
 
 LAZY, PER-BACKEND IMPORTS
 -------------------------
@@ -232,6 +234,7 @@ def _openai_compatible_chat(
     backend: str,
     extra: str,
     require_key: bool,
+    default_base_url: str | None = None,
 ) -> ChatProvider:
     _require("langchain_openai", backend=backend, extra=extra)
     from langchain_openai import ChatOpenAI
@@ -240,7 +243,10 @@ def _openai_compatible_chat(
     if require_key and not api_key:
         raise _missing_key_error(backend, provider)
 
-    base_url = provider.base_url
+    # A hosted OpenAI-compatible vendor has one known endpoint, so the config
+    # need not spell it out; an explicit base_url still wins, which is what lets
+    # a role point at a proxy or a region-specific host.
+    base_url = provider.base_url or default_base_url
     # The OpenAI client requires a non-empty key even when the endpoint (a local
     # server) ignores it, so a keyless local run still needs a placeholder.
     effective_key = api_key or "not-needed-for-local"
@@ -285,6 +291,36 @@ def build_local_chat(provider: ProviderConfig, limiter: RateLimiter) -> ChatProv
         )
     return _openai_compatible_chat(
         provider, limiter, backend="local", extra="local", require_key=False
+    )
+
+
+# --------------------------------------------------------------------------
+# DeepSeek chat
+# --------------------------------------------------------------------------
+
+# DeepSeek serves the OpenAI wire format from this host, so it needs no vendor
+# package of its own -- the [deepseek] extra just pulls langchain-openai.
+DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+
+
+def build_deepseek_chat(provider: ProviderConfig, limiter: RateLimiter) -> ChatProvider:
+    """Chat over DeepSeek's OpenAI-compatible API.
+
+    Chat-only: DeepSeek publishes no embeddings endpoint, so this backend is
+    absent from the registry's embedding map and a config naming it for the
+    embedding role is rejected there.
+
+    The endpoint defaults to :data:`DEEPSEEK_BASE_URL`, so a role needs only
+    ``backend``/``model``/``api_key_env``. A key is always required: unlike
+    ``local``, this is a hosted API that authenticates every request.
+    """
+    return _openai_compatible_chat(
+        provider,
+        limiter,
+        backend="deepseek",
+        extra="deepseek",
+        require_key=True,
+        default_base_url=DEEPSEEK_BASE_URL,
     )
 
 
