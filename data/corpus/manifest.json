@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "documents": [
+    {
+      "doc_id": "fba8556ba42e4801",
+      "label": "Harvey_Abilene_Paradox",
+      "path": "/home/yared/workspace/phoenix-rag-experiments/data/Harvey_Abilene_Paradox.pdf",
+      "pages": 12,
+      "characters": 52238,
+      "added_at": "2026-09-17T17:49:43+00:00",
+      "profile": {
+        "pages": 12,
+        "characters": 52238,
+        "estimated_tokens": 13059,
+        "sections": 14,
+        "median_chars_per_page": 4353.0,
+        "min_chars_per_page": 4353,
+        "max_chars_per_page": 4354,
+        "doc_type": "paper",
+        "table_heavy": false,
+        "list_heavy": false
+      },
+      "summary": "**Summary of *The Abilene Paradox: The Management of Agreement* (Jerry B. Harvey, 1988)**\n\n**Main Subject:**\nJerry B. Harvey introduces the **Abilene Paradox**, a behavioral phenomenon where organizations (or groups) collectively pursue actions contrary to their private preferences, leading to counterproductive outcomes. The core issue is the **failure to manage agreement**—a dysfunction more damaging than conflict—where members suppress dissent, miscommunicate desires, and collude in decisions that undermine shared goals.\n\n---\n\n### **Key Sections & Topics**\n1. **The Paradox’s Origin (Case Study):**\n   Harvey illustrates the paradox through a **family anecdote**—a group of four (including himself) travels 106 miles to Abilene in extreme heat, only to later admit they *all* privately preferred staying home. The trip’s absurdity reveals **collective deception**: no one voiced dissent, each assumed others wanted to go, and the group’s shared discomfort emerged only after the fact.\n\n2. **Symptoms of the Paradox (6 Subsymptoms):**\n   - **Private agreement** on the preferred course of action (e.g., staying in Coleman).\n   - **Shared knowledge** of the \"right\" solution but **silent collusion** in pursuing the opposite.\n   - **Miscommunication**: Members falsely signal agreement (e.g., \"Sounds good to me\") to avoid conflict.\n   - **Counterproductive actions**: Decisions made despite shared disapproval (e.g., funding a doomed R&D project).\n   - **Post-decision blame**: Subgroups scapegoat others or authority figures (e.g., Watergate figures’ internecine finger-pointing).\n   - **Cycle of repetition**: Unresolved agreement mismanagement leads to worse outcomes over time.\n\n3. **Case Studies of \"Trips to Abilene\":**\n   - **Ozyx Corporation (R&D Division):** Executives privately agree a research project is flawed but continue funding it due to fear of repercussions (e.g., job loss, reputational damage). The project’s failure triggers layoffs and morale collapse.\n   - **Watergate:** Harvey applies the paradox to the scandal, citing testimony where staff (e.g., Herbert Porter) **publicly supported illegal actions** they privately opposed, driven by loyalty fears and group pressure.\n\n4. **Psychological Underpinnings:**\n   Harvey dissects the **causal dynamics** behind the paradox, framing it as a **paradox within a paradox**:\n   - **Action Anxiety:** Fear of acting on true preferences (e.g., Hamlet’s hesitation to confront Claudius).\n   - **Negative Fantasies:** Members imagine dire consequences (e.g., ostracism, failure) if they dissent, justifying inaction.\n   - **Real Risk vs. Fantasied Risk:** Organizations avoid existential risks (e.g., failure, legal trouble) by reversing logic—**fearing separation** (e.g., being labeled \"non-team players\") more than the actual risks of their chosen path.\n   - **Separation Anxiety:** A core fear of loneliness/alienation drives collusion, even in harmful decisions.\n\n5. **Redefinitions for Coping:**\n   Harvey challenges conventional organizational concepts:\n   - **Victim/Victimizer:** In Abilene scenarios, *everyone* is a victim of the paradox; blame shifts energy away from problem-solving.\n   - **Collusion:** All members (peers, superiors, subordinates) **actively or passively enable** the paradox through silence or false agreement.\n   - **Responsibility:** No hierarchical role (e.g., \"the boss\") holds sole accountability; **anyone** who confronts the shared reality can disrupt the cycle.\n   - **Reality/Knowledge:** Organizations often **know** the \"right\" course but suppress it; confrontation should focus on **what they agree upon**, not what they disagree about.\n   - **Real vs. Phony Conflict:** True conflict arises from genuine differences; \"conflict\" in Abilene cases stems from **shared disapproval of a forced decision**.\n\n6. **Group Tyranny Revisited:**\n   Harvey critiques the notion of \"groupthink\" as a blanket explanation, arguing that **mismanaged agreement** (not just conformity pressure) drives dysfunction. Examples include lynch mobs or workplace \"camel-designed-by-committee\" decisions, where individuals **perceive coercion** but are actually **colluding in silence**.\n\n7. **Diagnosis & Recommendations:**\n   - **Diagnostic Survey:** Harvey proposes a tool to distinguish between **conflict-management** (legitimate disagreement) and **agreement-management** (paradox) situations.\n   - **Confrontation as Cure:** The solution lies in **directly addressing shared disapproval**—e.g., a research manager admitting a project’s flaws or a staffer calling out an unethical plan. This requires **psychological risk-taking** (e.g., facing separation anxiety) but avoids the worse risks of inaction.\n\n---\n\n### **Factual Claims & Structure**\n- **Empirical Basis:** Harvey draws on **personal anecdotes**, **organizational consulting experience**, and **historical cases** (Watergate) to ground the paradox in observable behavior.\n- **Theoretical Framework:** Integrates **social psychology** (e.g., group dynamics, conformity), **existential risk theory** (Toffler/Slater), and **organizational behavior** (e.g., groupthink critiques).\n- **Structure:**\n  1. **Narrative Hook** (Abilene family story) → 2. **Symptom Analysis** → 3. **Case Studies** → 4. **Psychological Deconstruction** → 5. **Redefinitions** → 6. **Diagnostic Tools** → 7. **Prescriptive Recommendations**.\n- **Key Terminology:** *Abilene Paradox, agreement management, action anxiety, negative fantasies, separation anxiety, collusion, phony conflict, group tyranny, existential risk*.\n\n---\n### **Overall Purpose**\nHarvey’s goal is to **shift organizational focus** from managing conflict (a reactive stance) to **managing agreement** (a proactive, preventive stance). The paradox exposes how **shared silence**—not conflict—often poisons organizations, and his recommendations emphasize **courageous confrontation** of collective disapproval as the path to effective decision-making. The article blends **academic rigor** with **practical applicability**, targeting managers, consultants, and organizational leaders.",
+      "question_count": 9
+    }
+  ],
+  "indexes": {
+    "30f40218ad664e2baa38": {
+      "index_key": "30f40218ad664e2baa38",
+      "embedding_model": "mistral-embed",
+      "chunk_size": 1200,
+      "chunk_overlap": 180,
+      "members": [
+        "fba8556ba42e4801"
+      ]
+    },
+    "bd9d0c97378148a3c60a": {
+      "index_key": "bd9d0c97378148a3c60a",
+      "embedding_model": "mistral-embed",
+      "chunk_size": 1000,
+      "chunk_overlap": 150,
+      "members": [
+        "fba8556ba42e4801"
+      ]
+    },
+    "dca7940aae821d28bd58": {
+      "index_key": "dca7940aae821d28bd58",
+      "embedding_model": "mistral-embed",
+      "chunk_size": 800,
+      "chunk_overlap": 120,
+      "members": [
+        "fba8556ba42e4801"
+      ]
+    },
+    "eb1df457c24c7c82ed2b": {
+      "index_key": "eb1df457c24c7c82ed2b",
+      "embedding_model": "mistral-embed",
+      "chunk_size": 1500,
+      "chunk_overlap": 225,
+      "members": [
+        "fba8556ba42e4801"
+      ]
+    }
+  },
+  "last_optimized_members": [
+    "fba8556ba42e4801"
+  ]
+}

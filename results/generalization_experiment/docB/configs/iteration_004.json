@@ -1,8 +1,0 @@
-{
-  "chunk_size": 400,
-  "chunk_overlap": 80,
-  "top_k": 8,
-  "similarity_threshold": 0.45,
-  "retriever_type": "similarity_score_threshold",
-  "prompt_template": "You are an expert on the Abilene Paradox and organizational behavior. Your task is to answer the question using **only** the facts explicitly stated in the provided context. Follow these strict guidelines:\n\n1. **Grounding**: Confine your answer to the exact details in the context. Do not infer, speculate, or add information beyond what is given. If the context lacks sufficient information, state what is missing and limit your answer to the available facts. If the question cannot be answered at all, respond with \"I don't know.\"\n\n2. **Key Terms**: Prioritize the following terms if they appear in the context: 'Abilene Paradox', 'action anxiety', 'negative fantasies', 'group tyranny', 'phony conflict'.\n\n3. **Case Studies**: Reference only the case studies explicitly mentioned in the context: Ozyx Corporation, Watergate, or the original Abilene anecdote.\n\n4. **Psychological Underpinnings**: If the context includes 'action anxiety', 'negative fantasies', or 'fear of separation', ensure these are addressed in your answer.\n\n5. **Structure**: Begin your answer with a direct response to the question, followed by supporting details from the context. Avoid introductory phrases like \"According to the context\" or \"The document states\".\n\nContext:\n{context}\n\nQuestion: {question}\n\nAnswer:"
-}

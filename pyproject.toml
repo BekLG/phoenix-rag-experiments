@@ -1,0 +1,81 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phoenix-rag"
+version = "0.1.0"
+description = "Self-optimizing RAG: tunes retrieval parameters and the answer prompt against an LLM-judged benchmark"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Yared Mengiste" }]
+keywords = ["rag", "retrieval", "optimization", "llm", "ragas", "faiss"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# Version floors match what this was developed against; upper bounds sit on the
+# packages whose APIs actually churn. evaluation/ragas_compat.py and the
+# RunConfig import fallback in evaluation/evaluator.py both exist because of
+# ragas/langchain breakage across minor releases, so those are capped.
+dependencies = [
+    "langchain>=1.3,<2",
+    "langchain-community>=0.4,<1",
+    "langchain-core>=1.5,<2",
+    "langchain-text-splitters>=1.1,<2",
+    "faiss-cpu>=1.14",
+    "ragas>=0.3.9,<0.4",
+    "datasets>=5.0",
+    "pypdf>=6.14",
+    "unstructured>=0.24",
+    "markdown>=3.10",
+    "python-dotenv>=1.2",
+    "pandas>=2.0",
+    "pyyaml>=6.0",
+    # Mistral is the default backend and the registry imports its client
+    # eagerly, so its packages stay hard dependencies. The other backends
+    # (openai, anthropic, deepseek, local) import their vendor SDKs lazily and
+    # live in the optional extras below.
+    "mistralai>=2.7,<3",
+    "langchain-mistralai>=1.1,<2",
+]
+
+[project.optional-dependencies]
+ui = ["streamlit>=1.51"]
+dev = ["pytest>=8.0"]
+# One extra per non-Mistral backend. Each backend imports its vendor package
+# lazily (providers/langchain_backends.py), so these are only needed if a config
+# actually selects that backend. "local" covers both surfaces: chat via an
+# OpenAI-compatible endpoint (langchain-openai) and embeddings via in-process
+# sentence-transformers.
+openai = ["langchain-openai>=1.4,<2"]
+anthropic = ["langchain-anthropic>=1,<2"]
+# DeepSeek speaks the OpenAI wire format, so its client is langchain-openai. The
+# extra exists under its own name so selecting the backend yields a
+# "pip install 'phoenix-rag[deepseek]'" hint rather than naming another vendor.
+deepseek = ["langchain-openai>=1.4,<2"]
+local = ["langchain-openai>=1.4,<2", "langchain-huggingface>=1,<2", "sentence-transformers>=3"]
+all = [
+    "langchain-openai>=1.4,<2",
+    "langchain-anthropic>=1,<2",
+    "langchain-huggingface>=1,<2",
+    "sentence-transformers>=3",
+]
+
+[project.scripts]
+phoenix-rag = "phoenix_rag.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# So the suite runs straight from a checkout, without requiring an editable
+# install first.
+pythonpath = ["src"]

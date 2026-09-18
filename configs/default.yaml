@@ -1,0 +1,165 @@
+# Phoenix RAG configuration
+# =========================
+# Copy to <workspace>/config/config.yaml and edit. Safe to commit: this file
+# names the environment variables holding your API keys, never the keys
+# themselves. Put the values in .env (gitignored).
+#
+#   cp configs/default.yaml config/config.yaml
+
+# --------------------------------------------------------------------------
+# Providers: which backend and model serve each of the four roles.
+# --------------------------------------------------------------------------
+# embedding  - embeds chunks and queries. Highest call volume by a wide margin.
+# generation - answers benchmark questions, writes the questions, summarizes.
+# optimizer  - proposes the next retrieval config. Exactly one call per iteration.
+# judge      - scores answers with Ragas. By far the most calls of any hosted
+#              role: each metric fires several sub-calls per sample.
+#
+# Wired backends (per role):
+#   mistral    - chat + embedding          (hard dependency; always available)
+#   openai     - chat + embedding          pip install 'phoenix-rag[openai]'
+#   anthropic  - chat only                 pip install 'phoenix-rag[anthropic]'
+#   deepseek   - chat only                 pip install 'phoenix-rag[deepseek]'
+#                base_url defaults to https://api.deepseek.com; no embeddings API
+#   local      - OpenAI-compatible chat (Ollama/vLLM/LM Studio via base_url)
+#                + in-process embeddings (sentence-transformers)
+#                                          pip install 'phoenix-rag[local]'
+#
+# This example ships the intended split: the two high-volume roles run LOCALLY
+# (no per-call cost), while the two roles that need the strongest model run in
+# the CLOUD. Point everything at mistral instead if you'd rather not run a local
+# model -- the migration path from the old all-Mistral config still works.
+providers:
+  # Local embeddings via in-process sentence-transformers: no key, no endpoint.
+  embedding:
+    backend: local
+    model: sentence-transformers/all-MiniLM-L6-v2
+    api_key_env: null
+    requests_per_minute: 45      # ignored for in-process embeddings; kept for parity
+    max_retries: 5
+    base_backoff_seconds: 2.0
+
+  # Local generation via an OpenAI-compatible endpoint (here: Ollama). No key;
+  # base_url is required. Start the server and pull the model first.
+  generation:
+    backend: local
+    model: qwen2.5:3b-instruct
+    base_url: http://localhost:11434/v1
+    api_key_env: null
+
+  # Cloud roles read their key from the named environment variable (value in
+  # .env, never here). Swap to openai/anthropic/deepseek by changing backend +
+  # model + api_key_env and installing that backend's extra.
+  optimizer:
+    backend: mistral
+    model: mistral-medium-latest
+    api_key_env: MISTRAL_API_KEY
+
+  judge:
+    backend: mistral
+    model: mistral-medium-latest
+    api_key_env: MISTRAL_API_KEY
+
+# All-Mistral alternative (no local model needed) -- set every role to:
+#   backend: mistral
+#   api_key_env: MISTRAL_API_KEY
+# with models mistral-embed / mistral-small-latest / mistral-large-latest.
+
+# DeepSeek alternative for the two cloud roles -- chat only, so the embedding
+# role must stay on local (or mistral/openai). base_url is optional; it defaults
+# to https://api.deepseek.com.
+#   optimizer:
+#     backend: deepseek
+#     model: deepseek-flash
+#     api_key_env: DEEPSEEK_API_KEY
+#   judge:
+#     backend: deepseek
+#     model: deepseek-flash
+#     api_key_env: DEEPSEEK_API_KEY
+# Models: deepseek-flash (fast/cheap) or deepseek-v4-pro (stronger). The older
+# deepseek-v4-flash / deepseek-chat names still resolve but are retired aliases.
+
+# --------------------------------------------------------------------------
+# Retrieval: the search space the optimizer moves through.
+# --------------------------------------------------------------------------
+# These are only the STARTING values, and only when optimizer.seed_from_profile
+# is false. With seeding on (the default), iteration 1 derives chunk_size,
+# chunk_overlap and top_k from the document's own profile and this block
+# supplies the rest.
+retrieval:
+  chunk_size: 300
+  chunk_overlap: 50
+  top_k: 1
+  similarity_threshold: 0.0      # only used when retriever_type is similarity_score_threshold
+  retriever_type: similarity     # similarity | mmr | similarity_score_threshold
+
+  # Must contain {context} and {question} exactly once each; they are filled in
+  # at answer time. The optimizer rewrites this template between iterations.
+  prompt_template: |-
+    You are a helpful assistant answering questions using ONLY the provided context. If the answer is not contained in the context, say you don't know.
+
+    Context:
+    {context}
+
+    Question: {question}
+
+    Answer:
+
+# --------------------------------------------------------------------------
+# Benchmark question generation.
+# --------------------------------------------------------------------------
+# Generated once from the FULL document and then frozen, so every configuration
+# is scored against identical questions. Raising questions_per_batch is the main
+# lever on benchmark size -- and therefore on judge cost, which scales with it.
+question_generation:
+  batch_size_chars: 6000
+  questions_per_batch: 1
+  dedup_similarity_threshold: 0.9
+  regenerate_each_iteration: false
+  question_types:
+    - factual
+    - reasoning
+    - comparison
+    - why
+    - multi-hop
+    - summarization
+    - definition
+    - relationship
+    - edge-case
+
+# --------------------------------------------------------------------------
+# Optimization loop: budget, targets, and the bounds proposals are clamped to.
+# --------------------------------------------------------------------------
+optimizer:
+  max_iterations: 10
+  seed_from_profile: true        # derive iteration 1 from the document profile
+
+  # Stop early once every metric clears its target. Faithfulness is 0-1; the
+  # other three targets are set deliberately above their attainable range so the
+  # loop runs its full budget rather than stopping at "good enough".
+  target_faithfulness: 1.0
+  target_context_recall: 9.5
+  target_context_precision: 9.0
+  target_response_relevancy: 9.5
+
+  top_k_bounds: [2, 10]
+  chunk_size_bounds: [300, 1500]
+  similarity_threshold_bounds: [0.1, 0.75]
+
+  top_k_step: 2
+  chunk_size_step: 200
+  similarity_threshold_step: 0.05
+
+# --------------------------------------------------------------------------
+# Paths. Omit any of these to have it resolved under the active workspace
+# (the current directory, or $PHOENIX_RAG_WORKSPACE).
+# --------------------------------------------------------------------------
+# source_document: data/source.pdf
+# faiss_index_path: data/faiss_index
+# benchmark_path: generated_questions/benchmark.json
+# summary_path: generated_questions/document_summary.txt
+# profile_path: generated_questions/document_profile.json
+
+# Set to a corpus root to optimize against every document added there instead of
+# a single file. Leave unset for single-document mode.
+corpus_path: null

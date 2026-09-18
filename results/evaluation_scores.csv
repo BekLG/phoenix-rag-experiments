@@ -1,3 +1,0 @@
-iteration,faithfulness,context_recall,context_precision,response_relevancy,applied_rules
-1,0.6861111111111111,0.6,0.7777777777,0.6516812995815717,"llm_optimizer[prompt_template_updated]: Initial configuration starts with a conservative chunk_size (500) to balance granularity and context completeness, while increasing top_k (4) to improve recall. A similarity_score_threshold (0.3) is introduced to filter low-relevance chunks and boost precision. The prompt is tightened with domain-specific instructions to enforce faithfulness and relevancy, addressing potential hallucinations or off-topic drift."
-2,0.9175000000000001,1.0,0.8999999999383335,0.9258647589727076,all_targets_met

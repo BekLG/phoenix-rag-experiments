@@ -12,3 +12,7 @@ unstructured==0.24.1
 markdown==3.10.2
 python-dotenv==1.2.2
 pandas==3.0.3
+
+# Only needed for the GUI front-end (streamlit run streamlit_app.py). The
+# terminal front-end (python menu.py) is standard library only.
+streamlit==1.51.0
