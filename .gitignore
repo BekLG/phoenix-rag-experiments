@@ -18,5 +18,7 @@ dist/
 # Generated run artifacts and local tooling config
 results/
 logs/
-data/corpus/indexes/
+data/corpus/
 .claude/
+phoenix_demo_workspace/
+my-phoenix-workspace/
