@@ -153,8 +153,7 @@ Place your source document (PDF or .txt/.md) somewhere under `data/`, e.g.
 ## Usage
 
 ```python
-from phoenix_rag import load_or_create_default_config
-from phoenix_rag.optimization.runner import run_experiment
+from phoenix_rag import load_or_create_default_config, run_experiment
 
 config = load_or_create_default_config()
 config.optimizer.max_iterations = 5
