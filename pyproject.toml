@@ -47,7 +47,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-ui = ["streamlit>=1.51"]
+
 dev = ["pytest>=8.0"]
 # One extra per non-Mistral backend. Each backend imports its vendor package
 # lazily (providers/langchain_backends.py), so these are only needed if a config
@@ -68,8 +68,6 @@ all = [
     "sentence-transformers>=3",
 ]
 
-[project.scripts]
-phoenix-rag = "phoenix_rag.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -1,16 +1,14 @@
 """
 operations.py
 =============
-The operator-facing operations, with no user interface attached.
+The operator-facing operations, representing the high-level convenience layer
+for library consumers.
 
-Both front-ends -- ui/menu.py (terminal) and ui/streamlit_app.py (GUI) -- are
-thin presentation layers over this module. Everything that involves a decision
-(which retrieval config is "current"? does the corpus need bootstrapping? is
-this edit to config.yaml valid?) lives here exactly once, so the two
-UIs cannot drift apart in behaviour. The UIs are responsible only for reading
-input and formatting output.
+Everything that involves a decision (which retrieval config is "current"?
+does the corpus need bootstrapping? is this edit to config.yaml valid?) lives
+here, providing a simple, pure-backend Python API.
 
-The four operations the menu exposes map onto this module as:
+Key entry points:
 
     optimize RAG           -> optimization.runner.run_experiment, after ensure_corpus
     add document           -> add_document
@@ -103,7 +101,7 @@ def corpus_state(app_config: AppConfig) -> corpus.Corpus:
 
 @dataclass
 class StatusReport:
-    """Everything a UI needs to tell the operator where the system stands."""
+    """Everything a consumer needs to tell the operator where the system stands."""
 
     corpus_enabled: bool
     corpus_root: Path
@@ -123,7 +121,7 @@ class StatusReport:
 
     @property
     def headline(self) -> str:
-        """One line for a menu header or a GUI caption."""
+        """One-line status summary for consumers to log or display."""
         if not self.corpus_enabled:
             name = Path(self.source_document).name
             state = {"never": "not optimized", "stale": "STALE", "current": "optimized"}
@@ -325,7 +323,7 @@ def resolve_active_retrieval(app_config: AppConfig) -> ActiveRetrieval:
     The saved best configuration wins when there is one -- that is the whole
     output of an optimization run, and answering with the untuned default block
     instead would make the tuning invisible. The provenance string is returned
-    alongside so the UI can always say which one is in use; an operator who
+    alongside so a consumer can always see which one is in use; an operator who
     cannot tell whether they are querying tuned or untuned parameters cannot
     interpret the answer.
     """
@@ -364,9 +362,8 @@ def resolve_active_retrieval(app_config: AppConfig) -> ActiveRetrieval:
 class AskSession:
     """A loaded index plus a pipeline, reusable across questions.
 
-    Construction is the expensive part (loading or extending the index), so a UI
-    builds one session and asks many questions through it. Streamlit keeps it in
-    session_state; the terminal menu keeps it for the duration of the ask loop.
+    Construction is the expensive part (loading or extending the index), so
+    library consumers should build one session and ask many questions through it.
     """
 
     def __init__(self, app_config: AppConfig):
@@ -483,7 +480,7 @@ _TEXT_FIELDS = {"retrieval.prompt_template"}
 # No configuration field holds a secret. API keys are referenced by variable
 # NAME (`api_key_env`) and read from .env at run time; the value never enters a
 # config file. The masking in ConfigField.display_value is kept as a dormant
-# safety net -- add a path here and it is masked in both front-ends.
+# safety net -- add a path here and it is masked by consumer displays.
 _SECRET_FIELDS: set[str] = set()
 _CHOICE_FIELDS = {
     "retrieval.retriever_type": ("similarity", "mmr", "similarity_score_threshold"),
@@ -597,7 +594,7 @@ def editable_fields(app_config: AppConfig) -> list[ConfigField]:
     """Flatten the AppConfig dataclass tree into an ordered list of leaves.
 
     Generic on purpose: a field added to any of the config dataclasses later
-    becomes editable in both front-ends without touching either of them.
+    becomes editable by consumers without touching their code.
     """
     result: list[ConfigField] = []
 
@@ -802,9 +799,10 @@ def apply_field(app_config: AppConfig, path: str, raw) -> object:
 def stage_document(uploaded_name: str, data: bytes) -> Path:
     """Write an uploaded file into data/ and return its path.
 
-    The GUI receives bytes, but every document operation works on a path, and
-    the manifest records that path so later chunk-parameter changes can re-read
-    the file. Uploads therefore have to land somewhere durable, not a temp dir.
+    Web or API consumers might receive bytes, but every document operation works
+    on a path, and the manifest records that path so later chunk-parameter
+    changes can re-read the file. Uploads therefore have to land somewhere
+    durable, not a temp dir.
     """
     data_dir = active_workspace().data_dir
     data_dir.mkdir(parents=True, exist_ok=True)
@@ -823,11 +821,12 @@ def stage_document(uploaded_name: str, data: bytes) -> Path:
 
 
 class ListLogHandler(logging.Handler):
-    """Collect log records into a list so a GUI can render a running log.
+    """Collect log records into a list so a consumer can render a running log.
 
     The optimize and add-document operations are long, and their only progress
     signal is the logging they already emit. Rather than adding a parallel
-    callback mechanism through five modules, both front-ends attach one of these.
+    callback mechanism through five modules, consumer applications can attach
+    one of these.
     """
 
     def __init__(self, limit: int = 2000):

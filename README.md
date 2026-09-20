@@ -84,15 +84,17 @@ src/phoenix_rag/
         optimizer.py          Bounds clamping + target checks
         llm_optimizer.py      LLM-driven retrieval parameter proposals
         runner.py             Orchestrates the full optimization loop
-    ui/
-        menu.py               Terminal front-end (stdlib only)
-        streamlit_app.py      GUI front-end
 tests/                    Offline test suite
 ```
 
 Everything the system *writes* lives in a **workspace** directory, separate from
-the installed package — by default the current working directory, overridable
-with `--workspace` or `$PHOENIX_RAG_WORKSPACE`:
+the installed package — by default the current working directory. You can
+override this in code by configuring a `Workspace` before running operations:
+
+```python
+from phoenix_rag.workspace import Workspace, use_workspace
+use_workspace(Workspace("~/rag-runs/experiment-a"))
+```
 
 ```
 config/config.yaml        The live configuration the app reads and rewrites
@@ -108,7 +110,7 @@ logs/                     Run logs
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e '.[ui,dev]'      # drop the extras for a runtime-only install
+pip install -e '.[dev]'         # drop the extra for a runtime-only install
 
 cp .env.example .env
 # edit .env and set MISTRAL_API_KEY
@@ -150,70 +152,9 @@ Place your source document (PDF or .txt/.md) somewhere under `data/`, e.g.
 
 ## Usage
 
-### Front-ends
-
-Both front-ends expose the same four operations — optimize, add a document, ask
-the RAG, and edit the config — and both call the same functions in
-`operations.py`, so neither can drift from the other.
-
-```bash
-phoenix-rag --menu        # terminal menu (standard library only)
-
-streamlit run src/phoenix_rag/ui/streamlit_app.py   # GUI (needs the [ui] extra)
-```
-
-```
-Phoenix RAG
-== corpus: 2 doc(s) | 13 question(s) | best config STALE ==
-  1) Optimize RAG
-  2) Add document to existing FAISS index
-  3) Ask the RAG
-  4) Modify configuration
-  5) Show corpus / status
-  0) Exit
-```
-
-Option 4 edits every field of `config/config.yaml` — including
-`question_generation.questions_per_batch` and `batch_size_chars`, which together
-set the benchmark size, and `optimizer.max_iterations` — with type coercion and
-validation, so a `chunk_overlap` above `chunk_size` or a prompt template missing
-`{question}` is rejected at the point of editing rather than mid-run.
-
-### Direct CLI
-
-```bash
-# Run with defaults (looks for data/source.pdf)
-phoenix-rag
-
-# Point at a specific document
-phoenix-rag --source data/my_document.pdf
-
-# Read and write everything under a specific workspace instead of the cwd
-phoenix-rag --workspace ~/rag-runs/experiment-a
-
-# Cap the optimization loop
-phoenix-rag --source data/my_document.pdf --max-iterations 5
-
-# Force the benchmark question set to regenerate even if a cached one exists
-phoenix-rag --source data/my_document.pdf --force-regenerate-questions
-
-# Start iteration 1 from config/config.yaml instead of the document profile
-phoenix-rag --source data/my_document.pdf --no-profile-seed
-
-# Optimize against the whole multi-document corpus instead of one file
-phoenix-rag --corpus
-
-# Ignore the corpus for one run, even if the saved config enables it
-phoenix-rag --no-corpus --source data/my_document.pdf
-
-# Verbose logging
-phoenix-rag --source data/my_document.pdf --verbose
-```
-
-### As a library
-
 ```python
-from phoenix_rag import load_or_create_default_config, run_experiment
+from phoenix_rag import load_or_create_default_config
+from phoenix_rag.optimization.runner import run_experiment
 
 config = load_or_create_default_config()
 config.optimizer.max_iterations = 5
@@ -223,8 +164,7 @@ run_experiment(config)
 
 ## Multiple documents: the corpus
 
-By default the system indexes exactly one document. Adding a second one through
-the menu or the GUI switches it into **corpus mode** (`AppConfig.corpus_path`,
+By default the system indexes exactly one document. Adding a second one switches it into **corpus mode** (`AppConfig.corpus_path`,
 rooted at `data/corpus/`), where the benchmark, summary, profile, and FAISS index
 all describe every document that has been added:
 
@@ -263,8 +203,7 @@ subject, and the profiles are aggregated into one `DocumentProfile` so
 searched.
 
 **Enabling corpus mode is opt-in and reversible.** With `corpus_path` unset,
-every code path behaves exactly as it did before, and `phoenix-rag --no-corpus`
-ignores the corpus for a single run.
+every code path behaves exactly as it did before.
 
 Documents are identified by a digest of their **contents**, so re-adding the same
 file (even renamed) is a no-op rather than a duplicate, and a file edited in place
@@ -299,8 +238,7 @@ rather than travelling.
 
 `retriever_type`, `similarity_threshold`, and `prompt_template` still come from
 the config — choosing those needs measured scores, which do not exist yet at
-iteration 1. Pass `--no-profile-seed` (or set `optimizer.seed_from_profile` to
-`false`) to restore the old unseeded behaviour; the seed rationale is recorded in
+iteration 1. Set `optimizer.seed_from_profile` to `false` to restore the old unseeded behaviour; the seed rationale is recorded in
 iteration 1's `applied_rules` either way.
 
 ## Outputs
@@ -319,10 +257,9 @@ iteration 1's `applied_rules` either way.
 In corpus mode the equivalents live under `data/corpus/` — `benchmark.json`,
 `corpus_summary.txt`, and `corpus_profile.json` — and the per-iteration results
 still go to `results/`, so `results/best_configuration.json` always describes
-whatever was optimized most recently. The status view (menu option 5, or the GUI
-sidebar) says which that was.
+whatever was optimized most recently.
 
-All of these are relative to the active workspace, so two `--workspace`
+All of these are relative to the active workspace, so two `Workspace`
 directories keep entirely separate results.
 
 ## Tests

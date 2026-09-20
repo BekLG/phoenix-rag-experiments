@@ -300,9 +300,9 @@ def validate_prompt_template(template: str) -> bool:
     in rag_pipeline.py's build_prompt(), so this is checked before the
     template is ever installed into a RetrievalConfig.
 
-    Public because the config editor (menu.py / streamlit_app.py) validates a
-    hand-edited template with exactly this rule -- a prompt typed by an operator
-    can break build_prompt() the same way an LLM-proposed one can.
+    Public because the configuration API validates a hand-edited template
+    with exactly this rule -- a prompt passed by a library consumer can
+    break build_prompt() the same way an LLM-proposed one can.
     """
     return isinstance(template, str) and all(
         template.count(ph) == 1 for ph in REQUIRED_PLACEHOLDERS
