@@ -214,9 +214,8 @@ This library started life as a folder of top-level scripts (`app.py`,
 
 ```
 phoenix_rag/
-├── cli.py                 # `phoenix-rag` entry point (argparse → run_experiment)
 ├── workspace.py           # resolves data/, results/, logs/, config/ roots
-├── operations.py          # higher-level operations used by the UIs
+├── operations.py          # higher-level operations for library consumers
 ├── storage.py             # writes iteration configs, scores, best-config to disk
 │
 ├── config/
@@ -248,14 +247,10 @@ phoenix_rag/
 │   ├── evaluator.py       # run_evaluation → Ragas scores
 │   └── ragas_compat.py    # shims around ragas/langchain version churn
 │
-├── optimization/
-│   ├── runner.py          # THE LOOP: run_experiment (see §5)
-│   ├── llm_optimizer.py   # propose_next_config_llm (the LLM proposer)
-│   └── optimizer.py       # meets_targets + rule-based helpers
-│
-└── ui/
-    ├── menu.py            # interactive terminal front-end
-    └── streamlit_app.py   # the GUI
+└── optimization/
+    ├── runner.py          # THE LOOP: run_experiment (see §5)
+    ├── llm_optimizer.py   # propose_next_config_llm (the LLM proposer)
+    └── optimizer.py       # meets_targets + rule-based helpers
 ```
 
 The organizing principle: **`core/` knows nothing about optimization**, and
@@ -405,8 +400,8 @@ branch from the hot path.
 
 **The workspace.** `workspace.py` resolves where `data/`, `results/`,
 `generated_questions/`, `logs/`, and `config/` live — the current directory by
-default, or `$PHOENIX_RAG_WORKSPACE`. The CLI creates these dirs; *importing the
-library does not*, which keeps the package import side-effect-free.
+default, or `$PHOENIX_RAG_WORKSPACE`. These directories are created on demand
+when data is written, which keeps the package import side-effect-free.
 
 **Rate limiting.** `ratelimit.py` is a thread-safe sliding-window limiter (a
 `deque` of timestamps guarded by a `threading.Lock`; `acquire()` evicts entries
@@ -429,7 +424,7 @@ where to see each:
 | **Composition root** | `build_providers` (registry.py) | Wire the object graph once, at the edge |
 | **Callable injection** | `ExperimentInputs.build_store`, `model_factory` | Erase a branch; defer expense |
 | **PEP 562 module `__getattr__`** | `providers/__init__.py` | Lazy submodule import |
-| **Lazy in-function imports** | each builder in langchain_backends.py; ragas in cli.py | Optional deps + fast `--help` |
+| **Lazy in-function imports** | each builder in langchain_backends.py | Optional deps |
 | **Decorator/wrapper class** | `RateLimitedEmbeddings`, `LangChainChatProvider` | Add rate limiting without touching the wrapped object |
 | **Sliding-window rate limiter** | `ratelimit.py` | Respect an API quota across threads |
 | **Content-addressed cache** | `get_or_build_vector_store`, `get_or_create_*` | Cheap, reproducible reruns |
@@ -499,12 +494,11 @@ uv pip install -e '.[openai]'  --python .venv/bin/python   # + OpenAI backend
 uv pip install -e '.[all]'     --python .venv/bin/python   # everything
 ```
 
-Then **activate the venv** so the `phoenix-rag` command is on your PATH (installing
-the package created it in `.venv/bin/`):
+Then **activate the venv** so you can run scripts and use the library:
 
 ```bash
-source .venv/bin/activate      # now `phoenix-rag` works directly
-# or, without activating, call it by path: .venv/bin/phoenix-rag ...
+source .venv/bin/activate
+# or, without activating, run your scripts with: .venv/bin/python ...
 ```
 
 > **Prefer plain pip?** It works too — just create a normal venv instead:
@@ -591,21 +585,15 @@ want your defaults tracked in git.
 
 ### 9.6 Run it
 
-With the venv activated:
+With the venv activated, you can use the library from Python:
 
-```bash
-phoenix-rag --source data/source.pdf                 # single document, default 10 iterations
-phoenix-rag --source data/Harvey_Abilene_Paradox.pdf --max-iterations 15
-phoenix-rag --no-profile-seed --source data/x.pdf    # start from the config, not the profile
-phoenix-rag --corpus                                 # optimize the whole data/corpus/ folder
-phoenix-rag --menu                                   # interactive terminal front-end
-phoenix-rag --help                                   # all flags
-```
+```python
+from phoenix_rag import load_or_create_default_config, run_experiment
 
-For the GUI:
+config = load_or_create_default_config()
+config.optimizer.max_iterations = 5
 
-```bash
-streamlit run src/phoenix_rag/ui/streamlit_app.py    # needs: uv pip install -e '.[ui]' ...
+run_experiment(config, "data/source.pdf")
 ```
 
 Results — per-iteration configs, scores, and the best configuration found — land
@@ -640,7 +628,6 @@ Common failures and their cause:
 | error from the judge/optimizer about a missing key | `MISTRAL_API_KEY` not in `.env` | add it to `.env` (§9.3) |
 | connection refused to `localhost:11434` | Ollama not running | `ollama serve` |
 | `model 'qwen2.5:3b-instruct' not found` | model not pulled, or name mismatch | `ollama pull qwen2.5:3b-instruct`, or edit `generation.model` |
-| `phoenix-rag: command not found` | venv not activated | `source .venv/bin/activate` or call `.venv/bin/phoenix-rag` |
 | first run hangs on "Loading weights" | MiniLM downloading from HF | wait once; it's cached afterward |
 
 ### 9.8 The all-cloud shortcut (no Ollama, no local extra)
@@ -680,5 +667,5 @@ understanding without backtracking:
 5. `config/schema.py` then `config/loader.py` — the knobs and how they load (§5).
 6. `optimization/llm_optimizer.py` — how the next config is proposed.
 
-Everything else (`core/corpus.py`, `benchmark/*`, `evaluation/*`, `ui/*`) is a
+Everything else (`core/corpus.py`, `benchmark/*`, `evaluation/*`) is a
 leaf you can read on demand once the spine above makes sense.
