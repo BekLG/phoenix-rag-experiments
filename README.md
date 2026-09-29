@@ -5,6 +5,23 @@ evaluation questions from a source document, evaluates a RAG pipeline with
 Ragas, tunes retrieval parameters based on the results, and repeats until
 the best-performing configuration is found (or the target scores are hit).
 
+It is **provider-agnostic**: each model role (embedding, generation, optimizer,
+judge) can run on a different backend — Mistral, OpenAI, Anthropic, DeepSeek, or
+a local model — so you can use whichever API keys or hardware you already have.
+
+## Supported providers
+
+| Backend | Chat | Embeddings | Install extra | Notes |
+|---|---|---|---|---|
+| `mistral` | ✓ | ✓ | (built in) | Default |
+| `openai` | ✓ | ✓ | `[openai]` | |
+| `anthropic` | ✓ | — | `[anthropic]` | No embeddings API; pair with another embedding backend |
+| `deepseek` | ✓ | — | `[deepseek]` | No embeddings API; pair with another embedding backend |
+| `local` | ✓ | ✓ | `[local]` | Ollama / vLLM for chat, sentence-transformers for embeddings |
+
+Roles mix freely, e.g. local generation and embeddings (free) with a cloud
+model as optimizer and judge. See [Choosing providers](#choosing-providers).
+
 ## Architecture
 
 ```
@@ -17,7 +34,7 @@ Recursive Text Splitter
   ▼        ▼
 FAISS   Full Document Chunks
   │        │
-  │   Mistral: Generate Evaluation Questions
+  │   LLM: Generate Evaluation Questions
   │        │
   │        ▼
   │   Evaluation Benchmark Dataset (fixed, generated once)
@@ -26,7 +43,7 @@ FAISS   Full Document Chunks
 Retriever ──► RAG Pipeline ──► Generated Answer
                                     │
                                     ▼
-                        Ragas + Mistral (judge)
+                        Ragas + judge LLM
                                     │
                                     ▼
               Faithfulness / Context Recall / Context Precision /
@@ -63,12 +80,12 @@ src/phoenix_rag/
         schema.py             Configuration dataclasses (pure data, no I/O)
         loader.py             YAML persistence + `.env` handling
     providers/
-        mistral.py            Rate-limited, retrying wrapper around the Mistral SDK
+        (one rate-limited, retrying wrapper per backend)
         ratelimit.py          Sliding-window rate limiter
     core/
         document_loader.py    PDF / text ingestion
         chunking.py           RecursiveCharacterTextSplitter wrapper
-        embeddings.py         LangChain Embeddings adapter for Mistral embeddings
+        embeddings.py         LangChain Embeddings adapter for the embedding backend
         vector_store.py       FAISS index build/save/load + retriever factory
         corpus.py             Multi-document corpus: manifest + incremental indexing
         document_profile.py   Deterministic document characteristics for tuning
@@ -78,7 +95,7 @@ src/phoenix_rag/
         question_generator.py Generates + caches the fixed benchmark question set
         summarizer.py         Generates + caches the document summary
     evaluation/
-        evaluator.py          Ragas evaluation using Mistral as judge
+        evaluator.py          Ragas evaluation using the configured judge model
         ragas_compat.py       Shims for optional integrations Ragas imports eagerly
     optimization/
         optimizer.py          Bounds clamping + target checks
@@ -112,8 +129,11 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -e '.[dev]'         # drop the extra for a runtime-only install
 
+# add the extras for the providers you want:
+pip install -e '.[openai]'      # or [anthropic], [deepseek], [local]
+
 cp .env.example .env
-# edit .env and set MISTRAL_API_KEY
+# edit .env and set the API key(s) for the providers you use
 ```
 
 `requirements.txt` remains as the exact pinned set the results in this repo were
@@ -138,14 +158,71 @@ providers:
 
 That keeps `config/config.yaml` safe to share or diff while the values stay in
 `.env`, which is gitignored. There are four roles — `embedding`, `generation`,
-`optimizer`, and `judge` — so they can be pointed at different providers later;
-today all four must be `backend: mistral`.
+`optimizer`, and `judge` — and each one picks its own `backend`, so they can
+point at different providers.
 
-Set each role's `requests_per_minute` to match the quota for your account.
-Generation, embedding, and optimization calls use a rate-limited client; Ragas
-applies its own conservative concurrency limit. FAISS indexes are cached below
-`faiss_index_path` using the document contents, embedding model, chunk size, and
-overlap, so recurring configurations do not consume embedding quota again.
+Set each role's `requests_per_minute` to match the quota for your account
+(local backends can be set high). Generation, embedding, and optimization calls
+use a rate-limited client; Ragas applies its own conservative concurrency limit.
+FAISS indexes are cached below `faiss_index_path` using the document contents,
+embedding model, chunk size, and overlap, so recurring configurations do not
+consume embedding quota again. Switching the embedding model builds a new index.
+
+### Choosing providers
+
+**Cloud-only, mixed vendors** — Anthropic as optimizer and judge, OpenAI
+embeddings (Anthropic has no embeddings API):
+
+```yaml
+providers:
+  embedding:
+    backend: openai
+    model: text-embedding-3-small
+    api_key_env: OPENAI_API_KEY
+  generation:
+    backend: openai
+    model: gpt-4o-mini
+    api_key_env: OPENAI_API_KEY
+  optimizer:
+    backend: anthropic
+    model: claude-sonnet-5-5          # any model your key can access
+    api_key_env: ANTHROPIC_API_KEY
+  judge:
+    backend: anthropic
+    model: claude-sonnet-5-5
+    api_key_env: ANTHROPIC_API_KEY
+```
+
+**Local generation and embeddings, cloud judge** — a local Qwen served by
+Ollama, a local sentence-transformers embedder, and Claude for the roles where
+scoring quality matters most:
+
+```yaml
+providers:
+  embedding:
+    backend: local
+    model: BAAI/bge-small-en-v1.5
+  generation:
+    backend: local
+    model: qwen2.5:7b
+    base_url: http://localhost:11434
+  optimizer:
+    backend: anthropic
+    model: claude-sonnet-5-5
+    api_key_env: ANTHROPIC_API_KEY
+  judge:
+    backend: anthropic
+    model: claude-sonnet-5-5
+    api_key_env: ANTHROPIC_API_KEY
+```
+
+Tips:
+
+- Use a strong model as the **judge** — Ragas scores are only as trustworthy as
+  the model that produces them.
+- Local inference without a GPU is slow; start with `optimizer.max_iterations = 2`.
+- To add a backend: install its extra, set `backend` + `model` + `api_key_env`
+  for the role in `config.yaml`, and put the key in `.env`.
 
 Place your source document (PDF or .txt/.md) somewhere under `data/`, e.g.
 `data/source.pdf`.
@@ -295,4 +372,3 @@ from phoenix_rag.evaluation.ragas_compat import install_ragas_compat
 
 install_ragas_compat()
 ```
-

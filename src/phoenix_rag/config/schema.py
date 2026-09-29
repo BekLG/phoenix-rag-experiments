@@ -111,12 +111,12 @@ class ProvidersConfig:
 
     embedding: ProviderConfig = field(default_factory=lambda: _mistral("mistral-embed"))
     generation: ProviderConfig = field(
-        default_factory=lambda: _mistral("mistral-small-latest")
+        default_factory=lambda: _mistral("ministral-8b-latest")
     )
     optimizer: ProviderConfig = field(
-        default_factory=lambda: _mistral("mistral-large-latest")
+        default_factory=lambda: _mistral("ministral-14b-latest")
     )
-    judge: ProviderConfig = field(default_factory=lambda: _mistral("mistral-large-latest"))
+    judge: ProviderConfig = field(default_factory=lambda: _mistral("ministral-14b-latest"))
 
     def as_map(self) -> dict[str, ProviderConfig]:
         return {role: getattr(self, role) for role in ROLES}
@@ -180,9 +180,9 @@ class MistralSettings:
     api_key: str = field(default_factory=lambda: os.getenv("MISTRAL_API_KEY", ""))
 
     embedding_model: str = "mistral-embed"
-    generation_model: str = "mistral-small-latest"
-    optimizer_model: str = "mistral-large-latest"
-    judge_model: str = "mistral-large-latest"
+    generation_model: str = "ministral-8b-latest"
+    optimizer_model: str = "ministral-14b-latest"
+    judge_model: str = "ministral-14b-latest"
 
     # Free-tier rate limiting (requests per minute). Adjust to your plan.
     requests_per_minute: int = 45

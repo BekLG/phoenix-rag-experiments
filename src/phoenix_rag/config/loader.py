@@ -109,9 +109,9 @@ def _migrate_legacy(data: dict) -> dict:
 
     data["providers"] = {
         "embedding": block("embedding_model", "mistral-embed"),
-        "generation": block("generation_model", "mistral-small-latest"),
-        "optimizer": block("optimizer_model", "mistral-large-latest"),
-        "judge": block("judge_model", "mistral-large-latest"),
+        "generation": block("generation_model", "ministral-8b-latest"),
+        "optimizer": block("optimizer_model", "ministral-14b-latest"),
+        "judge": block("judge_model", "ministral-14b-latest"),
     }
     # An inline api_key in a committed config is exactly what api_key_env exists
     # to prevent; say so rather than quietly dropping it.

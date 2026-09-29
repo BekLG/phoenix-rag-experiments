@@ -30,7 +30,8 @@ The mental model in one sentence:
 > the next point to try is another LLM.
 
 Everything in the codebase is in service of that loop being *cheap, reproducible,
-and swappable across model backends*.
+and swappable across model backends* (Mistral, OpenAI, Anthropic, DeepSeek, or a
+local model).
 
 ### What "RAG parameters" means here
 
@@ -80,6 +81,19 @@ The whole point of splitting these into roles is that they don't have to share a
 backend. The shipped config runs `embedding` and `generation` **locally** (no
 per-call cost) and `optimizer` and `judge` in the **cloud** (the two that most
 need a strong model). See §4.
+
+### Which backends can play which role
+
+| Backend     | Chat (generation / optimizer / judge) | Embeddings                    |
+|-------------|----------------------------------------|-------------------------------|
+| `mistral`   | ✓                                      | ✓                             |
+| `openai`    | ✓                                      | ✓                             |
+| `anthropic` | ✓                                      | — (no embeddings API)         |
+| `deepseek`  | ✓                                      | — (no embeddings API)         |
+| `local`     | ✓ (Ollama / vLLM / LM Studio)          | ✓ (sentence-transformers)     |
+
+So if you use Anthropic or DeepSeek for chat roles, the `embedding` role must
+point at a different backend (`local`, `mistral`, or `openai`).
 
 ### The two surfaces — `providers/base.py`
 
@@ -162,10 +176,10 @@ quota the API actually enforces.
 
 **(b) Vendor SDKs are imported lazily, inside each builder.** The Mistral client is
 a hard dependency (it's the default and the registry imports it eagerly), but
-OpenAI / Anthropic / local backends import their SDKs *inside* the builder
-function that needs them. That's what makes the optional extras work (§7): you
-only need `langchain-openai` installed if a config actually selects the openai
-backend.
+OpenAI / Anthropic / DeepSeek / local backends import their SDKs *inside* the
+builder function that needs them. That's what makes the optional extras work
+(see the patterns table in §8 and the install steps in §9.2): you only need
+`langchain-openai` installed if a config actually selects the openai backend.
 
 ### The generic LangChain adapter — `providers/langchain_backends.py`
 
@@ -214,8 +228,9 @@ This library started life as a folder of top-level scripts (`app.py`,
 
 ```
 phoenix_rag/
+├── cli.py                 # console entry point (`phoenix-rag`)
 ├── workspace.py           # resolves data/, results/, logs/, config/ roots
-├── operations.py          # higher-level operations for library consumers
+├── operations.py          # higher-level operations shared by the front-ends
 ├── storage.py             # writes iteration configs, scores, best-config to disk
 │
 ├── config/
@@ -232,12 +247,12 @@ phoenix_rag/
 ├── core/                  # the RAG mechanics
 │   ├── document_loader.py # PDF/text → LangChain Documents
 │   ├── chunking.py        # split_documents(chunk_size, overlap)
-│   ├── embeddings.py       # embedding helpers
+│   ├── embeddings.py      # embedding helpers
 │   ├── vector_store.py    # get_or_build_vector_store (content-addressed FAISS)
 │   ├── rag_pipeline.py    # RagPipeline: retrieve → prompt → generate
 │   ├── document_profile.py# analyze a document (length, structure, …)
 │   ├── seed_config.py     # derive iteration-1 params from the profile
-│   └── corpus.py          # multi-document mode
+│   └── corpus.py          # multi-document mode (manifest + incremental indexing)
 │
 ├── benchmark/
 │   ├── question_generator.py  # get_or_create_benchmark (fixed question set)
@@ -248,9 +263,19 @@ phoenix_rag/
 │   └── ragas_compat.py    # shims around ragas/langchain version churn
 │
 └── optimization/
-    ├── runner.py          # THE LOOP: run_experiment (see §5)
+    ├── runner.py          # THE LOOP: run_experiment (see §6)
     ├── llm_optimizer.py   # propose_next_config_llm (the LLM proposer)
     └── optimizer.py       # meets_targets + rule-based helpers
+```
+
+Outside the package, at the repo root:
+
+```
+run_optimization.py             # script entry point for a run
+add_document_and_reoptimize.py  # add a document to the corpus, then re-run
+scripts/                        # helpers, e.g. validate_split_run.py (see §9.7)
+configs/default.yaml            # committed, commented example configuration
+tests/                          # offline test suite
 ```
 
 The organizing principle: **`core/` knows nothing about optimization**, and
@@ -282,8 +307,14 @@ The reasoning is a cost/quality trade sorted by call volume:
 
 You can collapse this to all-Mistral (no local model needed) by pointing every
 role at `backend: mistral`; the config file documents that fallback inline. Or
-move a cloud role to OpenAI/Anthropic by changing `backend` + `model` +
-`api_key_env` and installing that backend's extra.
+move a cloud role to OpenAI/Anthropic/DeepSeek by changing `backend` + `model` +
+`api_key_env` and installing that backend's extra. Remember the embedding
+constraint from §2: Anthropic and DeepSeek can serve chat roles only, so keep
+`embedding` on `local`, `mistral`, or `openai`.
+
+Changing the embedding model changes the FAISS index identity, so the first run
+after a switch re-embeds the document into a new index (see content-addressed
+caching in §7).
 
 ---
 
@@ -343,8 +374,8 @@ seed iteration 1 from the profile     # §7 — seed_config.propose_seed_config
         │
 for iteration in 1..max_iterations:
     ├─ (re)build the FAISS store IF chunk_size/overlap changed   # cached otherwise
-    ├─ RagPipeline(store, generation, config).answer_many(qs)    # LOCAL generation
-    ├─ run_evaluation(results, benchmark, judge, embedding)      # CLOUD judge (Ragas)
+    ├─ RagPipeline(store, generation, config).answer_many(qs)    # generation role
+    ├─ run_evaluation(results, benchmark, judge, embedding)      # judge role (Ragas)
     ├─ storage.save_iteration_config / append_experiment_result  # persist
     ├─ weighted_score = 0.40·faithfulness + 0.20·(recall+precision+relevancy)
     ├─ faithfulness ≥ 0.80 gate → maybe record as new best       # SAFETY GATE
@@ -357,7 +388,8 @@ Details that matter:
 
 - **The benchmark is generated once and frozen.** Every configuration is scored
   against the *identical* question set, or the comparison across iterations would
-  be meaningless.
+  be meaningless. It is generated from the *complete* document, never from
+  retrieved chunks, so it stays independent of the retrieval pipeline being tuned.
 - **The LLM optimizer sees the full history.** `propose_next_config_llm` gets the
   entire iteration history plus the document summary and profile, so it reasons
   about trade-offs across the whole run — not just the last score — and proposes
@@ -369,6 +401,17 @@ Details that matter:
 - **The store is rebuilt only when it has to be.** The FAISS index depends only on
   `chunk_size`/`chunk_overlap`. The loop caches the store and rebuilds it only when
   those change — an iteration that only tweaks `top_k` or the prompt reuses it.
+
+### What a run writes
+
+Everything lands in the workspace (§7):
+
+- `generated_questions/benchmark.json` — the fixed question set
+- `generated_questions/document_profile.json` — deterministic document facts
+- `results/configs/iteration_NNN.json` — the config used each iteration
+- `results/evaluation_scores.csv` — Ragas scores per iteration + which rules fired
+- `results/experiment_results.csv` — full config + scores, one row per iteration
+- `results/best_configuration.json` — best config so far, updated on each new best
 
 ---
 
@@ -386,8 +429,13 @@ the cached 1024-dim Mistral ones).
 `seed_config.propose_seed_config` derives iteration 1's `chunk_size` /
 `chunk_overlap` / `top_k` *from that measurement* rather than from a
 document-agnostic default. Without this, the LLM optimizer anchors on an arbitrary
-starting point and burns its whole budget nudging around it. (`--no-profile-seed`
-turns this off and starts from the config's `retrieval` block instead.)
+starting point and burns its whole budget nudging around it (on a 12-page paper
+needing 800–1200 character chunks, ten iterations never left the 300–500 band).
+`retriever_type`, `similarity_threshold`, and `prompt_template` still come from
+the config, because choosing those needs measured scores that don't exist yet at
+iteration 1. Set `optimizer.seed_from_profile: false` (or pass `--no-profile-seed`)
+to turn seeding off and start from the config's `retrieval` block instead; the
+seed rationale is recorded in iteration 1's `applied_rules` either way.
 
 **Corpus mode.** Everything above describes single-document mode. Set
 `corpus_path` (or pass `--corpus`) and the benchmark/summary/profile/index describe
@@ -396,18 +444,42 @@ that this difference is confined to `prepare_inputs()`: it hands the loop a
 `benchmark`, a `summary`, a `profile`, and a `build_store(chunk_size, overlap)`
 *callable* — and the scoring, safety gate, history, and proposal logic downstream
 have **no idea** which mode is running. That's dependency injection used to erase a
-branch from the hot path.
+branch from the hot path. Corpus mode has a few rules worth knowing:
+
+- **Adding is incremental.** A new document is added to the *existing* FAISS index;
+  only its new chunks are embedded and every vector already in the index is reused.
+  Index identity is `(embedding_model, chunk_size, chunk_overlap)` — deliberately
+  *not* including the documents — with per-variant membership tracked in
+  `data/corpus/manifest.json`. Changing chunk size or overlap still forces a full
+  re-embed into a new variant directory.
+- **Documents are identified by content digest**, so re-adding the same file (even
+  renamed) is a no-op. Removing a document invalidates the index variants that
+  contained it, so removal costs a rebuild where adding does not.
+- **The optimizer sees every document** through one multi-document briefing
+  (`corpus_summary.txt`) and one aggregated `DocumentProfile`.
+- **Adding a document changes the benchmark.** New questions are appended, so scores
+  from before an add are **not comparable** to scores after it, and the saved best
+  config is marked `STALE` as soon as membership changes. Re-run the optimization
+  after an add (`add_document_and_reoptimize.py` does both steps).
 
 **The workspace.** `workspace.py` resolves where `data/`, `results/`,
 `generated_questions/`, `logs/`, and `config/` live — the current directory by
 default, or `$PHOENIX_RAG_WORKSPACE`. These directories are created on demand
-when data is written, which keeps the package import side-effect-free.
+when data is written, which keeps the package import side-effect-free. Two
+workspaces keep entirely separate results.
 
 **Rate limiting.** `ratelimit.py` is a thread-safe sliding-window limiter (a
 `deque` of timestamps guarded by a `threading.Lock`; `acquire()` evicts entries
 older than the window and blocks if the window is full). It's thread-safe because
 Ragas evaluates with a worker pool, so multiple threads call the judge and
 embedding providers at once.
+
+**Ragas compatibility shim.** `ragas` unconditionally imports
+`ChatVertexAI` from a `langchain_community` module that recent releases removed.
+`evaluation/ragas_compat.py` registers a stub in `sys.modules` before Ragas is
+imported, so nothing needs patching in your virtualenv. If you ever see that
+`ModuleNotFoundError`, something imported `ragas` before
+`phoenix_rag.evaluation.evaluator`.
 
 ---
 
@@ -448,7 +520,7 @@ backends the four roles actually point at. Two common setups:
 | **All-cloud (simplest)** | all four → Mistral | Python, a Mistral key | Ollama, the `[local]` extra, sentence-transformers |
 
 If you just want the shortest path to a run and don't mind paying for cloud calls,
-jump to **§9.6 (the all-cloud shortcut)**. Otherwise follow §9.1–9.5 for the
+jump to **§9.8 (the all-cloud shortcut)**. Otherwise follow §9.1–9.6 for the
 shipped local/cloud split.
 
 ### 9.1 Prerequisite checklist (shipped split)
@@ -456,27 +528,23 @@ shipped local/cloud split.
 | # | Prerequisite | Why | Check it | Section |
 |---|---|---|---|---|
 | 1 | **Python ≥ 3.10** | the library targets 3.10–3.12 | `python3 --version` | 9.2 |
-| 2 | **`uv`** (or plain pip) | creates the venv / installs (this repo's venv is uv-made and has **no** pip) | `uv --version` | 9.2 |
+| 2 | **`uv`** (or plain pip) | creates the venv / installs (a uv-made venv has **no** pip inside) | `uv --version` | 9.2 |
 | 3 | **Library installed with `[local]`** | default embedding + generation are local | `.venv/bin/python -c "import phoenix_rag"` | 9.2 |
 | 4 | **Mistral API key in `.env`** | optimizer + judge are Mistral | `grep MISTRAL_API_KEY .env` | 9.3 |
 | 5 | **Ollama running + model pulled** | local generation calls it | `ollama list` and `curl -s localhost:11434/api/tags` | 9.4 |
 | 6 | **A source document** | the thing being optimized | `ls data/*.pdf` | 9.5 |
 
-> On *this* machine, 1, 2, 5, and 6 are already satisfied (Python 3.12 venv via uv
-> 0.12.3; Ollama 0.32.6 with `qwen2.5:3b-instruct` pulled and the server up;
-> `data/` has several PDFs). You'd mainly be checking 3 and 4.
-
 ### 9.2 Steps 1–3: Python, the environment, and installing the library
 
-The venv here is created by **`uv`**, which means **there is no `pip` inside it** —
-use `uv pip`. On a fresh machine:
+If your venv is created by **`uv`**, there is **no `pip` inside it** — use
+`uv pip`. On a fresh machine:
 
 ```bash
 # (only if uv isn't installed yet)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # from the repo root:
-uv venv                                              # creates .venv (already exists here)
+uv venv                                              # creates .venv
 uv pip install -e '.[local]' --python .venv/bin/python
 ```
 
@@ -488,11 +556,15 @@ reinstalling). `[local]` pulls the local-backend dependencies: `langchain-openai
 Pick the extra that matches your config's backends:
 
 ```bash
-uv pip install -e .            --python .venv/bin/python   # core + Mistral only (all-cloud)
-uv pip install -e '.[local]'   --python .venv/bin/python   # + local chat & embeddings
-uv pip install -e '.[openai]'  --python .venv/bin/python   # + OpenAI backend
-uv pip install -e '.[all]'     --python .venv/bin/python   # everything
+uv pip install -e .               --python .venv/bin/python   # core + Mistral only (all-cloud)
+uv pip install -e '.[local]'      --python .venv/bin/python   # + local chat & embeddings
+uv pip install -e '.[openai]'     --python .venv/bin/python   # + OpenAI backend
+uv pip install -e '.[anthropic]'  --python .venv/bin/python   # + Anthropic backend
+uv pip install -e '.[deepseek]'   --python .venv/bin/python   # + DeepSeek backend
+uv pip install -e '.[all]'        --python .venv/bin/python   # everything
 ```
+
+Add `dev` (e.g. `'.[dev,local]'`) if you want the test tooling.
 
 Then **activate the venv** so you can run scripts and use the library:
 
@@ -503,7 +575,7 @@ source .venv/bin/activate
 
 > **Prefer plain pip?** It works too — just create a normal venv instead:
 > `python3 -m venv .venv && source .venv/bin/activate && pip install -e '.[local]'`.
-> The uv note only matters because *this* repo's existing venv was made with uv.
+> The uv note only matters if your venv was made with uv.
 
 ### 9.3 Step 4: the Mistral API key (`.env`)
 
@@ -522,8 +594,9 @@ gitignored, so it never gets committed. A missing key is **not** an import-time
 crash — it surfaces as an error from the first call that needs it (i.e. once the
 judge or optimizer runs).
 
-To move a cloud role to OpenAI or Anthropic instead: add `OPENAI_API_KEY=` or
-`ANTHROPIC_API_KEY=` to `.env`, install that extra (§9.2), and point the role's
+To move a cloud role to OpenAI, Anthropic, or DeepSeek instead: add
+`OPENAI_API_KEY=`, `ANTHROPIC_API_KEY=`, or `DEEPSEEK_API_KEY=` (whatever name you
+give `api_key_env`) to `.env`, install that extra (§9.2), and point the role's
 `backend`/`model`/`api_key_env` at it in the YAML (§9.5).
 
 ### 9.4 Step 5: Ollama for local generation
@@ -551,7 +624,8 @@ bit slower). No server, no key.
 
 > Any OpenAI-compatible server works here, not just Ollama — vLLM or LM Studio too.
 > Just set `generation.base_url` to that server and `generation.model` to a model it
-> serves.
+> serves. Without a GPU, local generation is slow; start with a small
+> `max_iterations`.
 
 ### 9.5 Step 6: the config file and a document
 
@@ -575,9 +649,9 @@ providers:
 - `model` must match a model your Ollama actually has (see `ollama list`).
 - `api_key_env` names an environment variable — it must exist in `.env` for cloud
   roles, and be `null` for local roles.
+- Set each cloud role's `requests_per_minute` to your account's quota.
 
-Put a document at `data/source.pdf` (or point `--source` at any PDF/text file —
-this repo already ships a few under `data/`).
+Put a document at `data/source.pdf` (any PDF, `.txt`, or `.md` under `data/` works).
 
 `config/config.yaml` is **gitignored** (the app rewrites it as it saves best
 configs). The committable template is `configs/default.yaml` — edit that if you
@@ -585,7 +659,7 @@ want your defaults tracked in git.
 
 ### 9.6 Run it
 
-With the venv activated, you can use the library from Python:
+With the venv activated, use the library from Python:
 
 ```python
 from phoenix_rag import load_or_create_default_config, run_experiment
@@ -593,7 +667,14 @@ from phoenix_rag import load_or_create_default_config, run_experiment
 config = load_or_create_default_config()
 config.optimizer.max_iterations = 5
 
-run_experiment(config, "data/source.pdf")
+run_experiment(config)
+```
+
+Or use the repo-root script, which exposes the same run with flags such as
+`--source`, `--corpus`, and `--no-profile-seed`:
+
+```bash
+.venv/bin/python run_optimization.py --source data/source.pdf
 ```
 
 Results — per-iteration configs, scores, and the best configuration found — land
@@ -608,7 +689,7 @@ If a full run misbehaves, prove the parts independently before debugging the loo
 # The whole split, one iteration, against a cached benchmark (every role fires):
 .venv/bin/python scripts/validate_split_run.py
 
-# The unit tests (no API calls; proves the wiring):
+# The unit tests (fully offline, no API calls; proves the wiring):
 .venv/bin/python -m pytest -q
 
 # Local generation only:
@@ -624,11 +705,13 @@ Common failures and their cause:
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| `ModuleNotFoundError: langchain_huggingface` (or `_openai`) | ran without the matching extra | `uv pip install -e '.[local]' --python .venv/bin/python` |
+| `ModuleNotFoundError: langchain_huggingface` (or `_openai`, `_anthropic`) | ran without the matching extra | `uv pip install -e '.[local]' --python .venv/bin/python` (or the right extra) |
+| `ModuleNotFoundError: ...chat_models.vertexai` | something imported `ragas` before the evaluator | import `phoenix_rag.evaluation.evaluator` first, or call `install_ragas_compat()` (§7) |
 | error from the judge/optimizer about a missing key | `MISTRAL_API_KEY` not in `.env` | add it to `.env` (§9.3) |
 | connection refused to `localhost:11434` | Ollama not running | `ollama serve` |
 | `model 'qwen2.5:3b-instruct' not found` | model not pulled, or name mismatch | `ollama pull qwen2.5:3b-instruct`, or edit `generation.model` |
 | first run hangs on "Loading weights" | MiniLM downloading from HF | wait once; it's cached afterward |
+| best config shows `STALE` after adding a document | benchmark changed (§7) | re-run the optimization |
 
 ### 9.8 The all-cloud shortcut (no Ollama, no local extra)
 
