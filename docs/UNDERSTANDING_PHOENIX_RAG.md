@@ -248,15 +248,15 @@ phoenix_rag/
 │   ├── document_loader.py # PDF/text → LangChain Documents
 │   ├── chunking.py        # split_documents(chunk_size, overlap)
 │   ├── embeddings.py      # embedding helpers
-│   ├── vector_store.py    # get_or_build_vector_store (content-addressed FAISS)
+│   ├── vector_store.py    # FAISS build/load/save and incremental additions
 │   ├── rag_pipeline.py    # RagPipeline: retrieve → prompt → generate
 │   ├── document_profile.py# analyze a document (length, structure, …)
 │   ├── seed_config.py     # derive iteration-1 params from the profile
-│   └── corpus.py          # multi-document mode (manifest + incremental indexing)
+│   └── corpus.py          # all documents: manifest + incremental indexing
 │
 ├── benchmark/
-│   ├── question_generator.py  # get_or_create_benchmark (fixed question set)
-│   └── summarizer.py          # get_or_create_summary (fed to the optimizer)
+│   ├── question_generator.py  # generate_benchmark (fixed question set)
+│   └── summarizer.py          # generate_summary (fed to the optimizer)
 │
 ├── evaluation/
 │   ├── evaluator.py       # run_evaluation → Ragas scores
@@ -406,8 +406,11 @@ Details that matter:
 
 Everything lands in the workspace (§7):
 
-- `generated_questions/benchmark.json` — the fixed question set
-- `generated_questions/document_profile.json` — deterministic document facts
+- `data/corpus/manifest.json` — documents, their artifacts, and index membership
+- `data/corpus/benchmark.json` — the fixed question set for each run
+- `data/corpus/corpus_summary.txt` — the summary supplied to the optimizer
+- `data/corpus/corpus_profile.json` — aggregated document facts
+- `data/corpus/indexes/<key>/` — one FAISS index per embedding/chunking variant
 - `results/configs/iteration_NNN.json` — the config used each iteration
 - `results/evaluation_scores.csv` — Ragas scores per iteration + which rules fired
 - `results/experiment_results.csv` — full config + scores, one row per iteration
@@ -417,13 +420,13 @@ Everything lands in the workspace (§7):
 
 ## 7. Cross-cutting ideas you'll keep meeting
 
-**Content-addressed caching.** `get_or_build_vector_store` keys the FAISS index on
-`(source, embedding_model, chunk_size, chunk_overlap)`. Same inputs → the cached
-index is reused; change any of them → a fresh build. The benchmark, summary, and
-profile are cached the same way (`get_or_create_*`). This is what makes repeated
-runs cheap and makes the `validate_split_run.py` script able to reuse a cached
-benchmark and only rebuild the index (because MiniLM's 384-dim vectors don't match
-the cached 1024-dim Mistral ones).
+**Corpus caching.** `corpus.sync_index()` keys each FAISS index on
+`(embedding_model, chunk_size, chunk_overlap)` and tracks document membership in
+the manifest. An unchanged variant is reused; new documents extend it, and
+different embedding or chunking parameters build a separate variant. The corpus
+also persists its benchmark and each document's summary and profile. This lets
+repeated runs reuse those artifacts while rebuilding only the index when, for
+example, switching from Mistral embeddings to MiniLM.
 
 **Seeding from the profile.** `document_profile.py` measures the document; then
 `seed_config.propose_seed_config` derives iteration 1's `chunk_size` /
@@ -437,14 +440,16 @@ iteration 1. Set `optimizer.seed_from_profile: false` (or pass `--no-profile-see
 to turn seeding off and start from the config's `retrieval` block instead; the
 seed rationale is recorded in iteration 1's `applied_rules` either way.
 
-**Corpus mode.** Everything above describes single-document mode. Set
-`corpus_path` (or pass `--corpus`) and the benchmark/summary/profile/index describe
-*every* document in a folder instead of one file. The clever part of `runner.py` is
-that this difference is confined to `prepare_inputs()`: it hands the loop a
-`benchmark`, a `summary`, a `profile`, and a `build_store(chunk_size, overlap)`
-*callable* — and the scoring, safety gate, history, and proposal logic downstream
-have **no idea** which mode is running. That's dependency injection used to erase a
-branch from the hot path. Corpus mode has a few rules worth knowing:
+**One corpus path from the first document.** `config.source_document = "data/doc.pdf"`
+followed by `run_experiment(config)` initializes `corpus_path` to the workspace's
+`data/corpus/` automatically. An explicit root is also supported. `prepare_inputs()`
+hands the loop the corpus benchmark, summary, profile, and a
+`build_store(chunk_size, overlap)` callable. Existing configs with
+`corpus_path: null` adopt their cached profile, summary, and benchmark through
+`adopt_legacy_single_document_artifacts()`, generating only missing artifacts.
+Legacy content-addressed FAISS directories are left untouched and unused; vectors
+are rebuilt once in the corpus layout. See the [README corpus section](../README.md#multiple-documents-the-corpus)
+for migration details. Corpus behavior follows these rules:
 
 - **Adding is incremental.** A new document is added to the *existing* FAISS index;
   only its new chunks are embedded and every vector already in the index is reused.
@@ -499,7 +504,7 @@ where to see each:
 | **Lazy in-function imports** | each builder in langchain_backends.py | Optional deps |
 | **Decorator/wrapper class** | `RateLimitedEmbeddings`, `LangChainChatProvider` | Add rate limiting without touching the wrapped object |
 | **Sliding-window rate limiter** | `ratelimit.py` | Respect an API quota across threads |
-| **Content-addressed cache** | `get_or_build_vector_store`, `get_or_create_*` | Cheap, reproducible reruns |
+| **Persistent corpus cache** | `corpus.sync_index`, corpus manifest and benchmark | Cheap, reproducible reruns |
 | **Optional extras** | `pyproject.toml` `[openai]`/`[anthropic]`/`[deepseek]`/`[local]`/`[all]` | Only install the backend you use |
 
 ---

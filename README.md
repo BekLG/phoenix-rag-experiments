@@ -118,7 +118,7 @@ config/config.yaml        The live configuration the app reads and rewrites
 data/                     Source documents + FAISS index
 data/corpus/              Corpus manifest, benchmark, and per-variant indexes
 results/                  Per-iteration configs, CSV results, best config
-generated_questions/      Cached benchmark question set
+generated_questions/      Legacy artifacts adopted when initializing a corpus
 logs/                     Run logs
 ```
 
@@ -164,9 +164,10 @@ point at different providers.
 Set each role's `requests_per_minute` to match the quota for your account
 (local backends can be set high). Generation, embedding, and optimization calls
 use a rate-limited client; Ragas applies its own conservative concurrency limit.
-FAISS indexes are cached below `faiss_index_path` using the document contents,
-embedding model, chunk size, and overlap, so recurring configurations do not
-consume embedding quota again. Switching the embedding model builds a new index.
+FAISS indexes are cached below `corpus_path/indexes/` by embedding model, chunk
+size, and overlap, with document membership tracked in the manifest. Recurring
+configurations reuse existing vectors; switching the embedding model builds a
+new index.
 
 ### Choosing providers
 
@@ -240,9 +241,24 @@ run_experiment(config)
 
 ## Multiple documents: the corpus
 
-By default the system indexes exactly one document. Adding a second one switches it into **corpus mode** (`AppConfig.corpus_path`,
-rooted at `data/corpus/`), where the benchmark, summary, profile, and FAISS index
-all describe every document that has been added:
+Every document, including the first, uses the same corpus machinery. The usual
+API stays the same:
+
+```python
+from phoenix_rag import AppConfig, run_experiment
+
+config = AppConfig()
+config.source_document = "data/doc.pdf"
+best = run_experiment(config)
+```
+
+On first use, `corpus_path=None` is initialized to the active workspace's
+`data/corpus/` and persisted in `config/config.yaml`. An explicit `corpus_path`
+still selects a custom root. `source_document` seeds an empty corpus with a label
+derived from the filename stem; later documents join through `add_document()`.
+Once the corpus has members, changing `source_document` does not replace them.
+The benchmark, summary, profile, and FAISS index describe every registered
+document:
 
 ```
 data/corpus/
@@ -278,8 +294,23 @@ subject, and the profiles are aggregated into one `DocumentProfile` so
 `core/seed_config.py` sizes iteration 1 for the corpus that will actually be
 searched.
 
-**Enabling corpus mode is opt-in and reversible.** With `corpus_path` unset,
-every code path behaves exactly as it did before.
+**Existing configurations upgrade automatically.** A saved config with
+`source_document` set and `corpus_path: null` needs no manual migration. On first
+use, `adopt_legacy_single_document_artifacts()` reads existing `profile_path`,
+`summary_path`, and `benchmark_path` caches (normally under
+`generated_questions/`) and adopts them into the corpus. Only missing artifacts
+are generated, so cached summaries and questions incur no new generation API
+cost. The original cache files remain untouched. If the source file is missing
+and the corpus is empty, optimization reports an empty-corpus error; restore the
+file or add a document before running again.
+
+**Legacy FAISS indexes are rebuilt once.** Old single-document indexes in
+content-hash-named folders under `faiss_index_path` are no longer read or migrated.
+The corpus builds its vectors under `data/corpus/indexes/<key>/` (or your explicit
+corpus root). Those old index folders become orphaned and are safe to delete
+manually; Phoenix RAG does not delete them automatically. Profile, summary, and
+benchmark caches are adopted as described above; only the FAISS vectors need
+rebuilding.
 
 Documents are identified by a digest of their **contents**, so re-adding the same
 file (even renamed) is a no-op rather than a duplicate, and a file edited in place
@@ -319,9 +350,11 @@ iteration 1's `applied_rules` either way.
 
 ## Outputs
 
-- `generated_questions/benchmark.json` — the fixed evaluation question set
-- `generated_questions/document_profile.json` — deterministic document facts
-  supplied to the optimizer alongside the generated summary
+- `data/corpus/manifest.json` — documents, their artifacts, and index membership
+- `data/corpus/benchmark.json` — the fixed evaluation question set for each run
+- `data/corpus/corpus_summary.txt` — the summary supplied to the optimizer
+- `data/corpus/corpus_profile.json` — the aggregated document facts
+- `data/corpus/indexes/<key>/` — FAISS indexes per embedding and chunking variant
 - `results/configs/iteration_NNN.json` — retrieval config used each iteration
 - `results/evaluation_scores.csv` — Ragas scores per iteration + which
   optimization rules fired
@@ -330,10 +363,9 @@ iteration 1's `applied_rules` either way.
 - `results/best_configuration.json` — the best config found so far, updated
   whenever a new best is found
 
-In corpus mode the equivalents live under `data/corpus/` — `benchmark.json`,
-`corpus_summary.txt`, and `corpus_profile.json` — and the per-iteration results
-still go to `results/`, so `results/best_configuration.json` always describes
-whatever was optimized most recently.
+An explicit `corpus_path` overrides `data/corpus/`. Per-iteration results go to
+`results/`, so `results/best_configuration.json` describes whatever was optimized
+most recently.
 
 All of these are relative to the active workspace, so two `Workspace`
 directories keep entirely separate results.
@@ -349,6 +381,9 @@ question generation and supplies a fake embedder that counts how many texts it
 was asked to embed — that counter is what actually proves an add extends the
 index instead of rebuilding it. The FAISS-backed tests skip themselves if
 `faiss-cpu` is not installed.
+
+`tests/test_runner.py` covers first-run corpus creation from `source_document`
+alone and automatic adoption of cached artifacts from saved legacy configs.
 
 ## Troubleshooting
 

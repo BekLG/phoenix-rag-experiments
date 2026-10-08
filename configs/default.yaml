@@ -154,12 +154,15 @@ optimizer:
 # Paths. Omit any of these to have it resolved under the active workspace
 # (the current directory, or $PHOENIX_RAG_WORKSPACE).
 # --------------------------------------------------------------------------
+# Seed for an empty corpus; subsequent documents use add_document().
 # source_document: data/source.pdf
+# Legacy index location (retained for config compatibility, no longer read).
 # faiss_index_path: data/faiss_index
+# Legacy artifact locations, adopted when initializing the seed document.
 # benchmark_path: generated_questions/benchmark.json
 # summary_path: generated_questions/document_summary.txt
 # profile_path: generated_questions/document_profile.json
 
-# Set to a corpus root to optimize against every document added there instead of
-# a single file. Leave unset for single-document mode.
+# Optional explicit corpus root. When unset, first use initializes data/corpus
+# in the active workspace, adopting source_document and its legacy caches.
 corpus_path: null
