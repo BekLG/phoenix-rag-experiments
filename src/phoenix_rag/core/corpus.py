@@ -5,22 +5,11 @@ A growable, multi-document corpus for Phoenix RAG.
 
 WHY THIS EXISTS
 ---------------
-Everything else in this project assumes exactly one source document, and that
-assumption is baked into four independent caches:
-
-  * vector_store.get_or_build_vector_store keys its FAISS directory on
-    sha256(source_document bytes) + embedding_model + chunk_size + chunk_overlap.
-    A second document hashes differently, so it lands in a DIFFERENT directory --
-    there is no way to search both documents at once.
-  * AppConfig.summary_path / profile_path / benchmark_path are each one file
-    describing one document.
-  * llm_optimizer.propose_next_config_llm receives one summary string and one
-    DocumentProfile, so the optimizer can only reason about one document.
-
-Consequently, pointing the system at a new document meant discarding the old one.
-This module makes the opposite possible: ADD a document to the index that already
-exists, and grow the summary, profile and benchmark alongside it, so the
-optimizer tunes for a corpus rather than for whichever document was loaded last.
+Every document, including the configured source_document seed, is registered in
+one corpus. The manifest tracks membership, summaries and profiles; the benchmark
+grows as documents are added. Optimization and queries both use this machinery.
+The legacy artifact adoption helper reuses cached summaries, profiles and
+benchmarks from older single-document runs during the first registration.
 
 WHAT "INCREMENTAL" DOES AND DOES NOT MEAN
 ----------------------------------------
@@ -47,8 +36,8 @@ LAYOUT
         indexes/<key>/        one FAISS index per (model, chunk_size, overlap)
 
 The manifest is the source of truth. The two rendered files are derived and safe
-to delete. The single-document artifacts under generated_questions/ are never
-written to by this module, so single-document runs stay reproducible.
+to delete. Legacy artifacts under generated_questions/ are read for migration
+and left untouched.
 """
 
 from __future__ import annotations
@@ -94,9 +83,8 @@ logger = logging.getLogger("phoenix_rag.corpus")
 MANIFEST_VERSION = 1
 MANIFEST_NAME = "manifest.json"
 INDEXES_DIRNAME = "indexes"
-# Same convention as vector_store.get_or_build_vector_store: an index directory
-# is only trustworthy once this marker exists, so a crash mid-save leaves a
-# directory that is rebuilt rather than loaded as if it were complete.
+# An index directory is only trustworthy once this marker exists. A crash
+# mid-save leaves a directory that is rebuilt rather than loaded as complete.
 COMPLETE_MARKER = ".complete"
 
 
@@ -232,9 +220,8 @@ def document_digest(path: str | Path) -> str:
 def index_key(embedding_model: str, chunk_size: int, chunk_overlap: int) -> str:
     """Stable key for one index variant.
 
-    Note what is NOT in here, unlike get_or_build_vector_store's key: the source
-    document's digest. Membership is tracked in the manifest instead, which is
-    precisely what lets a variant gain a document without changing identity.
+    Document membership is tracked in the manifest, so a variant can gain a
+    document without changing its key.
     """
     payload = json.dumps(
         {
@@ -324,9 +311,8 @@ def _unique_label(corpus: Corpus, label: str) -> str:
 def _page_count(path: Path, loaded: list[Document]) -> int | None:
     """Pages, but only for formats where a page is a real thing.
 
-    Mirrors the guard in optimization.runner.run_experiment: for a .txt or .md the
-    loader returns one Document for the whole file, and calling that "1 page"
-    would feed document_profile a median_chars_per_page equal to the entire
+    For a .txt or .md the loader returns one Document for the whole file. Calling
+    that "1 page" would feed document_profile a median_chars_per_page equal to the entire
     document, which then drives the sizing regime off a fiction.
     """
     return len(loaded) if path.suffix.lower() == ".pdf" else None
@@ -845,8 +831,8 @@ def write_rendered_artifacts(corpus: Corpus) -> None:
     """Mirror the derived summary text and aggregate profile to disk.
 
     Purely for inspection -- nothing reads these back. Note what is NOT written:
-    app_config.summary_path and profile_path, which describe a single document
-    and must stay untouched so single-document runs remain reproducible.
+    app_config.summary_path and profile_path, which are legacy migration inputs
+    and must stay untouched.
     """
     if corpus.is_empty:
         return

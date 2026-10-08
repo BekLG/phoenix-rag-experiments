@@ -97,8 +97,7 @@ class Workspace:
         """Multi-document corpus root: the manifest plus one FAISS index
         directory per (embedding_model, chunk_size, chunk_overlap) variant.
 
-        Not created by :meth:`ensure` -- corpus.py makes it on first use, so
-        single-document runs leave no empty corpus directory behind.
+        Not created by :meth:`ensure` -- corpus.py makes it on first use.
         """
         return self.data_dir / "corpus"
 

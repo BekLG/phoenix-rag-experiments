@@ -332,6 +332,7 @@ class AppConfig:
     source_document: str = field(
         default_factory=lambda: str(active_workspace().data_dir / "source.pdf")
     )
+    # Kept so saved legacy configs still load; corpus indexes use corpus_path.
     faiss_index_path: str = field(
         default_factory=lambda: str(active_workspace().data_dir / "faiss_index")
     )

@@ -3,14 +3,11 @@ runner.py
 =========
 Orchestrates the full self-optimization loop:
 
-    1. Load + chunk the source document, build the FAISS index (once,
-       rebuilt per-iteration only when chunk_size/overlap change).
-    2. Generate (or load cached) the fixed benchmark question set from
-       the FULL document.
-    2b. Generate (or load cached) a document summary. Fed to the LLM
-        optimizer on every iteration so it can tailor the prompt template
-        it writes to what the source document actually is.
-    2c. Compute (or load cached) the document profile, then derive iteration
+    1. Initialize the corpus and synchronize its FAISS index (once,
+       synchronized again when chunk_size/overlap change).
+    2. Load the fixed corpus benchmark, generating it if missing.
+    2b. Render the corpus summary for the LLM optimizer on every iteration.
+    2c. Aggregate the corpus profile, then derive iteration
         1's chunk_size/chunk_overlap/top_k from it (seed_config.py). The
         config's retrieval block supplies the non-derivable fields and is
         the fallback when optimizer.seed_from_profile is False.
@@ -29,45 +26,28 @@ The rule-based optimizer (optimizer.propose_next_config) and the standalone
 prompt refiner (prompt_refiner.refine_prompt) are no longer part of this
 loop -- propose_next_config_llm is the only proposer used.
 
-SINGLE DOCUMENT vs CORPUS
--------------------------
-Steps 1, 2, 2b and 2c differ depending on whether app_config.corpus_path is set,
-and nothing else in the loop does. They are therefore gathered up front by
-prepare_inputs() into an ExperimentInputs, which hands the loop a benchmark, a
-summary, a profile, and a callable that produces an index for a given
-chunk_size/overlap. The scoring, safety gate, history and proposal logic below
-are identical in both modes and have no idea which one is running.
-
-  * corpus_path unset (the default) -- exactly the original behaviour: one
-    document, its own cached benchmark/summary/profile, and the content-addressed
-    index from vector_store.get_or_build_vector_store.
-  * corpus_path set -- the benchmark, summary and profile describe every document
-    in the corpus (see corpus.py), and the index spans all of them. A document
-    added since the last run is embedded into the existing index rather than
-    triggering a rebuild.
+CORPUS INPUTS
+-------------
+prepare_inputs() initializes the corpus from source_document on first use,
+adopting legacy profile, summary and benchmark caches when available. Every run
+uses the corpus manifest, aggregated artifacts and parameter-keyed indexes,
+whether the corpus contains one document or many. New documents extend an
+existing index; changing chunk parameters builds a separate index variant.
 """
 
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Callable
 
 from phoenix_rag import operations, storage
-from phoenix_rag.benchmark.question_generator import (
-    BenchmarkQuestion,
-    get_or_create_benchmark,
-)
-from phoenix_rag.benchmark.summarizer import get_or_create_summary
+from phoenix_rag.benchmark.question_generator import BenchmarkQuestion
 from phoenix_rag.config import AppConfig
 from phoenix_rag.core import corpus
-from phoenix_rag.core.chunking import split_documents
-from phoenix_rag.core.document_loader import load_document
-from phoenix_rag.core.document_profile import DocumentProfile, get_or_create_profile
+from phoenix_rag.core.document_profile import DocumentProfile
 from phoenix_rag.core.rag_pipeline import RagPipeline
 from phoenix_rag.core.seed_config import propose_seed_config
-from phoenix_rag.core.vector_store import get_or_build_vector_store
 from phoenix_rag.evaluation.evaluator import run_evaluation
 from phoenix_rag.optimization.llm_optimizer import propose_next_config_llm
 from phoenix_rag.optimization.optimizer import meets_targets
@@ -82,7 +62,7 @@ class ExperimentInputs:
 
     `build_store` takes (chunk_size, chunk_overlap) and returns a vector store
     for those parameters. The loop calls it only when the chunk parameters
-    change, so both implementations are free to be expensive.
+    change, so unchanged iterations reuse the same in-memory index.
 
     `on_success` is invoked once, after the loop finishes, only if a best
     configuration was actually found and saved. The corpus uses it to record
@@ -95,61 +75,6 @@ class ExperimentInputs:
     build_store: Callable[[int, int], object]
     description: str
     on_success: Callable[[], None] | None = None
-
-
-def _single_document_inputs(
-    app_config: AppConfig, providers: Providers
-) -> ExperimentInputs:
-    """The original single-document path, moved here verbatim in behaviour."""
-    source_documents = load_document(app_config.source_document)
-    full_text = "\n\n".join(document.page_content for document in source_documents)
-
-    benchmark = get_or_create_benchmark(
-        full_text=full_text,
-        generation=providers.generation,
-        qg_config=app_config.question_generation,
-        benchmark_path=app_config.benchmark_path,
-    )
-    document_summary = get_or_create_summary(
-        full_text=full_text,
-        generation=providers.generation,
-        summary_path=app_config.summary_path,
-    )
-    logger.info("Document summary ready (%d chars)", len(document_summary))
-
-    pages = (
-        len(source_documents)
-        if Path(app_config.source_document).suffix.lower() == ".pdf"
-        else None
-    )
-    document_profile = get_or_create_profile(
-        full_text=full_text,
-        profile_path=app_config.profile_path,
-        pages=pages,
-    )
-    logger.info("Document profile ready: %s", document_profile)
-
-    def build_store(chunk_size: int, chunk_overlap: int):
-        chunks = split_documents(
-            source_documents, chunk_size=chunk_size, chunk_overlap=chunk_overlap
-        )
-        return get_or_build_vector_store(
-            chunks=chunks,
-            embeddings=providers.embedding,
-            cache_root=app_config.faiss_index_path,
-            source_document=app_config.source_document,
-            embedding_model=app_config.providers.embedding.model,
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-        )
-
-    return ExperimentInputs(
-        benchmark=benchmark,
-        document_summary=document_summary,
-        document_profile=document_profile,
-        build_store=build_store,
-        description=f"single document: {Path(app_config.source_document).name}",
-    )
 
 
 def _corpus_inputs(

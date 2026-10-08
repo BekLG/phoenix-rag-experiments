@@ -9,8 +9,6 @@ question generation (see question_generator.py docstring for why).
 
 from __future__ import annotations
 
-import hashlib
-import json
 import logging
 from pathlib import Path
 
@@ -40,8 +38,6 @@ def add_chunks_to_store(store: FAISS, chunks: list[Document]) -> FAISS:
 
     This is what makes growing a corpus cheap: only the new chunks are sent to
     the embedding endpoint, and every vector already in `store` is reused as-is.
-    Contrast get_or_build_vector_store below, which is content-addressed on a
-    single document and therefore re-embeds everything whenever its key changes.
 
     Returns the same store it was handed, for call-site convenience.
     """
@@ -59,45 +55,6 @@ def load_vector_store(path: str | Path, embeddings: Embeddings) -> FAISS:
     return FAISS.load_local(
         str(path), embeddings, allow_dangerous_deserialization=True
     )
-
-
-def get_or_build_vector_store(
-    chunks: list[Document],
-    embeddings: Embeddings,
-    cache_root: str | Path,
-    source_document: str | Path,
-    embedding_model: str,
-    chunk_size: int,
-    chunk_overlap: int,
-) -> FAISS:
-    """Load a content-addressed FAISS index or build and persist it."""
-    source_path = Path(source_document)
-    digest = hashlib.sha256()
-    digest.update(source_path.read_bytes())
-    digest.update(
-        json.dumps(
-            {
-                "embedding_model": embedding_model,
-                "chunk_size": chunk_size,
-                "chunk_overlap": chunk_overlap,
-            },
-            sort_keys=True,
-        ).encode("utf-8")
-    )
-    cache_path = Path(cache_root) / digest.hexdigest()[:20]
-    complete_marker = cache_path / ".complete"
-
-    if complete_marker.exists():
-        try:
-            return load_vector_store(cache_path, embeddings)
-        except Exception:
-            logger.exception("Cached FAISS index is invalid; rebuilding %s", cache_path)
-            complete_marker.unlink(missing_ok=True)
-
-    store = build_vector_store(chunks, embeddings)
-    save_vector_store(store, cache_path)
-    complete_marker.write_text("ok\n", encoding="ascii")
-    return store
 
 
 def get_retriever(
