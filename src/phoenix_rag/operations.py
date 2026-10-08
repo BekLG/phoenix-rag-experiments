@@ -258,7 +258,7 @@ def add_document(
     # First add converts the single-document setup into a corpus. Doing this here
     # rather than making the operator do it explicitly is what keeps the existing
     # document from being silently dropped out of the index.
-    bootstrapped = corpus.bootstrap_from_single_document(
+    bootstrapped = corpus.adopt_legacy_single_document_artifacts(
         state, app_config, generation=providers.generation
     )
 
@@ -380,7 +380,7 @@ class AskSession:
         if app_config.corpus_path:
             state = corpus_state(app_config)
             if state.is_empty:
-                corpus.bootstrap_from_single_document(
+                corpus.adopt_legacy_single_document_artifacts(
                     state, app_config, generation=providers.generation
                 )
             if state.is_empty:

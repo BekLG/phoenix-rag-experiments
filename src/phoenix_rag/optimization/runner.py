@@ -162,7 +162,7 @@ def _corpus_inputs(
         # An operator who turned corpus mode on without adding anything yet still
         # has a configured source_document; seeding from it (reusing its cached
         # artifacts) is much friendlier than refusing to run.
-        corpus.bootstrap_from_single_document(
+        corpus.adopt_legacy_single_document_artifacts(
             corpus_state, app_config, generation=providers.generation
         )
     if corpus_state.is_empty:

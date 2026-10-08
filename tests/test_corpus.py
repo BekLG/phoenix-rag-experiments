@@ -532,8 +532,90 @@ class OptimizationStatusTests(CorpusTestCase):
         self.assertEqual(corpus.optimization_status(state), "current")
 
 
-class BootstrapTests(CorpusTestCase):
-    def test_bootstrap_adopts_cached_artifacts_without_generating(self):
+class LegacyArtifactAdoptionTests(CorpusTestCase):
+    def test_legacy_config_adopts_each_available_cache_and_generates_only_missing(self):
+        source = make_document(self.docs_dir, "legacy.txt")
+        cached_profile = compute_profile(source.read_text(encoding="utf-8"))
+        cached_questions = fake_questions("cached", 3)
+        generated_questions = fake_questions("generated", 2)
+
+        # All combinations, including a fresh config with no legacy artifacts.
+        for mask in range(8):
+            with self.subTest(cached_artifacts=mask):
+                root = self.root / str(mask)
+                cache = root / "generated_questions"
+                cache.mkdir(parents=True)
+                config = AppConfig.from_dict({
+                    "source_document": str(source),
+                    "corpus_path": None,
+                    "profile_path": str(cache / "document_profile.json"),
+                    "summary_path": str(cache / "document_summary.txt"),
+                    "benchmark_path": str(cache / "benchmark.json"),
+                })
+                if mask & 1:
+                    Path(config.profile_path).write_text(json.dumps(asdict(cached_profile)))
+                if mask & 2:
+                    Path(config.summary_path).write_text("Cached summary.")
+                if mask & 4:
+                    save_benchmark(cached_questions, config.benchmark_path)
+                original_caches = {p: p.read_bytes() for p in cache.iterdir()}
+
+                state = corpus.load(root / "corpus")
+                with mock.patch.object(corpus, "compute_profile", wraps=compute_profile) as profiler, \
+                     mock.patch.object(corpus, "generate_summary", return_value="Fresh summary.") as summarizer, \
+                     mock.patch.object(corpus, "generate_benchmark", return_value=generated_questions) as generator:
+                    document = corpus.adopt_legacy_single_document_artifacts(
+                        state, config, generation=mock.Mock()
+                    )
+
+                self.assertEqual(profiler.call_count, 0 if mask & 1 else 1)
+                self.assertEqual(summarizer.call_count, 0 if mask & 2 else 1)
+                self.assertEqual(generator.call_count, 0 if mask & 4 else 1)
+                self.assertEqual(document.label, "legacy")
+                self.assertEqual(document.document_profile, cached_profile)
+                self.assertEqual(document.summary, "Cached summary." if mask & 2 else "Fresh summary.")
+                self.assertEqual(
+                    corpus.corpus_benchmark(state, config, generation=mock.Mock()),
+                    cached_questions if mask & 4 else generated_questions,
+                )
+                self.assertEqual(corpus.load(state.root).documents, [document])
+                self.assertEqual(state.summary_text_path.read_text(), document.summary)
+                self.assertEqual(json.loads(state.profile_path.read_text()), asdict(cached_profile))
+                self.assertEqual({p: p.read_bytes() for p in cache.iterdir()}, original_caches)
+
+    def test_normal_registration_generates_fresh_despite_legacy_caches(self):
+        source = make_document(self.docs_dir, "fresh.txt")
+        Path(self.app_config.profile_path).write_text("invalid cached profile")
+        Path(self.app_config.summary_path).write_text("Old summary.")
+        save_benchmark(fake_questions("old"), self.app_config.benchmark_path)
+        state = corpus.load(self.corpus_root)
+        document = self.register(state, source, "fresh")
+
+        self.assertEqual(document.summary, "Summary of fresh.")
+        self.assertEqual(
+            corpus.corpus_benchmark(state, self.app_config, generation=mock.Mock()),
+            fake_questions("fresh"),
+        )
+
+    def test_adoption_preserves_an_existing_corpus_benchmark(self):
+        source = make_document(self.docs_dir, "existing.txt")
+        self.app_config.source_document = str(source)
+        state = corpus.load(self.corpus_root)
+        questions = fake_questions("corpus")
+        save_benchmark(questions, state.benchmark_path)
+        save_benchmark(fake_questions("legacy"), self.app_config.benchmark_path)
+
+        with mock.patch.object(corpus, "generate_summary", return_value="Summary."), \
+             mock.patch.object(corpus, "generate_benchmark") as generator:
+            document = corpus.adopt_legacy_single_document_artifacts(
+                state, self.app_config, generation=mock.Mock()
+            )
+
+        generator.assert_not_called()
+        self.assertEqual(document.question_count, 0)
+        self.assertEqual(corpus.corpus_benchmark(state, self.app_config, generation=mock.Mock()), questions)
+
+    def test_adoption_adopts_cached_artifacts_without_generating(self):
         source = make_document(self.docs_dir, "existing.txt")
         self.app_config.source_document = str(source)
         # The realistic starting point: a previous single-document run already paid
@@ -550,7 +632,7 @@ class BootstrapTests(CorpusTestCase):
         state = corpus.load(self.corpus_root)
         with mock.patch.object(corpus, "generate_summary") as summarizer, \
              mock.patch.object(corpus, "generate_benchmark") as generator:
-            document = corpus.bootstrap_from_single_document(state, self.app_config, generation=mock.Mock())
+            document = corpus.adopt_legacy_single_document_artifacts(state, self.app_config, generation=mock.Mock())
 
         self.assertIsNotNone(document)
         # The whole point: converting a single-document setup into a corpus spends
@@ -561,18 +643,18 @@ class BootstrapTests(CorpusTestCase):
         self.assertEqual(document.question_count, 4)
         self.assertEqual(len(corpus.corpus_benchmark(state, self.app_config, generation=mock.Mock())), 4)
 
-    def test_bootstrap_is_a_noop_on_a_populated_corpus(self):
+    def test_adoption_is_a_noop_on_a_populated_corpus(self):
         state = corpus.load(self.corpus_root)
         self.register(state, make_document(self.docs_dir, "alpha.txt"), "alpha")
         self.app_config.source_document = str(make_document(self.docs_dir, "other.txt"))
 
-        self.assertIsNone(corpus.bootstrap_from_single_document(state, self.app_config, generation=mock.Mock()))
+        self.assertIsNone(corpus.adopt_legacy_single_document_artifacts(state, self.app_config, generation=mock.Mock()))
         self.assertEqual(len(state.documents), 1)
 
-    def test_bootstrap_of_a_missing_source_document_is_survivable(self):
+    def test_adoption_of_a_missing_source_document_is_survivable(self):
         state = corpus.load(self.corpus_root)
         self.app_config.source_document = str(self.root / "does_not_exist.pdf")
-        self.assertIsNone(corpus.bootstrap_from_single_document(state, self.app_config, generation=mock.Mock()))
+        self.assertIsNone(corpus.adopt_legacy_single_document_artifacts(state, self.app_config, generation=mock.Mock()))
         self.assertTrue(state.is_empty)
 
 
