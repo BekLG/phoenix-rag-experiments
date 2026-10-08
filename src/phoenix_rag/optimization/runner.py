@@ -54,7 +54,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from phoenix_rag import storage
+from phoenix_rag import operations, storage
 from phoenix_rag.benchmark.question_generator import (
     BenchmarkQuestion,
     get_or_create_benchmark,
@@ -155,13 +155,12 @@ def _single_document_inputs(
 def _corpus_inputs(
     app_config: AppConfig, providers: Providers
 ) -> ExperimentInputs:
-    """The multi-document path: every artifact describes the whole corpus."""
+    """Every artifact describes the whole corpus, including its first document."""
     corpus_state = corpus.load(app_config.corpus_path)
 
     if corpus_state.is_empty:
-        # An operator who turned corpus mode on without adding anything yet still
-        # has a configured source_document; seeding from it (reusing its cached
-        # artifacts) is much friendlier than refusing to run.
+        # The seed uses legacy caches when available; otherwise registration
+        # generates its artifacts just like any later document.
         corpus.adopt_legacy_single_document_artifacts(
             corpus_state, app_config, generation=providers.generation
         )
@@ -222,10 +221,10 @@ def _corpus_inputs(
 def prepare_inputs(
     app_config: AppConfig, providers: Providers
 ) -> ExperimentInputs:
-    """Gather the loop's document-dependent inputs for whichever mode is active."""
-    if app_config.corpus_path:
-        return _corpus_inputs(app_config, providers)
-    return _single_document_inputs(app_config, providers)
+    """Initialize the corpus if needed and gather the loop's inputs from it."""
+    if not app_config.corpus_path:
+        operations.enable_corpus(app_config)
+    return _corpus_inputs(app_config, providers)
 
 
 def run_experiment(app_config: AppConfig) -> dict:

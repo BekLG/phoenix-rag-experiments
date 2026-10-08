@@ -74,17 +74,15 @@ def corpus_root(app_config: AppConfig) -> Path:
 
 
 def enable_corpus(app_config: AppConfig, save: bool = True) -> AppConfig:
-    """Turn on multi-document mode, persisting the switch.
+    """Resolve the default corpus location and persist it for subsequent runs.
 
-    Called by add_document rather than asked of the operator: adding a second
-    document IS the request to run in corpus mode, and a corpus that only the
-    current process knows about would be silently ignored by the next
-    `phoenix-rag` run.
+    Called automatically for the first document as well as later additions.
+    An explicit corpus_path is kept as supplied by the caller.
     """
     if not app_config.corpus_path:
         corpus_dir = active_workspace().corpus_dir
         app_config.corpus_path = str(corpus_dir)
-        logger.info("Multi-document corpus mode enabled (root: %s)", corpus_dir)
+        logger.info("Corpus location initialized (root: %s)", corpus_dir)
         if save:
             save_config(app_config)
     return app_config
@@ -255,9 +253,8 @@ def add_document(
     # questions for the new document) and the embeddings the sync uses.
     providers = build_providers(app_config)
 
-    # First add converts the single-document setup into a corpus. Doing this here
-    # rather than making the operator do it explicitly is what keeps the existing
-    # document from being silently dropped out of the index.
+    # Preserve the configured seed if add_document is the first operation on
+    # this workspace. Later additions find it already registered.
     bootstrapped = corpus.adopt_legacy_single_document_artifacts(
         state, app_config, generation=providers.generation
     )

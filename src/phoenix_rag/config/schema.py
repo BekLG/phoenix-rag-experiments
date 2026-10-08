@@ -328,6 +328,7 @@ class AppConfig:
 
     # Resolved against the active workspace at construction time, so a bare
     # AppConfig() still has usable paths without this module owning any.
+    # The seed document for a corpus that may grow through add_document().
     source_document: str = field(
         default_factory=lambda: str(active_workspace().data_dir / "source.pdf")
     )
@@ -350,10 +351,9 @@ class AppConfig:
         )
     )
 
-    # Opt-in multi-document mode. None (the default) keeps every path above
-    # describing a single document. When set, the experiment runner sources its
-    # benchmark, summary, profile and FAISS index from the corpus manifest under
-    # this root instead -- see core/corpus.py.
+    # Optional explicit corpus location. None is initialized automatically to
+    # the active workspace's data/corpus on first use. Legacy profile, summary
+    # and benchmark paths above are read once when adopting the seed document.
     corpus_path: str | None = None
 
     def to_dict(self) -> dict:
