@@ -5,15 +5,148 @@ Offline tests for the shared operator layer -- specifically the configuration
 editor, which is the part with real logic in it. Both front-ends drive these
 functions, so a rule tested here is a rule enforced in the terminal AND the GUI.
 
-Nothing here touches the Mistral API, the filesystem outside a temp dir, or FAISS.
+Nothing here touches the Mistral API or the filesystem outside a temp dir.
+Corpus session tests use real FAISS with deterministic fake embeddings.
 """
 
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest import mock
 
-from phoenix_rag import operations
-from phoenix_rag.config import AppConfig
+from phoenix_rag import operations, storage, workspace
+from phoenix_rag.config import AppConfig, RetrievalConfig
+from phoenix_rag.core import corpus
+from phoenix_rag.providers.base import ChatProvider, Providers
+
+from test_corpus import FAISS_AVAILABLE, FakeEmbeddings, fake_questions, make_document
+
+
+class ActiveRetrievalTests(unittest.TestCase):
+    def test_saved_best_wins_regardless_of_whether_corpus_path_is_initialized(self):
+        tuned = RetrievalConfig(chunk_size=400, chunk_overlap=40, top_k=2)
+        for root in (None, "custom-corpus"):
+            with self.subTest(corpus_path=root):
+                config = AppConfig(corpus_path=root)
+                with mock.patch.object(storage, "load_best_configuration", return_value={
+                    "iteration": 3, "config": tuned.to_dict(),
+                }):
+                    active = operations.resolve_active_retrieval(config)
+                self.assertEqual(active.config, tuned)
+                self.assertTrue(active.from_best)
+                self.assertIn("iteration 3", active.provenance)
+
+    def test_without_saved_best_the_configured_retrieval_block_is_used(self):
+        config = AppConfig()
+        with mock.patch.object(storage, "load_best_configuration", return_value=None):
+            active = operations.resolve_active_retrieval(config)
+        self.assertIs(active.config, config.retrieval)
+        self.assertFalse(active.from_best)
+
+
+@unittest.skipUnless(FAISS_AVAILABLE, "faiss-cpu is not installed")
+class CorpusOperationsTests(unittest.TestCase):
+    def setUp(self):
+        temporary = TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.workspace = workspace.Workspace(temporary.name)
+        self.enterContext(mock.patch.object(workspace, "_active", self.workspace))
+        self.enterContext(mock.patch.object(storage, "_results_dir_override", None))
+        self.source = make_document(self.workspace.root, "seed.txt")
+        self.config = AppConfig(source_document=str(self.source))
+        self.embeddings = FakeEmbeddings()
+        generation = mock.Mock(spec=ChatProvider)
+        generation.chat.return_value = "An answer."
+        self.providers = self.enterContext(mock.patch.object(
+            operations, "build_providers", return_value=Providers(
+                embedding=self.embeddings, generation=generation,
+                optimizer=mock.Mock(spec=ChatProvider), judge=mock.Mock(spec=ChatProvider),
+            ),
+        ))
+        self.summarizer = self.enterContext(mock.patch.object(
+            corpus, "generate_summary", return_value="Seed summary."
+        ))
+        self.generator = self.enterContext(mock.patch.object(
+            corpus, "generate_benchmark", return_value=fake_questions("seed")
+        ))
+
+    def test_ask_first_initializes_corpus_and_reuses_the_index_on_next_session(self):
+        self.assertIsNone(self.config.corpus_path)
+        tuned = RetrievalConfig(chunk_size=400, chunk_overlap=40, top_k=2)
+        storage.save_best_configuration(3, tuned, {"faithfulness": 1.0})
+        session = operations.AskSession(self.config)
+        self.assertEqual(session.retrieval_config, tuned)
+        self.assertEqual(session.scope, "corpus of 1: seed")
+        self.assertEqual(session.labels, ["seed"])
+        state = corpus.load(self.config.corpus_path)
+        self.assertEqual(len(state.documents), 1)
+        entry = next(iter(state.indexes.values()))
+        self.assertEqual(entry.chunk_size, tuned.chunk_size)
+        answer = session.ask(self.embeddings.embedded_texts[0])
+        self.assertEqual(answer.answer, "An answer.")
+        self.assertTrue(answer.sources)
+        self.assertTrue(all(s["doc_label"] == "seed" for s in answer.sources))
+        self.embeddings.embedded_texts.clear()
+
+        operations.AskSession(self.config)
+
+        self.assertEqual(self.embeddings.call_count, 0)
+        self.summarizer.assert_called_once()
+        self.generator.assert_called_once()
+        self.assertFalse(Path(self.config.faiss_index_path).exists())
+
+    def test_add_after_first_query_embeds_only_the_new_document(self):
+        operations.AskSession(self.config)
+        self.embeddings.embedded_texts.clear()
+        added = make_document(self.workspace.root, "beta.txt")
+        self.generator.return_value = fake_questions("beta")
+
+        result = operations.add_document(self.config, added)
+
+        self.assertIsNone(result.bootstrapped)
+        self.assertEqual(result.document_count, 2)
+        self.assertEqual(result.sync_report.action, "extended")
+        self.assertEqual(result.sync_report.added_labels, ["beta"])
+        self.assertEqual(self.embeddings.call_count, result.sync_report.added_chunks)
+        self.assertTrue(all("beta" in text for text in self.embeddings.embedded_texts))
+        self.assertEqual(result.questions_after, result.questions_before + 2)
+
+    def test_add_as_first_operation_preserves_the_configured_seed(self):
+        added = make_document(self.workspace.root, "beta.txt")
+        result = operations.add_document(self.config, added)
+        self.assertEqual(result.bootstrapped.label, "seed")
+        self.assertEqual(result.document.label, "beta")
+        self.assertEqual(result.document_count, 2)
+        self.assertEqual(result.sync_report.action, "built")
+
+    def test_status_before_first_use_reads_an_empty_corpus_without_generating(self):
+        report = operations.status(self.config)
+        self.assertTrue(report.corpus_enabled)
+        self.assertEqual(report.document_count, 0)
+        self.assertEqual(report.question_count, 0)
+        self.assertEqual(report.optimization_status, "never")
+        self.assertIn("corpus: 0 doc(s)", report.headline)
+        self.assertIsNone(self.config.corpus_path)
+        self.assertFalse(self.workspace.config_path.exists())
+        self.assertFalse(self.workspace.corpus_dir.exists())
+        self.providers.assert_not_called()
+
+    def test_status_with_unset_corpus_path_reports_the_existing_default_corpus(self):
+        operations.AskSession(self.config)
+        self.config.corpus_path = None
+        report = operations.status(self.config)
+        self.assertEqual(report.document_count, 1)
+        self.assertEqual(report.question_count, 2)
+        self.assertEqual(len(report.index_variants), 1)
+
+    def test_ask_with_missing_seed_reports_an_empty_corpus(self):
+        self.source.unlink()
+        with self.assertRaisesRegex(RuntimeError, "corpus is empty"):
+            operations.AskSession(self.config)
+        self.summarizer.assert_not_called()
+        self.generator.assert_not_called()
 
 
 class EditableFieldsTests(unittest.TestCase):

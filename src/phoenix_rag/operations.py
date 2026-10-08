@@ -10,7 +10,7 @@ here, providing a simple, pure-backend Python API.
 
 Key entry points:
 
-    optimize RAG           -> optimization.runner.run_experiment, after ensure_corpus
+    optimize RAG           -> optimization.runner.run_experiment
     add document           -> add_document
     ask the RAG            -> AskSession
     modify configuration   -> editable_fields / apply_field / save_config
@@ -35,10 +35,7 @@ from phoenix_rag.config import (
     save_config as write_config,
 )
 from phoenix_rag.core import corpus
-from phoenix_rag.core.chunking import split_documents
-from phoenix_rag.core.document_loader import load_document
 from phoenix_rag.core.rag_pipeline import RagPipeline, RagResult
-from phoenix_rag.core.vector_store import get_or_build_vector_store
 from phoenix_rag.optimization.llm_optimizer import validate_prompt_template
 from phoenix_rag.providers import build_providers
 from phoenix_rag.workspace import active_workspace
@@ -67,7 +64,7 @@ def save_config(app_config: AppConfig) -> Path:
 # =====================================================================
 
 def corpus_root(app_config: AppConfig) -> Path:
-    """Where this configuration's corpus lives, whether or not it is enabled."""
+    """Where this configuration's corpus lives, including before first use."""
     if app_config.corpus_path:
         return Path(app_config.corpus_path)
     return active_workspace().corpus_dir
@@ -120,10 +117,6 @@ class StatusReport:
     @property
     def headline(self) -> str:
         """One-line status summary for consumers to log or display."""
-        if not self.corpus_enabled:
-            name = Path(self.source_document).name
-            state = {"never": "not optimized", "stale": "STALE", "current": "optimized"}
-            return f"single document: {name} | {state.get(self.optimization_status, '')}"
         state = {
             "never": "never optimized",
             "stale": "best config STALE",
@@ -139,55 +132,25 @@ class StatusReport:
 def status(app_config: AppConfig) -> StatusReport:
     """Describe the current state of the corpus, config and saved best result."""
     best = storage.load_best_configuration()
-    enabled = bool(app_config.corpus_path)
-
-    if enabled:
-        state = corpus_state(app_config)
-        return StatusReport(
-            corpus_enabled=True,
-            corpus_root=state.root,
-            documents=state.documents,
-            question_count=_benchmark_size(state),
-            optimization_status=corpus.optimization_status(state),
-            integrity_problems=corpus.verify_documents(state),
-            source_document=app_config.source_document,
-            source_document_exists=Path(app_config.source_document).exists(),
-            best=best,
-            active_retrieval_source=resolve_active_retrieval(app_config).provenance,
-            index_variants=list(state.indexes.values()),
-        )
-
+    state = corpus_state(app_config)
     return StatusReport(
-        corpus_enabled=False,
-        corpus_root=corpus_root(app_config),
-        documents=[],
-        question_count=_single_benchmark_size(app_config),
-        optimization_status="current" if best else "never",
-        integrity_problems=[],
+        corpus_enabled=True,
+        corpus_root=state.root,
+        documents=state.documents,
+        question_count=_benchmark_size(state),
+        optimization_status=corpus.optimization_status(state),
+        integrity_problems=corpus.verify_documents(state),
         source_document=app_config.source_document,
         source_document_exists=Path(app_config.source_document).exists(),
         best=best,
         active_retrieval_source=resolve_active_retrieval(app_config).provenance,
-        index_variants=[],
+        index_variants=list(state.indexes.values()),
     )
 
 
 def _benchmark_size(state: corpus.Corpus) -> int:
     """Questions actually on disk, which is the number that will be scored."""
     return state.total_questions()
-
-
-def _single_benchmark_size(app_config: AppConfig) -> int:
-    from phoenix_rag.benchmark.question_generator import load_benchmark
-
-    path = Path(app_config.benchmark_path)
-    if not path.exists() or path.stat().st_size == 0:
-        return 0
-    try:
-        return len(load_benchmark(path))
-    except Exception:  # noqa: BLE001 -- a status view must never be what crashes
-        logger.exception("Could not read the benchmark for the status view")
-        return 0
 
 
 # =====================================================================
@@ -208,7 +171,7 @@ class AddDocumentResult:
         if self.bootstrapped is not None:
             lines.append(
                 f"corpus seeded with the existing document "
-                f"'{self.bootstrapped.label}' (cached artifacts reused, no API cost)"
+                f"'{self.bootstrapped.label}' (cached artifacts reused where available)"
             )
         lines.append(
             f"added '{self.document.label}' ({self.document.characters:,} chars"
@@ -374,52 +337,30 @@ class AskSession:
         providers = build_providers(app_config)
         embeddings = providers.embedding
 
-        if app_config.corpus_path:
-            state = corpus_state(app_config)
-            if state.is_empty:
-                corpus.adopt_legacy_single_document_artifacts(
-                    state, app_config, generation=providers.generation
-                )
-            if state.is_empty:
-                raise RuntimeError(
-                    "The corpus is empty and could not be seeded from "
-                    f"{app_config.source_document}. Add a document first."
-                )
-            store, report = corpus.sync_index(
-                state,
-                embeddings=embeddings,
-                embedding_model=app_config.providers.embedding.model,
-                chunk_size=self.retrieval_config.chunk_size,
-                chunk_overlap=self.retrieval_config.chunk_overlap,
+        enable_corpus(app_config)
+        state = corpus_state(app_config)
+        if state.is_empty:
+            corpus.adopt_legacy_single_document_artifacts(
+                state, app_config, generation=providers.generation
             )
-            self.scope = (
-                f"corpus of {len(state.documents)}: "
-                + ", ".join(d.label for d in state.documents)
+        if state.is_empty:
+            raise RuntimeError(
+                "The corpus is empty and could not be seeded from "
+                f"{app_config.source_document}. Add a document first."
             )
-            self.index_note = report.describe()
-            self.labels = [d.label for d in state.documents]
-        else:
-            source = Path(app_config.source_document)
-            if not source.exists():
-                raise FileNotFoundError(f"Source document not found: {source}")
-            documents = load_document(source)
-            chunks = split_documents(
-                documents,
-                chunk_size=self.retrieval_config.chunk_size,
-                chunk_overlap=self.retrieval_config.chunk_overlap,
-            )
-            store = get_or_build_vector_store(
-                chunks=chunks,
-                embeddings=embeddings,
-                cache_root=app_config.faiss_index_path,
-                source_document=str(source),
-                embedding_model=app_config.providers.embedding.model,
-                chunk_size=self.retrieval_config.chunk_size,
-                chunk_overlap=self.retrieval_config.chunk_overlap,
-            )
-            self.scope = f"single document: {source.name}"
-            self.index_note = f"index ready ({corpus.vector_count(store)} vectors)"
-            self.labels = [source.stem]
+        store, report = corpus.sync_index(
+            state,
+            embeddings=embeddings,
+            embedding_model=app_config.providers.embedding.model,
+            chunk_size=self.retrieval_config.chunk_size,
+            chunk_overlap=self.retrieval_config.chunk_overlap,
+        )
+        self.scope = (
+            f"corpus of {len(state.documents)}: "
+            + ", ".join(d.label for d in state.documents)
+        )
+        self.index_note = report.describe()
+        self.labels = [d.label for d in state.documents]
 
         self.store = store
         self.pipeline = RagPipeline(store, providers.generation, self.retrieval_config)
