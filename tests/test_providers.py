@@ -52,9 +52,9 @@ class BuildProvidersTests(unittest.TestCase):
         # the defaults name a different model per role, and each must land on the
         # provider for that role.
         providers = build_providers(AppConfig())
-        self.assertEqual(providers.generation._model, "mistral-small-latest")
-        self.assertEqual(providers.optimizer._model, "mistral-large-latest")
-        self.assertEqual(providers.judge._model, "mistral-large-latest")
+        self.assertEqual(providers.generation._model, "ministral-8b-latest")
+        self.assertEqual(providers.optimizer._model, "ministral-14b-latest")
+        self.assertEqual(providers.judge._model, "ministral-14b-latest")
         self.assertEqual(providers.embedding.settings.embedding_model, "mistral-embed")
 
     def test_roles_on_one_backend_share_a_single_rate_limiter(self):

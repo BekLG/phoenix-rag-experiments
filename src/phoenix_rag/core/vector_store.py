@@ -17,6 +17,8 @@ from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_core.vectorstores import VectorStoreRetriever
 
+from phoenix_rag.core.chunk_identity import assign_chunk_ids
+
 logger = logging.getLogger("phoenix_rag.vector_store")
 
 
@@ -52,9 +54,28 @@ def add_chunks_to_store(store: FAISS, chunks: list[Document]) -> FAISS:
 def load_vector_store(path: str | Path, embeddings: Embeddings) -> FAISS:
     path = Path(path)
     logger.info("Loading FAISS index from %s", path)
-    return FAISS.load_local(
+    store = FAISS.load_local(
         str(path), embeddings, allow_dangerous_deserialization=True
     )
+    ensure_store_chunk_ids(store)
+    return store
+
+
+def ensure_store_chunk_ids(store: FAISS) -> None:
+    """Backfill legacy metadata in memory, retaining vectors and cache files.
+
+    Vector insertion order is the original chunk order, including for repeated
+    text. FAISS's randomly generated docstore keys are not content identities.
+    No source re-splitting, embedding, index-key or manifest-version change is
+    needed. The IDs persist if the caller subsequently saves/extends the index.
+    """
+    chunks = [
+        store.docstore.search(docstore_id)
+        for _, docstore_id in sorted(store.index_to_docstore_id.items())
+    ]
+    if any(not chunk.metadata.get("chunk_id") or not chunk.metadata.get("document_id")
+           for chunk in chunks):
+        assign_chunk_ids(chunks)
 
 
 def get_retriever(

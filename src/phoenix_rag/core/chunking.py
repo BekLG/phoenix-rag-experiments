@@ -13,6 +13,8 @@ import logging
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+from phoenix_rag.core.chunk_identity import assign_chunk_ids, assign_document_ids
+
 logger = logging.getLogger("phoenix_rag.chunking")
 
 
@@ -27,7 +29,15 @@ def split_documents(
         chunk_overlap=chunk_overlap,
         separators=["\n\n", "\n", ". ", " ", ""],
     )
-    chunks = splitter.split_documents(documents)
+    # Stamp the full source/pages before splitting, so document identity does
+    # not depend on chunk parameters. Keep the caller's metadata untouched.
+    identified = [
+        document.model_copy(update={"metadata": dict(document.metadata)})
+        for document in documents
+    ]
+    assign_document_ids(identified)
+    chunks = splitter.split_documents(identified)
+    assign_chunk_ids(chunks, overwrite=True)
     logger.info(
         "Split %d document(s) into %d chunks (chunk_size=%d, overlap=%d)",
         len(documents),

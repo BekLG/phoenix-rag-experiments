@@ -61,6 +61,7 @@ from phoenix_rag.benchmark.question_generator import (
 )
 from phoenix_rag.benchmark.summarizer import generate_summary
 from phoenix_rag.config import AppConfig
+from phoenix_rag.core.chunk_identity import document_digest
 from phoenix_rag.core.chunking import split_documents
 from phoenix_rag.core.document_loader import load_document
 from phoenix_rag.core.document_profile import (
@@ -211,11 +212,6 @@ class Corpus:
 # --------------------------------------------------------------------------
 # Identity helpers
 # --------------------------------------------------------------------------
-
-def document_digest(path: str | Path) -> str:
-    """Content digest of a source file -- the document's identity in a corpus."""
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()[:16]
-
 
 def index_key(embedding_model: str, chunk_size: int, chunk_overlap: int) -> str:
     """Stable key for one index variant.
@@ -614,14 +610,12 @@ def _chunks_for_document(
             f"is missing: {path}. Restore it, or remove the document from the corpus."
         )
 
-    chunks = split_documents(
-        load_document(path), chunk_size=chunk_size, chunk_overlap=chunk_overlap
-    )
-    for chunk in chunks:
-        chunk.metadata["doc_id"] = document.doc_id
-        chunk.metadata["doc_label"] = document.label
-        chunk.metadata.setdefault("source", str(path))
-    return chunks
+    pages = load_document(path)
+    for page in pages:
+        page.metadata["doc_id"] = document.doc_id
+        page.metadata["doc_label"] = document.label
+        page.metadata.setdefault("source", str(path))
+    return split_documents(pages, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
 
 
 def sync_index(

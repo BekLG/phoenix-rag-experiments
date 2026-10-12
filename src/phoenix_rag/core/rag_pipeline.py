@@ -24,6 +24,8 @@ from langchain_core.documents import Document
 
 from phoenix_rag.config import RetrievalConfig
 from phoenix_rag.providers.base import ChatProvider
+from phoenix_rag.retrieval.base import RetrievalResult, Retriever
+from phoenix_rag.retrieval.dense import DenseRetriever
 
 logger = logging.getLogger("phoenix_rag.rag_pipeline")
 
@@ -39,6 +41,7 @@ class RagResult:
     # is the difference between a checkable answer and an unverifiable one once a
     # single index spans several documents (corpus.py stamps doc_id/doc_label).
     sources: list[dict] = field(default_factory=list)
+    retrieval_results: list[RetrievalResult] | None = None
 
 
 class RagPipeline:
@@ -56,33 +59,14 @@ class RagPipeline:
         # Rate-limited, retrying generation provider -- see module docstring.
         self._generation = generation
 
-        # ---------------------------------------------------------
-        # Retriever construction, including mmr support.
-        # ---------------------------------------------------------
-        if self.retrieval_config.retriever_type == "similarity_score_threshold":
-            self._retriever = vector_store.as_retriever(
-                search_type="similarity_score_threshold",
-                search_kwargs={
-                    "k": self.retrieval_config.top_k,
-                    "score_threshold": self.retrieval_config.similarity_threshold,
-                },
-            )
-        elif self.retrieval_config.retriever_type == "mmr":
-            self._retriever = vector_store.as_retriever(
-                search_type="mmr",
-                search_kwargs={
-                    "k": self.retrieval_config.top_k,
-                    "fetch_k": max(self.retrieval_config.top_k * 4, 20),
-                },
-            )
-        else:
-            self._retriever = vector_store.as_retriever(
-                search_type="similarity",
-                search_kwargs={"k": self.retrieval_config.top_k},
-            )
+        self._retriever: Retriever = DenseRetriever(vector_store, retrieval_config)
 
     def retrieve(self, question: str) -> list[Document]:
-        return self._retriever.invoke(question)
+        """Keep the existing Document-returning convenience API for callers."""
+        return [
+            Document(page_content=result.text, metadata=dict(result.metadata))
+            for result in self._retriever.retrieve(question)
+        ]
 
     def build_prompt(self, question: str, contexts: list[str]) -> str:
         joined_context = "\n\n".join(contexts)
@@ -91,8 +75,8 @@ class RagPipeline:
         )
 
     def answer(self, question: str) -> RagResult:
-        docs = self.retrieve(question)
-        contexts = [d.page_content for d in docs]
+        results = self._retriever.retrieve(question)
+        contexts = [result.text for result in results]
         prompt = self.build_prompt(question, contexts)
 
         # The ChatProvider handles rate limiting + exponential-backoff retry
@@ -106,7 +90,8 @@ class RagPipeline:
             question=question,
             answer=answer_text,
             contexts=contexts,
-            sources=[dict(d.metadata) for d in docs],
+            sources=[dict(result.metadata) for result in results],
+            retrieval_results=results,
         )
 
     def answer_many(self, questions: list[str]) -> list[RagResult]:
