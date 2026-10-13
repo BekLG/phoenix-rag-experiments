@@ -11,10 +11,10 @@ every provider role fires on the real pipeline:
     judge      -> cloud  (Mistral)                         Ragas scoring
     optimizer  -> cloud  (Mistral)                         proposes the next config
 
-It reuses the cached benchmark/summary/profile (no local question-generation
-pass) by pointing the path fields at the Harvey artifacts. The FAISS index is
-rebuilt because the cached one holds 1024-dim Mistral vectors and MiniLM is
-384-dim; that rebuild is local and free. Nothing here mutates config.yaml.
+If the default corpus is empty, it adopts any cached Harvey benchmark, summary,
+and profile, generating missing artifacts with the configured generation model.
+An existing corpus is reused. Corpus initialization may save its location in
+config.yaml. Switching embedding models builds a separate FAISS index variant.
 """
 
 from __future__ import annotations
@@ -39,13 +39,12 @@ def main() -> int:
     load_env()
     cfg = load_config(str(ROOT / "config" / "config.yaml"))
 
-    # Point the run at the document that already has a cached benchmark, and at
-    # that benchmark, so the local model does no question generation.
+    # Seed an empty corpus with Harvey, adopting legacy caches when available.
     cfg.source_document = str(ROOT / "data" / "Harvey_Abilene_Paradox.pdf")
     cfg.benchmark_path = str(GQ / "benchmark_Harvey_Abilene_Paradox.json")
     cfg.summary_path = str(GQ / "document_summary_Harvey_Abilene_Paradox.txt")
     cfg.profile_path = str(GQ / "document_profile_Harvey_Abilene_Paradox.json")
-    cfg.corpus_path = None  # single-document mode
+    cfg.corpus_path = None  # Initialize or reuse the default workspace corpus.
 
     # A single iteration is enough to prove the split: one local answer pass and
     # one cloud judge + optimizer round.

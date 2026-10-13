@@ -1,9 +1,13 @@
 # Phoenix RAG
 
 A self-optimizing Retrieval-Augmented Generation (RAG) system. It generates
-evaluation questions from a source document, evaluates a RAG pipeline with
+evaluation questions from the documents in a corpus, evaluates a RAG pipeline with
 Ragas, tunes retrieval parameters based on the results, and repeats until
 the best-performing configuration is found (or the target scores are hit).
+
+**Single-file mode has been removed. A corpus is used for every run, whether
+you have one file or many.** The first file initializes the corpus; adding more
+files extends that same corpus and its benchmark.
 
 It is **provider-agnostic**: each model role (embedding, generation, optimizer,
 judge) can run on a different backend — Mistral, OpenAI, Anthropic, DeepSeek, or
@@ -25,19 +29,19 @@ model as optimizer and judge. See [Choosing providers](#choosing-providers).
 ## Architecture
 
 ```
-Source Document
+Corpus (one or more documents)
       │
       ▼
 Recursive Text Splitter
       │
   ┌───┴────┐
   ▼        ▼
-FAISS   Full Document Chunks
+FAISS   Full Text of Each Document
   │        │
   │   LLM: Generate Evaluation Questions
   │        │
   │        ▼
-  │   Evaluation Benchmark Dataset (fixed, generated once)
+  │   Corpus Benchmark Dataset (fixed within each run)
   │        │
   ▼        ▼
 Retriever ──► RAG Pipeline ──► Generated Answer
@@ -56,26 +60,29 @@ Retriever ──► RAG Pipeline ──► Generated Answer
                   Tune Retrieval Parameters → Next Iteration
 ```
 
-**Key design rule:** evaluation questions are generated once from the
+**Key design rule:** evaluation questions are generated once from each
 *complete* source document (batched only for LLM context / rate-limit
 reasons), never from retrieved chunks. This keeps the benchmark independent
-of the retrieval pipeline being tuned — every configuration is scored
-against exactly the same questions.
+of the retrieval pipeline being tuned — every configuration within a run is
+scored against exactly the same questions. Adding a document extends the
+benchmark for subsequent runs.
 
 ## Project layout
 
-Phoenix RAG is a `src/`-layout Python package. The optimizer, the pipeline, and
-both front-ends are importable, so the library can be driven from your own code
-as well as from the CLI.
+Phoenix RAG is a `src/`-layout Python package. Use the library from your own
+Python code or run the example scripts in this repository.
 
 ```
-pyproject.toml            Package metadata, dependencies, extras, console script
+pyproject.toml            Package metadata, dependencies, and provider extras
 configs/default.yaml      Committed, commented example configuration
+data/                     Source documents and local corpus data
+scripts/                  Quickstart, query, corpus-growth, and validation examples
+run_optimization.py       Interactive five-iteration corpus optimization example
+add_document_and_reoptimize.py  Add a document and optimize the expanded corpus
 src/phoenix_rag/
-    cli.py                  Console entry point (`phoenix-rag`)
     workspace.py            Resolves where data/results/logs/config live
     storage.py              Persists configs / results / scores / best config
-    operations.py           Operator actions shared by both front-ends
+    operations.py           Corpus management, queries, and configuration operations
     config/
         schema.py             Configuration dataclasses (pure data, no I/O)
         loader.py             YAML persistence + `.env` handling
@@ -87,7 +94,7 @@ src/phoenix_rag/
         chunking.py           RecursiveCharacterTextSplitter wrapper
         embeddings.py         LangChain Embeddings adapter for the embedding backend
         vector_store.py       FAISS index build/save/load + retriever factory
-        corpus.py             Multi-document corpus: manifest + incremental indexing
+        corpus.py             Corpus for one or many documents + incremental indexing
         document_profile.py   Deterministic document characteristics for tuning
         seed_config.py        Derives iteration 1's chunk/top_k from that profile
         rag_pipeline.py       Retrieve → prompt → generate
@@ -102,6 +109,7 @@ src/phoenix_rag/
         llm_optimizer.py      LLM-driven retrieval parameter proposals
         runner.py             Orchestrates the full optimization loop
 tests/                    Offline test suite
+docs/                     Detailed explanation of the system
 ```
 
 Everything the system *writes* lives in a **workspace** directory, separate from
@@ -115,12 +123,17 @@ use_workspace(Workspace("~/rag-runs/experiment-a"))
 
 ```
 config/config.yaml        The live configuration the app reads and rewrites
-data/                     Source documents + FAISS index
+data/                     Source documents
 data/corpus/              Corpus manifest, benchmark, and per-variant indexes
 results/                  Per-iteration configs, CSV results, best config
 generated_questions/      Legacy artifacts adopted when initializing a corpus
 logs/                     Run logs
 ```
+
+`results/`, `logs/`, legacy `generated_questions/` caches, example workspaces,
+and Python/test caches are generated locally and ignored by Git. They are not
+required in a fresh checkout; runtime directories are created as needed.
+Keep source files and any corpus you want to reuse under `data/`.
 
 ## Setup
 
@@ -136,14 +149,13 @@ cp .env.example .env
 # edit .env and set the API key(s) for the providers you use
 ```
 
-`requirements.txt` remains as the exact pinned set the results in this repo were
-produced with; `pyproject.toml` carries the ranges a fresh install resolves.
+Dependencies and provider extras are defined in `pyproject.toml`.
 
 ### Configuration and secrets
 
 Configuration is YAML. `configs/default.yaml` is the commented example; the live
 copy is `config/config.yaml` in your workspace, written on first run and rewritten
-whenever you save from a front-end.
+when configuration is saved by the library or an example script.
 
 **No API key ever goes in the YAML.** Each model role names the *environment
 variable* to read instead:
@@ -225,7 +237,7 @@ Tips:
 - To add a backend: install its extra, set `backend` + `model` + `api_key_env`
   for the role in `config.yaml`, and put the key in `.env`.
 
-Place your source document (PDF or .txt/.md) somewhere under `data/`, e.g.
+Place your source documents (PDF or .txt/.md) under `data/`, e.g.
 `data/source.pdf`.
 
 ## Usage
@@ -234,29 +246,57 @@ Place your source document (PDF or .txt/.md) somewhere under `data/`, e.g.
 from phoenix_rag import load_or_create_default_config, run_experiment
 
 config = load_or_create_default_config()
+config.source_document = "data/source.pdf"  # Seeds an empty corpus.
 config.optimizer.max_iterations = 5
-run_experiment(config)
-```
-
-
-## Multiple documents: the corpus
-
-Every document, including the first, uses the same corpus machinery. The usual
-API stays the same:
-
-```python
-from phoenix_rag import AppConfig, run_experiment
-
-config = AppConfig()
-config.source_document = "data/doc.pdf"
 best = run_experiment(config)
 ```
 
-On first use, `corpus_path=None` is initialized to the active workspace's
+The first run creates a one-document corpus. Later runs reuse its manifest,
+benchmark, and cached indexes. Query the same corpus with the saved best
+retrieval configuration:
+
+```python
+from phoenix_rag.operations import AskSession
+
+session = AskSession(config)
+print(session.ask("What are the main findings?").answer)
+```
+
+For an interactive example from the repository root:
+
+```bash
+python run_optimization.py data/source.pdf
+python add_document_and_reoptimize.py data/second_document.pdf
+```
+
+Both scripts default to the `optimization-run/` workspace, so the second command
+adds to the first command's corpus. The examples under `scripts/` declare their
+own workspace paths; use the same workspace when optimizing, adding, and querying.
+
+## Corpus workflow: one file or many
+
+Every document, including the first, uses the same corpus machinery. There is
+no separate mode to enable when moving from one file to multiple files.
+To extend the corpus created above:
+
+```python
+from phoenix_rag import load_or_create_default_config, run_experiment
+from phoenix_rag.operations import add_document
+
+config = load_or_create_default_config()  # Use the same workspace as the first run.
+for path in ("data/second_document.pdf", "data/third_document.pdf"):
+    add_document(config, path)
+best = run_experiment(config)
+```
+
+`corpus_path=None` (or `corpus_path: null` in YAML) means that the default corpus
+location has not yet been saved; it does not select a single-file mode.
+On first use, it is initialized to the active workspace's
 `data/corpus/` and persisted in `config/config.yaml`. An explicit `corpus_path`
 still selects a custom root. `source_document` seeds an empty corpus with a label
 derived from the filename stem; later documents join through `add_document()`.
-Once the corpus has members, changing `source_document` does not replace them.
+Once the corpus has members, changing `source_document` does not replace or add
+documents; use `add_document()` to register each additional file.
 The benchmark, summary, profile, and FAISS index describe every registered
 document:
 
@@ -318,7 +358,7 @@ is reported by the status view. Removing a document invalidates the index
 variants that contained it — FAISS has no cheap per-vector removal — so removal
 costs a rebuild where adding does not.
 
-### One honest caveat
+### Benchmark changes
 
 Adding a document generates questions from it and appends them to the benchmark,
 because the alternative is quietly broken: with questions only from the older

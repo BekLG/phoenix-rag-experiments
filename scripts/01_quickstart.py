@@ -2,7 +2,7 @@
 """
 01_quickstart.py — the simplest possible use of Phoenix RAG.
 
-This is the whole library reduced to its essence: point it at a document,
+This is the whole library reduced to its essence: seed a corpus with a document,
 tell it how many optimization rounds to run, and let it go. Everything else
 (chunking, embedding, benchmark generation, Ragas scoring, the optimizer)
 happens automatically inside run_experiment().
@@ -14,7 +14,7 @@ USAGE
     source .venv/bin/activate
     pip install -e '.[dev]'
     cp .env.example .env      # set MISTRAL_API_KEY (or your backend's key)
-    python 01_quickstart.py data/your_document.pdf
+    python scripts/01_quickstart.py data/your_document.pdf
 """
 
 import sys

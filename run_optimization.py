@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-Run a full 5-iteration Phoenix RAG optimization experiment.
+Run a full 5-iteration Phoenix RAG optimization experiment against a corpus.
+
+The source document seeds an empty corpus. Once the corpus has documents,
+every run optimizes against all of them.
 
 Every function call in this script was checked directly against the
 phoenix_rag source (schema.py, workspace.py, runner.py, seed_config.py,
@@ -138,7 +141,7 @@ def main() -> None:
     print(f"  {workspace.results_dir / 'experiment_results.csv'}   <- all iterations, config + scores")
     print(f"  {workspace.results_dir / 'evaluation_scores.csv'}     <- scores + optimizer reasoning per iteration")
     print(f"  {workspace.results_dir / 'best_configuration.json'}   <- saved only if a best was found")
-    print(f"  {workspace.generated_questions_dir / 'benchmark.json'} <- the fixed question set used to score every iteration")
+    print(f"  {Path(config.corpus_path) / 'benchmark.json'} <- the fixed question set used to score every iteration")
     print("=" * 60)
 
 

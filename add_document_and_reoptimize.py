@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Add a new document to an existing Phoenix RAG setup and re-optimize.
+Add a new document to an existing Phoenix RAG corpus and re-optimize.
 
 Meant to run AFTER run_optimization.py has already produced a working
-single-document setup in ./optimization-run. This script:
-  1. Adds the new document (auto-converts single-doc -> corpus mode)
+corpus in ./optimization-run. A corpus holds one file or many. This script:
+  1. Adds the new document to that corpus
   2. Re-runs the optimization loop against the WHOLE corpus
 
 Every function/attribute here was checked directly against phoenix_rag's
@@ -30,7 +30,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 import phoenix_rag as pr
-from phoenix_rag.operations import add_document, resolve_active_retrieval
+from phoenix_rag.operations import add_document, corpus_root, resolve_active_retrieval
 
 
 def _to_dict(obj):
@@ -76,13 +76,7 @@ def main() -> None:
     print(f"Workspace: {workspace.root}")
     config = pr.load_or_create_default_config()
 
-    if not config.corpus_path:
-        print("Currently in single-document mode "
-              f"(source_document: {config.source_document}).")
-        print("Adding a second document will convert this into a corpus "
-              "automatically -- the existing document is carried over, not dropped.\n")
-    else:
-        print(f"Already in corpus mode (corpus_path: {config.corpus_path}).\n")
+    print(f"Corpus: {corpus_root(config)}")
 
     active_before = resolve_active_retrieval(config)
     print(f"Active retrieval config before add: {active_before.provenance}")
@@ -93,7 +87,7 @@ def main() -> None:
           "and generate questions from it)...")
 
     # ------------------------------------------------------------------
-    # 1. Add the document. auto-bootstraps single-doc -> corpus if needed,
+    # 1. Add the document. Seeds an empty corpus from source_document if needed,
     #    generates questions from the new document, appends them to the
     #    benchmark, and (by default) embeds the new chunks into the index
     #    immediately using whichever retrieval config is currently active.
@@ -116,8 +110,7 @@ def main() -> None:
 
     if args.no_optimize:
         print("\n--no-optimize passed: skipping re-optimization.")
-        print("Run this script again without --no-optimize, or run "
-              "run_optimization.py again pointed at this workspace, when ready.")
+        print("Call run_experiment(config) using this workspace when ready.")
         return
 
     print(
@@ -129,10 +122,7 @@ def main() -> None:
           f"({args.max_iterations} iterations)...")
 
     # ------------------------------------------------------------------
-    # 2. Re-optimize against the whole (now multi-document) corpus.
-    #    config.corpus_path is already set by add_document -> enable_corpus,
-    #    so run_experiment automatically optimizes the corpus, not just the
-    #    single original document.
+    # 2. Re-optimize against every registered document in the corpus.
     # ------------------------------------------------------------------
     config.optimizer.max_iterations = args.max_iterations
     print("\n--- Re-running optimization against the grown corpus ---\n")
@@ -162,7 +152,7 @@ def main() -> None:
     print(f"  {workspace.results_dir / 'experiment_results.csv'}")
     print(f"  {workspace.results_dir / 'evaluation_scores.csv'}")
     print(f"  {workspace.results_dir / 'best_configuration.json'}")
-    print(f"  {workspace.data_dir / 'corpus' / 'manifest.json'}   <- documents + per-doc question counts")
+    print(f"  {corpus_root(config) / 'manifest.json'}   <- documents + per-doc question counts")
     print("=" * 60)
 
 

@@ -228,9 +228,8 @@ This library started life as a folder of top-level scripts (`app.py`,
 
 ```
 phoenix_rag/
-├── cli.py                 # console entry point (`phoenix-rag`)
 ├── workspace.py           # resolves data/, results/, logs/, config/ roots
-├── operations.py          # higher-level operations shared by the front-ends
+├── operations.py          # corpus management, queries, and configuration
 ├── storage.py             # writes iteration configs, scores, best-config to disk
 │
 ├── config/
@@ -436,11 +435,12 @@ starting point and burns its whole budget nudging around it (on a 12-page paper
 needing 800–1200 character chunks, ten iterations never left the 300–500 band).
 `retriever_type`, `similarity_threshold`, and `prompt_template` still come from
 the config, because choosing those needs measured scores that don't exist yet at
-iteration 1. Set `optimizer.seed_from_profile: false` (or pass `--no-profile-seed`)
+iteration 1. Set `optimizer.seed_from_profile: false`
 to turn seeding off and start from the config's `retrieval` block instead; the
 seed rationale is recorded in iteration 1's `applied_rules` either way.
 
-**One corpus path from the first document.** `config.source_document = "data/doc.pdf"`
+**One corpus path from the first document.** Single-file mode has been removed;
+a corpus holds one file or many. `config.source_document = "data/doc.pdf"`
 followed by `run_experiment(config)` initializes `corpus_path` to the workspace's
 `data/corpus/` automatically. An explicit root is also supported. `prepare_inputs()`
 hands the loop the corpus benchmark, summary, profile, and a
@@ -448,7 +448,7 @@ hands the loop the corpus benchmark, summary, profile, and a
 `corpus_path: null` adopt their cached profile, summary, and benchmark through
 `adopt_legacy_single_document_artifacts()`, generating only missing artifacts.
 Legacy content-addressed FAISS directories are left untouched and unused; vectors
-are rebuilt once in the corpus layout. See the [README corpus section](../README.md#multiple-documents-the-corpus)
+are rebuilt once in the corpus layout. See the [README corpus section](../README.md#corpus-workflow-one-file-or-many)
 for migration details. Corpus behavior follows these rules:
 
 - **Adding is incremental.** A new document is added to the *existing* FAISS index;
@@ -675,16 +675,16 @@ config.optimizer.max_iterations = 5
 run_experiment(config)
 ```
 
-Or use the repo-root script, which exposes the same run with flags such as
-`--source`, `--corpus`, and `--no-profile-seed`:
+Or use the interactive repo-root script, which takes a source document to seed
+an empty corpus and runs up to five iterations:
 
 ```bash
-.venv/bin/python run_optimization.py --source data/source.pdf
+.venv/bin/python run_optimization.py data/source.pdf
 ```
 
 Results — per-iteration configs, scores, and the best configuration found — land
-under `results/` in the workspace (the current directory by default, or
-`$PHOENIX_RAG_WORKSPACE`). Logs go to `logs/`.
+under `results/` in the workspace. The library defaults to the current directory
+or `$PHOENIX_RAG_WORKSPACE`; the script above uses `optimization-run/`.
 
 ### 9.7 Verify each piece on its own (troubleshooting)
 

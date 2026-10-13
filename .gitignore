@@ -1,4 +1,6 @@
 .venv/
+venv/
+test_env/
 __pycache__/
 *.pyc
 .env
@@ -18,7 +20,12 @@ dist/
 # Generated run artifacts and local tooling config
 results/
 logs/
+*.log
+generated_questions/
 data/corpus/
 .claude/
+demo-01-quickstart/
+phoenix-demo/
+optimization-run/
 phoenix_demo_workspace/
 my-phoenix-workspace/

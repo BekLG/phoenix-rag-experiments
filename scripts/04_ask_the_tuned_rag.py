@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 04_ask_the_tuned_rag.py — use the OPTIMIZED system to actually answer
-questions, after 03_full_optimization_run.py has produced a best config.
+questions, after an optimization run in ./phoenix-demo has produced a best config.
 
 This is the payoff step: optimization isn't the end goal, a working,
 tuned RAG system you can query is. AskSession automatically uses your saved
@@ -11,9 +11,8 @@ chunk_size/top_k/etc. out of the results yourself.
 Every call here was checked directly against phoenix_rag's operations.py.
 
 USAGE
-    # Run 03_full_optimization_run.py FIRST, against the same workspace,
-    # then:
-    python 04_ask_the_tuned_rag.py "What does Ragas measure?"
+    # Optimize the corpus in ./phoenix-demo first, then:
+    python scripts/04_ask_the_tuned_rag.py "What does Ragas measure?"
 """
 
 import sys
