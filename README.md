@@ -239,6 +239,55 @@ run_experiment(config)
 ```
 
 
+## Retrieval strategies
+
+Dense retrieval remains the default. To enable lexical BM25 or dense + BM25
+hybrid retrieval, install the optional extra (also included in `[all]`):
+
+```bash
+pip install -e '.[retrieval]'
+```
+
+Set the flat retrieval fields in your configuration:
+
+```yaml
+retrieval:
+  retrieval_strategy: hybrid  # dense | bm25 | hybrid
+  top_k: 5                   # final chunks passed to the LLM
+  hybrid_dense_k: null        # null -> max(2 * top_k, 10)
+  hybrid_bm25_k: null         # null -> max(2 * top_k, 10)
+  rrf_k: 60
+```
+
+`retriever_type` (`similarity`, `mmr`, or `similarity_score_threshold`) and
+`similarity_threshold` still configure dense search, including the dense half
+of hybrid. BM25 ignores them. Candidate budgets apply only to hybrid; all
+strategies pass at most `top_k` chunks to generation. Budgets and `rrf_k` must be
+positive integers. Older configs load with the dense defaults.
+
+BM25 reads the same canonical chunks and IDs from the FAISS docstore. It uses
+lowercase Unicode regex word tokens for both indexing and queries. Its
+in-memory cache belongs to the FAISS store and its chunk size/overlap variant;
+pipelines sharing that store reuse the index. A chunk ID/text snapshot detects
+corpus growth or replacement and triggers a rebuild from **all** chunks.
+Loading a new store builds BM25 once when first requested. No BM25 data is
+pickled or persisted, and dense retrieval never imports `rank_bm25`.
+
+Hybrid merges by `chunk_id` and scores each chunk with
+`sum(1 / (rrf_k + rank))`, using 1-based ranks from the candidate lists. Raw
+dense and BM25 scores are not combined. Equal fused scores sort by best
+individual rank, then chunk ID. BM25 score ties also sort by chunk ID, including
+zero-score matches. Results expose `dense_rank`, `bm25_rank`, and `rrf_score`
+in `extras`; a missing method rank is `None`. DEBUG retrieval logs include
+candidate counts, latency, final chunk IDs, and hybrid's component rankings.
+
+FAISS index keys still depend only on embedding model and chunk size/overlap,
+with document membership tracked separately. There is no retrieval-result or
+evaluation-result cache to invalidate. Per-iteration and best-config JSON
+already save the complete config, including these new fields; CSV columns are
+unchanged. The optimizer is unchanged, and `copy_with()` preserves the new
+fields while allowing its existing `top_k` tuning.
+
 ## Multiple documents: the corpus
 
 Every document, including the first, uses the same corpus machinery. The usual

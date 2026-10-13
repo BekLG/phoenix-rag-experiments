@@ -49,6 +49,8 @@ dependencies = [
 [project.optional-dependencies]
 
 dev = ["pytest>=8.0"]
+# Lexical and hybrid retrieval only; the default dense path needs no extra.
+retrieval = ["rank_bm25>=0.2.2,<0.3"]
 # One extra per non-Mistral backend. Each backend imports its vendor package
 # lazily (providers/langchain_backends.py), so these are only needed if a config
 # actually selects that backend. "local" covers both surfaces: chat via an
@@ -62,6 +64,7 @@ anthropic = ["langchain-anthropic>=1,<2"]
 deepseek = ["langchain-openai>=1.4,<2"]
 local = ["langchain-openai>=1.4,<2", "langchain-huggingface>=1,<2", "sentence-transformers>=3"]
 all = [
+    "rank_bm25>=0.2.2,<0.3",
     "langchain-openai>=1.4,<2",
     "langchain-anthropic>=1,<2",
     "langchain-huggingface>=1,<2",

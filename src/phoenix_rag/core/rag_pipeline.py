@@ -24,8 +24,8 @@ from langchain_core.documents import Document
 
 from phoenix_rag.config import RetrievalConfig
 from phoenix_rag.providers.base import ChatProvider
+from phoenix_rag.retrieval import build_retriever
 from phoenix_rag.retrieval.base import RetrievalResult, Retriever
-from phoenix_rag.retrieval.dense import DenseRetriever
 
 logger = logging.getLogger("phoenix_rag.rag_pipeline")
 
@@ -59,7 +59,7 @@ class RagPipeline:
         # Rate-limited, retrying generation provider -- see module docstring.
         self._generation = generation
 
-        self._retriever: Retriever = DenseRetriever(vector_store, retrieval_config)
+        self._retriever: Retriever = build_retriever(retrieval_config, vector_store)
 
     def retrieve(self, question: str) -> list[Document]:
         """Keep the existing Document-returning convenience API for callers."""

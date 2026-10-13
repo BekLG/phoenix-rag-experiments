@@ -1,5 +1,9 @@
 """Retrieval contracts and implementations.
 
-Import contracts from ``base`` and the FAISS adapter from ``dense`` so using the
-result type alone does not import the vector store or its dependencies.
+The factory loads implementations lazily; importing contracts alone does not
+import the vector store or optional retrieval dependencies.
 """
+
+from phoenix_rag.retrieval.factory import build_retriever
+
+__all__ = ["build_retriever"]

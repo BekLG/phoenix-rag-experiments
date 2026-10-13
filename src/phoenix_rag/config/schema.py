@@ -195,6 +195,7 @@ class MistralSettings:
 # --------------------------------------------------------------------------
 
 RetrieverType = Literal["similarity", "mmr", "similarity_score_threshold"]
+RetrievalStrategy = Literal["dense", "bm25", "hybrid"]
 
 RETRIEVER_TYPES: tuple[str, ...] = (
     "similarity",
@@ -214,9 +215,9 @@ class RetrievalConfig:
     chunk_size: int = 300
     chunk_overlap: int = 50
 
-    top_k: int = 1
+    top_k: int = 1  # Final chunks passed to the LLM for every strategy.
     similarity_threshold: float = 0.0  # only used by "similarity_score_threshold"
-    retriever_type: RetrieverType = "similarity"
+    retriever_type: RetrieverType = "similarity"  # Dense search only; BM25 ignores it.
 
     prompt_template: str = (
         "You are a helpful assistant answering questions using ONLY the "
@@ -226,6 +227,28 @@ class RetrievalConfig:
         "Question: {question}\n\n"
         "Answer:"
     )
+
+    retrieval_strategy: RetrievalStrategy = "dense"
+    # None resolves at retriever construction to max(2 * top_k, 10).
+    hybrid_dense_k: int | None = None
+    hybrid_bm25_k: int | None = None
+    rrf_k: int = 60
+
+    def __post_init__(self) -> None:
+        self.validate()
+
+    def validate(self) -> None:
+        if self.retrieval_strategy not in ("dense", "bm25", "hybrid"):
+            raise ValueError(
+                f"Unknown retrieval_strategy: {self.retrieval_strategy!r}; "
+                "expected 'dense', 'bm25', or 'hybrid'"
+            )
+        for name in ("top_k", "hybrid_dense_k", "hybrid_bm25_k", "rrf_k"):
+            value = getattr(self, name)
+            if value is None and name in ("hybrid_dense_k", "hybrid_bm25_k"):
+                continue
+            if type(value) is not int or value <= 0:
+                raise ValueError(f"{name} must be a positive integer, got {value!r}")
 
     def to_dict(self) -> dict:
         return asdict(self)

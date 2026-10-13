@@ -68,7 +68,9 @@ class DenseRetriever:
             for rank, (document, score) in enumerate(scored, start=1)
         ]
         logger.debug(
-            "Retrieval method=%s results=%d latency_ms=%.3f",
+            "Retrieval method=%s results=%d latency_ms=%.3f "
+            "strategy=dense candidates=%d final_chunk_ids=%s",
             method, len(results), (perf_counter() - started) * 1000,
+            len(results), [result.chunk_id for result in results],
         )
         return results

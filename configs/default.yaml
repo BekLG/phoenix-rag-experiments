@@ -89,9 +89,13 @@ providers:
 retrieval:
   chunk_size: 300
   chunk_overlap: 50
-  top_k: 1
+  top_k: 1                     # final chunks passed to the LLM for every strategy
+  retrieval_strategy: dense   # dense | bm25 | hybrid; BM25 needs the [retrieval] extra
+  hybrid_dense_k: null         # null -> max(2 * top_k, 10); hybrid candidates only
+  hybrid_bm25_k: null          # null -> max(2 * top_k, 10); hybrid candidates only
+  rrf_k: 60                   # positive rank-fusion constant; hybrid only
   similarity_threshold: 0.0      # only used when retriever_type is similarity_score_threshold
-  retriever_type: similarity     # similarity | mmr | similarity_score_threshold
+  retriever_type: similarity     # dense only: similarity | mmr | similarity_score_threshold
 
   # Must contain {context} and {question} exactly once each; they are filled in
   # at answer time. The optimizer rewrites this template between iterations.
