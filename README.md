@@ -1,9 +1,11 @@
 # Phoenix RAG
 
-A self-optimizing Retrieval-Augmented Generation (RAG) system. It generates
-evaluation questions from a source document, evaluates a RAG pipeline with
-Ragas, tunes retrieval parameters based on the results, and repeats until
-the best-performing configuration is found (or the target scores are hit).
+A self-optimizing Retrieval-Augmented Generation (RAG) system built around a
+**corpus of one or more documents**. It evaluates answers against a corpus
+benchmark with Ragas, tunes retrieval parameters and the answer prompt, and
+repeats until the best-performing configuration is found or its targets are hit.
+Every run uses the corpus manifest, benchmark, and indexes, including when the
+corpus contains just one file. There is no separate single-file optimization path.
 
 It is **provider-agnostic**: each model role (embedding, generation, optimizer,
 judge) can run on a different backend — Mistral, OpenAI, Anthropic, DeepSeek, or
@@ -25,21 +27,19 @@ model as optimizer and judge. See [Choosing providers](#choosing-providers).
 ## Architecture
 
 ```
-Source Document
+Corpus (one or more registered documents)
       │
-      ▼
-Recursive Text Splitter
-      │
-  ┌───┴────┐
-  ▼        ▼
-FAISS   Full Document Chunks
-  │        │
-  │   LLM: Generate Evaluation Questions
-  │        │
-  │        ▼
-  │   Evaluation Benchmark Dataset (fixed, generated once)
-  │        │
-  ▼        ▼
+  ┌───┴────────────────────┐
+  ▼                        ▼
+Canonical chunks       Full document texts
+  │                        │
+  ▼                        ▼
+FAISS vectors          LLM: Generate Evaluation Questions
+and docstore               │
+  │                        ▼
+  │                    Corpus benchmark (fixed within a run)
+  │                        │
+  ▼                        ▼
 Retriever ──► RAG Pipeline ──► Generated Answer
                                     │
                                     ▼
@@ -56,11 +56,12 @@ Retriever ──► RAG Pipeline ──► Generated Answer
                   Tune Retrieval Parameters → Next Iteration
 ```
 
-**Key design rule:** evaluation questions are generated once from the
-*complete* source document (batched only for LLM context / rate-limit
-reasons), never from retrieved chunks. This keeps the benchmark independent
-of the retrieval pipeline being tuned — every configuration is scored
-against exactly the same questions.
+**Key design rule:** evaluation questions come from the *complete text* of
+registered documents, never from retrieved chunks. Registration normally adds
+each document's questions to the corpus benchmark; if the corpus has no
+benchmark, one is generated from its full text. The benchmark stays fixed
+throughout an optimization run, so every configuration is scored against the
+same questions. Adding documents can extend it before the next run.
 
 ## Project layout
 
@@ -87,7 +88,7 @@ src/phoenix_rag/
         chunking.py           RecursiveCharacterTextSplitter wrapper
         embeddings.py         LangChain Embeddings adapter for the embedding backend
         vector_store.py       FAISS index build/save/load + retriever factory
-        corpus.py             Multi-document corpus: manifest + incremental indexing
+        corpus.py             Corpus of one or more documents: manifest + incremental indexing
         document_profile.py   Deterministic document characteristics for tuning
         seed_config.py        Derives iteration 1's chunk/top_k from that profile
         rag_pipeline.py       Retrieve → prompt → generate
@@ -115,7 +116,7 @@ use_workspace(Workspace("~/rag-runs/experiment-a"))
 
 ```
 config/config.yaml        The live configuration the app reads and rewrites
-data/                     Source documents + FAISS index
+data/                     Input documents; indexes live under the corpus root
 data/corpus/              Corpus manifest, benchmark, and per-variant indexes
 results/                  Per-iteration configs, CSV results, best config
 generated_questions/      Legacy artifacts adopted when initializing a corpus
@@ -225,8 +226,9 @@ Tips:
 - To add a backend: install its extra, set `backend` + `model` + `api_key_env`
   for the role in `config.yaml`, and put the key in `.env`.
 
-Place your source document (PDF or .txt/.md) somewhere under `data/`, e.g.
-`data/source.pdf`.
+Place the files you want to register (PDF, `.txt`, or `.md`) somewhere accessible,
+such as `data/`. The corpus records their paths; putting files in that directory
+alone does not register them.
 
 ## Usage
 
@@ -234,9 +236,15 @@ Place your source document (PDF or .txt/.md) somewhere under `data/`, e.g.
 from phoenix_rag import load_or_create_default_config, run_experiment
 
 config = load_or_create_default_config()
+config.source_document = "data/handbook.pdf"  # First member if the corpus is empty.
 config.optimizer.max_iterations = 5
-run_experiment(config)
+best = run_experiment(config)
 ```
+
+This creates or reuses the workspace's corpus at `data/corpus/` and optimizes
+over all its registered documents. A corpus containing only `handbook.pdf` uses
+the same pipeline as one containing many files. To grow it, use `add_document()`
+as shown in [The corpus: one or many documents](#the-corpus-one-or-many-documents).
 
 
 ## Retrieval strategies
@@ -288,33 +296,44 @@ already save the complete config, including these new fields; CSV columns are
 unchanged. The optimizer is unchanged, and `copy_with()` preserves the new
 fields while allowing its existing `top_k` tuning.
 
-## Multiple documents: the corpus
+## The corpus: one or many documents
 
-Every document, including the first, uses the same corpus machinery. The usual
-API stays the same:
+The corpus is the unit of optimization. `run_experiment(config)` loads its
+manifest and uses its benchmark, summary, aggregated profile, and index variants
+whether it has one member or many.
+
+To register another file in the corpus used above and optimize the expanded set:
 
 ```python
-from phoenix_rag import AppConfig, run_experiment
+from phoenix_rag.operations import add_document
 
-config = AppConfig()
-config.source_document = "data/doc.pdf"
+add_document(config, "data/appendix.pdf", label="appendix")
 best = run_experiment(config)
 ```
 
-On first use, `corpus_path=None` is initialized to the active workspace's
-`data/corpus/` and persisted in `config/config.yaml`. An explicit `corpus_path`
-still selects a custom root. `source_document` seeds an empty corpus with a label
-derived from the filename stem; later documents join through `add_document()`.
-Once the corpus has members, changing `source_document` does not replace them.
-The benchmark, summary, profile, and FAISS index describe every registered
-document:
+Call `add_document()` for each additional file; there is no separate mode to
+enable when growing from one document to several.
+
+| Setting or operation | Meaning |
+|----------------------|---------|
+| `corpus_path: null` | Resolve the active workspace's `data/corpus/` on first use and persist that location. |
+| Explicit `corpus_path` | Select a corpus root and its registered document set. |
+| `source_document` | Seed an **empty** corpus, with a label derived from the file's name. It does not replace or filter a populated corpus. |
+| `add_document(config, path)` | Register a file, generate its artifacts, and sync its chunks into the corpus index by default. |
+
+To change which documents participate, add or remove corpus members, or select
+another corpus root. Changing `source_document` on a populated corpus does not
+change the documents searched. Use a separate workspace when you also want
+separate configs and optimization results.
+
+The same on-disk layout is used for one or many files:
 
 ```
 data/corpus/
     manifest.json         documents, per-variant index membership, per-doc
                           summaries and profiles
     benchmark.json        the corpus benchmark — grows as documents are added
-    corpus_summary.txt    the rendered multi-document summary the optimizer sees
+    corpus_summary.txt    the corpus summary the optimizer sees
     corpus_profile.json   the aggregated profile
     indexes/<key>/        one FAISS index per (embedding model, chunk_size, overlap)
 ```
@@ -331,35 +350,16 @@ embedding only 17 new chunk(s) from vectordbs
 Index identity is `(embedding_model, chunk_size, chunk_overlap)` — deliberately
 *not* including the documents — and membership is tracked per variant in the
 manifest. That is what allows a variant to gain a document without changing
-identity. Changing `chunk_size` or `chunk_overlap` still forces a full re-embed
-into a new variant directory, because differently-sized chunks are different
-vectors; the old variant is left in place, so switching back is free.
+identity. New `chunk_size` or `chunk_overlap` settings require a separate index
+variant because the chunks differ. Existing variants stay in place; switching
+back reuses their vectors and embeds only any corpus members they are missing.
 
-**The optimizer sees every document.** Each document's own summary and profile
-are kept in the manifest and combined for the optimizer: the summaries are
-rendered into one multi-document briefing (`corpus_summary.txt`) that names each
-document and warns the model not to scope its prompt template to a single
-subject, and the profiles are aggregated into one `DocumentProfile` so
-`core/seed_config.py` sizes iteration 1 for the corpus that will actually be
-searched.
-
-**Existing configurations upgrade automatically.** A saved config with
-`source_document` set and `corpus_path: null` needs no manual migration. On first
-use, `adopt_legacy_single_document_artifacts()` reads existing `profile_path`,
-`summary_path`, and `benchmark_path` caches (normally under
-`generated_questions/`) and adopts them into the corpus. Only missing artifacts
-are generated, so cached summaries and questions incur no new generation API
-cost. The original cache files remain untouched. If the source file is missing
-and the corpus is empty, optimization reports an empty-corpus error; restore the
-file or add a document before running again.
-
-**Legacy FAISS indexes are rebuilt once.** Old single-document indexes in
-content-hash-named folders under `faiss_index_path` are no longer read or migrated.
-The corpus builds its vectors under `data/corpus/indexes/<key>/` (or your explicit
-corpus root). Those old index folders become orphaned and are safe to delete
-manually; Phoenix RAG does not delete them automatically. Profile, summary, and
-benchmark caches are adopted as described above; only the FAISS vectors need
-rebuilding.
+**The optimizer sees every document.** Each document's summary and profile are
+kept in the manifest. With one member, the corpus summary and profile use that
+document's values. With several members, summaries become one briefing that
+names each document, and profiles are aggregated into one `DocumentProfile`.
+`core/seed_config.py` therefore sizes iteration 1 for the corpus that will
+actually be searched.
 
 Documents are identified by a digest of their **contents**, so re-adding the same
 file (even renamed) is a no-op rather than a duplicate, and a file edited in place
@@ -367,7 +367,7 @@ is reported by the status view. Removing a document invalidates the index
 variants that contained it — FAISS has no cheap per-vector removal — so removal
 costs a rebuild where adding does not.
 
-### One honest caveat
+### When corpus membership changes
 
 Adding a document generates questions from it and appends them to the benchmark,
 because the alternative is quietly broken: with questions only from the older
@@ -384,18 +384,31 @@ score as if it described the new corpus.
 ### Where iteration 1 starts
 
 Iteration 1's `chunk_size`, `chunk_overlap`, and `top_k` are derived from the
-document profile by `core/seed_config.py`, not read from `config/config.yaml`.
-A document-agnostic starting point (previously 300/50/1 for every document) acts
-as an anchor the LLM optimizer nudges around: on a 12-page paper needing 800–1200
-character chunks, ten consecutive iterations never left the 300–500 band. Seeding
-puts iteration 1 in the regime the document's own `doc_type`,
-`median_chars_per_page`, and section length imply, so the budget goes on refining
-rather than travelling.
+**aggregated corpus profile** by `core/seed_config.py`, rather than taken from
+`config/config.yaml`. A one-document corpus naturally uses that document's
+profile. As documents are added, the aggregate reflects the corpus's content
+and structure, so the initial settings describe the evidence actually searched.
 
 `retriever_type`, `similarity_threshold`, and `prompt_template` still come from
 the config — choosing those needs measured scores, which do not exist yet at
-iteration 1. Set `optimizer.seed_from_profile` to `false` to restore the old unseeded behaviour; the seed rationale is recorded in
-iteration 1's `applied_rules` either way.
+iteration 1. Set `optimizer.seed_from_profile` to `false` to start from the
+configured retrieval values instead. When seeding is enabled, its rationale
+is recorded in iteration 1's `applied_rules`.
+
+### Migrating an older workspace
+
+Older saved configs can still supply a seed document and cached artifacts.
+When the corpus is empty, `adopt_legacy_single_document_artifacts()` reads
+`source_document` and any usable `profile_path`, `summary_path`, and
+`benchmark_path` caches, normally under `generated_questions/`. It registers
+the seed in the corpus and generates only missing artifacts. The original
+cache files remain untouched. If there is no usable seed and no registered
+member, optimization reports an empty-corpus error; add a document first.
+
+These legacy artifact fields support migration; they do not select an
+alternative optimization path. Old indexes under `faiss_index_path` are unused
+and are not migrated. Vectors are built in `corpus_path/indexes/<key>/`, then
+reused by subsequent corpus runs. Old index folders remain untouched.
 
 ## Outputs
 
@@ -407,8 +420,8 @@ iteration 1's `applied_rules` either way.
 - `results/configs/iteration_NNN.json` — retrieval config used each iteration
 - `results/evaluation_scores.csv` — Ragas scores per iteration + which
   optimization rules fired
-- `results/experiment_results.csv` — full config + scores per iteration, one
-  row each, convenient for plotting/analysis
+- `results/experiment_results.csv` — existing parameter columns + scores per
+  iteration; the full config, including retrieval strategy, is in the JSON
 - `results/best_configuration.json` — the best config found so far, updated
   whenever a new best is found
 

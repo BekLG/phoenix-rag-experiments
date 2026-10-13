@@ -11,8 +11,9 @@ self-contained.
 
 ## 1. What the library actually does
 
-Phoenix RAG is a **self-optimizing RAG system**. You point it at a document (or a
-folder of documents), and it repeatedly:
+Phoenix RAG is a **self-optimizing RAG system** built around a **corpus of one or
+more registered documents**. Every run uses that corpus, including when it has
+only one file. There is no separate single-file optimization path. It repeatedly:
 
 1. builds a retrieval-augmented-generation pipeline with some set of parameters,
 2. answers a fixed set of benchmark questions with it,
@@ -21,7 +22,13 @@ folder of documents), and it repeatedly:
 
 It keeps the best-scoring configuration and stops when it hits its targets or runs
 out of iterations. The output is **a tuned retrieval config plus a tuned answer
-prompt** — the settings that made this particular document answer best.
+prompt** — the settings that produced the best measured answers for the corpus.
+
+The corpus manifest records which documents participate. `source_document` can
+seed an empty corpus; additional files are registered with
+`phoenix_rag.operations.add_document()`. Placing files in a folder does not
+automatically register them. Once the corpus has members, optimization uses
+all of them, regardless of the value of `source_document`.
 
 The mental model in one sentence:
 
@@ -37,17 +44,24 @@ local model).
 
 A RAG pipeline has knobs that dramatically change answer quality:
 
-- **`chunk_size` / `chunk_overlap`** — how the document is sliced before embedding.
+- **`chunk_size` / `chunk_overlap`** — how each corpus document is sliced before embedding.
   Too small and each chunk lacks context; too big and retrieval returns noise.
-- **`top_k`** — how many chunks to retrieve per question.
-- **`retriever_type`** — `similarity`, `mmr` (maximal marginal relevance, trades
-  some relevance for diversity), or `similarity_score_threshold`.
-- **`similarity_threshold`** — the cutoff for the threshold retriever.
+- **`top_k`** — the maximum number of final chunks passed to the LLM per question.
+- **`retriever_type`** — the dense search method: `similarity`, `mmr` (maximal
+  marginal relevance, trades some relevance for diversity), or
+  `similarity_score_threshold`.
+- **`similarity_threshold`** — the cutoff for dense threshold retrieval.
 - **`prompt_template`** — the instructions wrapped around the retrieved context
   before the model answers.
 
 These form the **search space**. The optimizer moves through it; the judge tells
 it whether it's getting warmer.
+
+Phase 2 also adds **`retrieval_strategy`**: `dense` (the default), `bm25`, or
+`hybrid`. You select this in config; the optimizer's tuning logic is unchanged.
+Hybrid has separate candidate budgets, while `top_k` remains the final context
+budget. See [§11](#11-phases-1-and-2-retrieval-contracts-and-hybrid-search) for
+what both retrieval phases changed and why they matter.
 
 ---
 
@@ -247,12 +261,20 @@ phoenix_rag/
 ├── core/                  # the RAG mechanics
 │   ├── document_loader.py # PDF/text → LangChain Documents
 │   ├── chunking.py        # split_documents(chunk_size, overlap)
+│   ├── chunk_identity.py  # deterministic document_id and chunk_id
 │   ├── embeddings.py      # embedding helpers
 │   ├── vector_store.py    # FAISS build/load/save and incremental additions
 │   ├── rag_pipeline.py    # RagPipeline: retrieve → prompt → generate
 │   ├── document_profile.py# analyze a document (length, structure, …)
 │   ├── seed_config.py     # derive iteration-1 params from the profile
 │   └── corpus.py          # all documents: manifest + incremental indexing
+│
+├── retrieval/             # interchangeable retrieval strategies (see §11)
+│   ├── base.py            # Retriever protocol and RetrievalResult
+│   ├── factory.py         # build_retriever(config, vector_store)
+│   ├── dense.py           # existing FAISS search behind the common contract
+│   ├── bm25.py            # lexical search over the same canonical chunks
+│   └── hybrid.py          # merge dense + BM25 rankings with RRF
 │
 ├── benchmark/
 │   ├── question_generator.py  # generate_benchmark (fixed question set)
@@ -312,9 +334,10 @@ move a cloud role to OpenAI/Anthropic/DeepSeek by changing `backend` + `model` +
 constraint from §2: Anthropic and DeepSeek can serve chat roles only, so keep
 `embedding` on `local`, `mistral`, or `openai`.
 
-Changing the embedding model changes the FAISS index identity, so the first run
-after a switch re-embeds the document into a new index (see content-addressed
-caching in §7).
+Changing the embedding model selects a different FAISS index variant. If that
+variant does not exist, the next run embeds every corpus document into it; if
+it already exists, corpus syncing reuses it and adds any missing members
+(see corpus caching in §7).
 
 ---
 
@@ -367,10 +390,10 @@ persists a secret to a committable file. Local roles need no key at all
 ```
 build_providers(app_config)          # §2 — wire backends ONCE for the run
         │
-prepare_inputs(...)                   # gather document-dependent inputs:
-        │                             #   benchmark, summary, profile, build_store()
+prepare_inputs(...)                   # initialize/load the corpus:
+        │                             #   benchmark, corpus summary/profile, build_store()
         │
-seed iteration 1 from the profile     # §7 — seed_config.propose_seed_config
+seed iteration 1 from corpus profile  # §7 — seed_config.propose_seed_config
         │
 for iteration in 1..max_iterations:
     ├─ (re)build the FAISS store IF chunk_size/overlap changed   # cached otherwise
@@ -386,12 +409,14 @@ for iteration in 1..max_iterations:
 
 Details that matter:
 
-- **The benchmark is generated once and frozen.** Every configuration is scored
+- **The corpus benchmark is fixed within a run.** Every configuration is scored
   against the *identical* question set, or the comparison across iterations would
-  be meaningless. It is generated from the *complete* document, never from
-  retrieved chunks, so it stays independent of the retrieval pipeline being tuned.
+  be meaningless. Questions come from registered documents' *complete* text,
+  never from retrieved chunks. Registration normally extends the saved benchmark;
+  if none exists, it is generated from the full corpus text. Adding documents
+  can change the benchmark before the next run.
 - **The LLM optimizer sees the full history.** `propose_next_config_llm` gets the
-  entire iteration history plus the document summary and profile, so it reasons
+  entire iteration history plus the corpus summary and aggregated profile, so it reasons
   about trade-offs across the whole run — not just the last score — and proposes
   the retrieval params **and** the prompt template *together*.
 - **The safety gate.** The objective is a weighted score, but an answer that
@@ -399,8 +424,9 @@ Details that matter:
   So a configuration is only eligible to become "best" if `faithfulness ≥ 0.80`.
   A high score that fails the gate is logged and discarded.
 - **The store is rebuilt only when it has to be.** The FAISS index depends only on
-  `chunk_size`/`chunk_overlap`. The loop caches the store and rebuilds it only when
-  those change — an iteration that only tweaks `top_k` or the prompt reuses it.
+  the corpus, embedding model, and chunking parameters. Within a run, the loop
+  caches the store and rebuilds it when `chunk_size`/`chunk_overlap` changes.
+  Changing `top_k`, the prompt, or `retrieval_strategy` does not require new vectors.
 
 ### What a run writes
 
@@ -413,7 +439,8 @@ Everything lands in the workspace (§7):
 - `data/corpus/indexes/<key>/` — one FAISS index per embedding/chunking variant
 - `results/configs/iteration_NNN.json` — the config used each iteration
 - `results/evaluation_scores.csv` — Ragas scores per iteration + which rules fired
-- `results/experiment_results.csv` — full config + scores, one row per iteration
+- `results/experiment_results.csv` — existing parameter columns + scores, one row
+  per iteration; the complete config, including strategy fields, is in the JSON
 - `results/best_configuration.json` — best config so far, updated on each new best
 
 ---
@@ -428,40 +455,46 @@ also persists its benchmark and each document's summary and profile. This lets
 repeated runs reuse those artifacts while rebuilding only the index when, for
 example, switching from Mistral embeddings to MiniLM.
 
-**Seeding from the profile.** `document_profile.py` measures the document; then
+**Seeding from the corpus profile.** `document_profile.py` measures each document,
+and `corpus.profile()` aggregates those measurements. A one-document corpus uses
+that document's profile; a larger corpus combines its members' characteristics.
 `seed_config.propose_seed_config` derives iteration 1's `chunk_size` /
-`chunk_overlap` / `top_k` *from that measurement* rather than from a
-document-agnostic default. Without this, the LLM optimizer anchors on an arbitrary
-starting point and burns its whole budget nudging around it (on a 12-page paper
-needing 800–1200 character chunks, ten iterations never left the 300–500 band).
+`chunk_overlap` / `top_k` from this aggregate, so the starting configuration
+reflects the corpus being searched instead of an arbitrary default.
 `retriever_type`, `similarity_threshold`, and `prompt_template` still come from
 the config, because choosing those needs measured scores that don't exist yet at
-iteration 1. Set `optimizer.seed_from_profile: false` (or pass `--no-profile-seed`)
-to turn seeding off and start from the config's `retrieval` block instead; the
-seed rationale is recorded in iteration 1's `applied_rules` either way.
+iteration 1. Set `optimizer.seed_from_profile: false` to start from the config's
+`retrieval` block instead. When seeding is enabled, its rationale is recorded
+in iteration 1's `applied_rules`.
 
-**One corpus path from the first document.** `config.source_document = "data/doc.pdf"`
-followed by `run_experiment(config)` initializes `corpus_path` to the workspace's
-`data/corpus/` automatically. An explicit root is also supported. `prepare_inputs()`
-hands the loop the corpus benchmark, summary, profile, and a
-`build_store(chunk_size, overlap)` callable. Existing configs with
-`corpus_path: null` adopt their cached profile, summary, and benchmark through
-`adopt_legacy_single_document_artifacts()`, generating only missing artifacts.
-Legacy content-addressed FAISS directories are left untouched and unused; vectors
-are rebuilt once in the corpus layout. See the [README corpus section](../README.md#multiple-documents-the-corpus)
-for migration details. Corpus behavior follows these rules:
+**One corpus path from the first document.** `corpus_path: null` resolves to the
+workspace's `data/corpus/`; an explicit path selects another corpus root.
+`prepare_inputs()` always loads that corpus and hands the loop its benchmark,
+summary, profile, and a `build_store(chunk_size, overlap)` callable.
+`source_document` registers the first member only when the corpus is empty.
+Changing it afterward does not replace or filter existing members. Use
+`add_document()` or `remove_document()` to change membership, and a separate
+workspace when you want separate configs and results as well.
+
+Older configs may supply cached profile, summary, and benchmark files that are
+adopted during first registration. This is migration into the same corpus path;
+legacy FAISS directories are unused. See
+[Migrating an older workspace](../README.md#migrating-an-older-workspace) for
+those compatibility details. Corpus behavior follows these rules:
 
 - **Adding is incremental.** A new document is added to the *existing* FAISS index;
   only its new chunks are embedded and every vector already in the index is reused.
   Index identity is `(embedding_model, chunk_size, chunk_overlap)` — deliberately
   *not* including the documents — with per-variant membership tracked in
-  `data/corpus/manifest.json`. Changing chunk size or overlap still forces a full
-  re-embed into a new variant directory.
+  `data/corpus/manifest.json`. New chunking parameters require another variant;
+  returning to an existing variant reuses its vectors and adds missing members.
 - **Documents are identified by content digest**, so re-adding the same file (even
   renamed) is a no-op. Removing a document invalidates the index variants that
   contained it, so removal costs a rebuild where adding does not.
-- **The optimizer sees every document** through one multi-document briefing
-  (`corpus_summary.txt`) and one aggregated `DocumentProfile`.
+- **The optimizer sees every document** through `corpus_summary.txt` and one
+  aggregated `DocumentProfile`. With one member, these use that document's
+  values; with several, the summary describes all members and the profile
+  combines their characteristics.
 - **Adding a document changes the benchmark.** New questions are appended, so scores
   from before an add are **not comparable** to scores after it, and the saved best
   config is marked `STALE` as soon as membership changes. Re-run the optimization
@@ -537,7 +570,7 @@ shipped local/cloud split.
 | 3 | **Library installed with `[local]`** | default embedding + generation are local | `.venv/bin/python -c "import phoenix_rag"` | 9.2 |
 | 4 | **Mistral API key in `.env`** | optimizer + judge are Mistral | `grep MISTRAL_API_KEY .env` | 9.3 |
 | 5 | **Ollama running + model pulled** | local generation calls it | `ollama list` and `curl -s localhost:11434/api/tags` | 9.4 |
-| 6 | **A source document** | the thing being optimized | `ls data/*.pdf` | 9.5 |
+| 6 | **A corpus with at least one document, or a file to seed it** | supplies the evidence and benchmark for optimization | inspect the corpus with `operations.status(config)` | 9.5 |
 
 ### 9.2 Steps 1–3: Python, the environment, and installing the library
 
@@ -632,7 +665,7 @@ bit slower). No server, no key.
 > serves. Without a GPU, local generation is slow; start with a small
 > `max_iterations`.
 
-### 9.5 Step 6: the config file and a document
+### 9.5 Step 6: the config file and corpus
 
 Create your live config from the committable example, then confirm which backend
 serves each role:
@@ -656,7 +689,19 @@ providers:
   roles, and be `null` for local roles.
 - Set each cloud role's `requests_per_minute` to your account's quota.
 
-Put a document at `data/source.pdf` (any PDF, `.txt`, or `.md` under `data/` works).
+For a new corpus, choose its first document (PDF, `.txt`, or `.md`) and set these
+top-level fields in the same config:
+
+```yaml
+corpus_path: null                    # defaults to the workspace's data/corpus/
+source_document: data/handbook.pdf    # seeds the corpus only when it is empty
+```
+
+Ensure that file exists before the first run. For a populated corpus, select
+its `corpus_path`; its manifest determines which documents are used, and
+`source_document` is ignored. Register additional files with `add_document()`
+as shown below. The corpus directory stores the manifest and generated
+artifacts; it does not automatically import files placed there.
 
 `config/config.yaml` is **gitignored** (the app rewrites it as it saves best
 configs). The committable template is `configs/default.yaml` — edit that if you
@@ -664,7 +709,8 @@ want your defaults tracked in git.
 
 ### 9.6 Run it
 
-With the venv activated, use the library from Python:
+With the venv activated, optimize the configured corpus from Python. This is
+the same call for one or many registered files:
 
 ```python
 from phoenix_rag import load_or_create_default_config, run_experiment
@@ -672,15 +718,21 @@ from phoenix_rag import load_or_create_default_config, run_experiment
 config = load_or_create_default_config()
 config.optimizer.max_iterations = 5
 
-run_experiment(config)
+best = run_experiment(config)
 ```
 
-Or use the repo-root script, which exposes the same run with flags such as
-`--source`, `--corpus`, and `--no-profile-seed`:
+To grow that corpus and re-optimize over both the existing and new documents:
 
-```bash
-.venv/bin/python run_optimization.py --source data/source.pdf
+```python
+from phoenix_rag.operations import add_document
+
+add_document(config, "data/appendix.pdf", label="appendix")
+best = run_experiment(config)
 ```
+
+On an empty corpus, either operation first attempts to register the configured
+seed. Once populated, the corpus retains its membership across runs. An empty
+corpus without a usable seed must have a document added before optimization.
 
 Results — per-iteration configs, scores, and the best configuration found — land
 under `results/` in the workspace (the current directory by default, or
@@ -750,10 +802,211 @@ understanding without backtracking:
 
 1. `providers/base.py` — the contracts (§2).
 2. `providers/registry.py` — how they're built (§2).
-3. `core/rag_pipeline.py` — the thing being optimized.
-4. `optimization/runner.py` — the loop that ties it together (§6).
-5. `config/schema.py` then `config/loader.py` — the knobs and how they load (§5).
-6. `optimization/llm_optimizer.py` — how the next config is proposed.
+3. `retrieval/base.py` then `retrieval/factory.py` — retrieval results and strategy
+   construction (§11); follow into `dense.py`, `bm25.py`, or `hybrid.py` as needed.
+4. `core/rag_pipeline.py` — the thing being optimized.
+5. `core/corpus.py` — document membership, shared artifacts, and index syncing (§7).
+6. `optimization/runner.py` — the corpus optimization loop (§6).
+7. `config/schema.py` then `config/loader.py` — the knobs and how they load (§5).
+8. `optimization/llm_optimizer.py` — how the next config is proposed.
 
-Everything else (`core/corpus.py`, `benchmark/*`, `evaluation/*`) is a
+Everything else (`benchmark/*`, `evaluation/*`) is a
 leaf you can read on demand once the spine above makes sense.
+
+---
+
+## 11. Phases 1 and 2: retrieval contracts and hybrid search
+
+These phases let Phoenix retrieve evidence in more than one way while keeping
+the same retrieve → prompt → generate pipeline.
+
+| Phase | What changed | Main benefit |
+|-------|--------------|--------------|
+| **1: retrieval contract and identities** | Added `Retriever`, `RetrievalResult`, `DenseRetriever`, and stable document/chunk IDs. | Every retrieval method can describe and identify its hits consistently. |
+| **2: BM25 and hybrid retrieval** | Added lexical retrieval, Reciprocal Rank Fusion (RRF), and a config-driven factory. | You can combine semantic similarity with word matching while controlling the final context size. |
+
+### Phase 1: give every retriever the same contract
+
+Previously, the pipeline worked directly with LangChain's FAISS retriever and its
+returned `Document` objects. Phase 1 introduced a small protocol in
+[retrieval/base.py](../src/phoenix_rag/retrieval/base.py):
+
+```python
+class Retriever(Protocol):
+    def retrieve(self, query: str) -> list[RetrievalResult]:
+        ...
+```
+
+A `RetrievalResult` carries the chunk's text and metadata, its `document_id` and
+`chunk_id`, a 1-based rank, a retrieval method, and the method's score. It also
+has an `extras` dictionary for method-specific details. The reserved
+`reranker_score` field stays `None`; neither phase runs a reranker.
+
+[DenseRetriever](../src/phoenix_rag/retrieval/dense.py) adapts the existing FAISS
+search to that contract. It preserves the previous search parameters, ordering,
+and filtering. Score meanings remain explicit:
+
+- `similarity`: the raw FAISS score; for the indexes Phoenix builds, this is
+  squared L2 distance, where lower is better.
+- `similarity_score_threshold`: LangChain's relevance score after threshold
+  filtering, where higher is better.
+- `mmr`: `None`, because that search returns documents without scores.
+
+The pipeline builds the same prompt from the result texts. `answer()` exposes
+the structured hits through `RagResult.retrieval_results`, while the existing
+`pipeline.retrieve()` convenience API still returns LangChain documents. Ragas
+continues receiving the context strings it already consumed.
+
+**Benefit:** retrieval implementations can change without rewriting prompt
+construction or evaluation. A caller can also inspect which chunks were used,
+their order, and the meaning of their scores. Phase 1 itself preserves dense
+retrieval behavior; its benefit is a consistent interface and better traceability.
+
+### Phase 1: identify a chunk independently of its rank
+
+Two retrievers may return the same passage at different ranks. To merge those
+hits, Phoenix needs an identity that does not depend on the query, retrieval
+order, or FAISS's generated docstore keys.
+
+[core/chunk_identity.py](../src/phoenix_rag/core/chunk_identity.py) assigns:
+
+- **`document_id`** from the corpus's existing content digest, or derives a
+  deterministic identity when one is missing. For a file-backed corpus document,
+  renaming the file preserves its identity; changing its contents changes it.
+- **`chunk_id`** by hashing `[document_id, exact chunk text, occurrence]`.
+  The occurrence counts identical passages within that document, so repeated
+  text gets distinct IDs. Adding an unrelated document does not change existing
+  chunks' identities.
+
+IDs are assigned during canonical chunking. Legacy FAISS stores missing these
+fields are backfilled from their full docstore in insertion order, without
+embedding the text again. If the original document digest and source file are
+both unavailable, a deterministic text fallback provides an identity but cannot
+recover the original file digest.
+
+**Benefit:** hybrid retrieval can recognize the same chunk in both lists and
+include it once. Stable IDs also make comparisons across queries, logs, and
+corpus extensions easier to follow, while preserving source attribution.
+
+### Phase 2: retrieve by meaning, words, or both
+
+[build_retriever(config, vector_store)](../src/phoenix_rag/retrieval/factory.py)
+selects the implementation. `RagPipeline` calls this factory, so normal answers
+use the selected strategy automatically.
+
+| `retrieval_strategy` | How it finds evidence | When it can help |
+|----------------------|-----------------------|------------------|
+| `dense` | Searches embedding vectors through FAISS. | Questions phrased differently from the source, where meaning matters more than shared words. |
+| `bm25` | Ranks chunks by query-token matches, accounting for term frequency, rarity, and chunk length. | Distinctive names, technical terms, and identifiers that appear in the source. |
+| `hybrid` | Gets candidates from dense and BM25, then fuses their ranks. | Questions that benefit from both semantic similarity and specific word matches. |
+
+For example, a question about "reducing model overconfidence" may benefit from
+semantic matches to passages about calibration. A question naming "BM25Okapi"
+gives lexical search a distinctive token to find. Hybrid gives both methods a
+chance to supply evidence. Whether that improves answer quality for your corpus
+still needs to be measured against its benchmark.
+
+BM25 uses one deterministic tokenizer for both chunks and questions: lowercase
+text, then Unicode-aware regex word tokens (`\w+`). It has no stemming or heavy
+NLP dependency. Its chunks come directly from the **same FAISS docstore** used
+by dense retrieval; there is no separate lexical chunking pass.
+
+**Benefit:** both methods search the same units of evidence. Differences in
+their results come from ranking, and their IDs can be merged reliably. BM25
+queries make no embedding call, although the current pipeline still prepares
+the canonical FAISS store through its usual embedding/index setup.
+
+### How hybrid combines results: a worked RRF example
+
+Raw dense distances and BM25 scores have different scales and meanings. Hybrid
+instead uses each hit's 1-based position in its candidate list:
+
+```text
+rrf_score(chunk) = sum(1 / (rrf_k + rank))
+                  over the lists that returned that chunk
+```
+
+Suppose dense returns `[A, B, C]` and BM25 returns `[B, D, A]`. With `rrf_k=60`:
+
+| Chunk | Dense rank | BM25 rank | RRF score |
+|-------|------------|-----------|-----------|
+| B | 2 | 1 | `1/62 + 1/61 ≈ 0.03252` |
+| A | 1 | 3 | `1/61 + 1/63 ≈ 0.03227` |
+| D | — | 2 | `1/62 ≈ 0.01613` |
+| C | 3 | — | `1/63 ≈ 0.01587` |
+
+The fused order is `[B, A, D, C]`. B and A each appear once despite being found
+by both methods. With `top_k=3`, the LLM receives B, A, and D, with fresh ranks
+1, 2, and 3. Equal fused scores sort by the best individual rank, then by
+`chunk_id`, making tie-breaking deterministic.
+
+Hybrid results set `retrieval_method="hybrid"` and use the fused score as
+`retrieval_score`. Their `extras` contain `dense_rank`, `bm25_rank`, and
+`rrf_score`; a missing method's rank is `None`.
+
+**Benefit:** highly ranked evidence from either method can survive, and agreement
+between methods adds weight without needing to normalize incompatible raw
+scores. The recorded component ranks also explain how a fused result was ranked.
+
+### Selecting a strategy and controlling context size
+
+Dense remains the default and needs no new dependency. BM25 and hybrid require
+the optional extra, also included in `[all]`:
+
+```bash
+pip install -e '.[retrieval]'
+```
+
+For example, in the existing YAML retrieval block:
+
+```yaml
+retrieval:
+  retrieval_strategy: hybrid
+  top_k: 5
+  hybrid_dense_k: null
+  hybrid_bm25_k: null
+  rrf_k: 60
+  retriever_type: similarity
+```
+
+Each `null` candidate budget resolves to `max(2 * top_k, 10)`, so this example
+asks each method for up to 10 candidates and passes at most 5 fused chunks to
+generation. Explicit `hybrid_dense_k` and `hybrid_bm25_k` values override those
+candidate counts. The candidate fields and `rrf_k` apply only to hybrid.
+`retriever_type` and `similarity_threshold` configure dense search, including
+the dense half of hybrid; BM25 ignores them.
+
+Unknown strategies and non-positive budgets or `rrf_k` raise clear errors.
+Old configs load with `retrieval_strategy="dense"`, unset candidate budgets,
+and `rrf_k=60`. The BM25 builder imports `rank_bm25` only when needed and gives
+an installation hint if it is missing.
+
+**Benefit:** you can broaden the pool of candidate evidence while keeping a
+single final context budget, `top_k`. The existing optimizer still tunes that
+budget, and `copy_with()` and config serialization preserve the new fields.
+These phases do not add optimizer logic for selecting strategies or tuning RRF.
+
+### Reusing indexes, growing the corpus, and inspecting results
+
+BM25 builds an in-memory index once for a FAISS store and chunk size/overlap
+combination. Queries and newly constructed pipelines sharing that unchanged
+store reuse it. A snapshot of chunk IDs and text detects corpus changes; when
+the snapshot changes, BM25 rebuilds from **all** stored chunks. This matters
+when adding documents: BM25 covers both old and new corpus members. Loading a
+fresh FAISS store builds a fresh BM25 object when requested. BM25 is not
+persisted or pickled.
+
+FAISS disk keys still depend on embedding model and chunk size/overlap, with
+document membership tracked separately. Switching retrieval strategies does
+not invalidate the vectors. There is no retrieval-result or evaluation-result
+cache to re-key. Per-iteration and best-config JSON record the full config;
+existing CSV columns stay unchanged.
+
+At DEBUG level, retrieval logs show the strategy, candidate counts, latency,
+and final chunk IDs. Hybrid also logs dense, BM25, and fused top IDs.
+
+**Benefit:** switching strategies reuses existing vectors, growing the corpus
+keeps lexical retrieval current, and logs expose the evidence selected before
+the LLM generates an answer. Phases 1 and 2 establish this retrieval path;
+reranking and changes to CLI, UI, optimizer, or evaluation schemas remain for
+later work.
